@@ -10,17 +10,11 @@
 #:enddef
 
 #:def ALLOCATE(*args)
-    @:LOG({'@:ALLOCATE(${re.sub(' +', ' ', ', '.join(args))}$)'})
     allocate(${', '.join(args)}$)
-    #:if MFC_COMPILER == 'Cray'
     !$acc enter data create(${', '.join([ arg.split('(')[0] for arg in args ])}$)
-    #:else
-    !$acc enter data create(${', '.join(args)}$)
-    #:endif
 #:enddef ALLOCATE
 
 #:def DEALLOCATE(*args)
-    @:LOG({'@:DEALLOCATE(${re.sub(' +', ' ', ', '.join(args))}$)'})
     deallocate(${', '.join(args)}$)
     !$acc exit data delete(${', '.join(args)}$)
 #:enddef DEALLOCATE

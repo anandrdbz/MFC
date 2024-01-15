@@ -762,8 +762,6 @@ contains
 
             !$acc update device(ix, iy, iz, bcxb, bcxe, bcyb, bcye)
 
-            print *, "SIZE", proc_rank, bc_x%beg, bc_x%end, bc_y%beg, bc_y%end
-
             ! ===============================================================
             ! Reconstructing Primitive/Conservative Variables ===============
             
@@ -938,8 +936,6 @@ contains
                     end do
                 end do
 
-                !print *, maxval(abs(dux_igr)), maxval(abs(duy_igr)), maxval(dvx_igr),maxval(abs(dvy_igr))
-                !print *, maxloc(abs(duy_igr))
                 !$acc parallel loop collapse(2) gang vector default(present)
                 do k = iy%beg, iy%end
                     do j = ix%beg, ix%end
@@ -1062,13 +1058,7 @@ contains
 
                             end do
                         end do                       
-                    end do
-
-                    if(i == 100) then
-                        print *, "ITER 1", maxval(abs(jac_igr(1,-1:m+1, -1:n+1) - jac_old_igr(1, -1:m+1, -1:n+1)))
-                        print *, "ITER 2", maxval(abs(jac_igr(1,-1:m+1, -1:n+1) - jac_old_igr(1, -1:m+1, -1:n+1)))
-                    end if
-                    
+                    end do                  
 
                     if(bcxb >= -1) then
                         if(bcxb >= 0) then
