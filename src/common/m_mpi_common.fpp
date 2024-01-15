@@ -62,57 +62,45 @@ contains
     end subroutine s_mpi_initialize ! --------------------------------------
 
 
-    subroutine s_initialize_mpi_data(q_cons_vf, pb, mv) ! --------------------------
+    subroutine s_initialize_mpi_data(q_cons_vf) ! --------------------------
 
         type(scalar_field), &
             dimension(sys_size), &
             intent(IN) :: q_cons_vf
-
-
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), optional, intent(INOUT) :: pb 
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), optional, intent(INOUT) :: mv 
 
         integer, dimension(num_dims) :: sizes_glb, sizes_loc
 
 #ifdef MFC_MPI
 
         ! Generic loop iterator
-        integer :: i, j
+        integer :: i, j, q, k, l
 
         do i = 1, sys_size
-#ifdef MPI_SIMULATION
-            MPI_IO_DATA%var(i)%sf => q_cons_vf(i)%sf
-#else
             MPI_IO_DATA%var(i)%sf => q_cons_vf(i)%sf(0:m, 0:n, 0:p)
-#endif
         end do
 
-#ifndef MFC_POSTPROCESS
+        !Additional variables pb and mv for non-polytropic qbmm
+#ifdef MFC_PRE_PROCESS 
         if(qbmm .and. .not. polytropic) then
-            do i = 1, nb 
-                do j = 1, 4
-#ifdef MPI_SIMULATION
-            MPI_IO_DATA%var(sys_size + i*4 + j)%sf = pb(0:m, 0:n, 0:p, j, i)
-#else
-            MPI_IO_DATA%var(sys_size + i*4 + j)%sf = pb(0:m, 0:n, 0:p, j, i)
-#endif  
+            do i = 1, nb
+                do j = 1, nnode
+                        MPI_IO_DATA%var(sys_size + (i-1)*nnode + j)%sf => pb%sf(0:m, 0:n, 0:p, j, i) 
+                        MPI_IO_DATA%var(sys_size + (i-1)*nnode + j + nb*nnode)%sf => mv%sf(0:m, 0:n, 0:p, j, i) 
                 end do
-            end do          
-        end if
-
-        if(qbmm .and. .not. polytropic) then
-            do i = 1, nb 
-                do j = 1, 4
-#ifdef MPI_SIMULATION
-            MPI_IO_DATA%var(sys_size + nb*4 + i*4 + j)%sf = mv(0:m, 0:n, 0:p, j, i)
-#else
-            MPI_IO_DATA%var(sys_size + nb*4 + i*4 + j)%sf = mv(0:m, 0:n, 0:p, j, i)
-#endif  
-                end do
-            end do          
+            end do                  
         end if
 #endif
 
+#if defined(MFC_SIMULATION) | defined(MFC_TEST) 
+        if(qbmm .and. .not. polytropic) then
+            do i = 1, nb
+                do j = 1, nnode
+                        MPI_IO_DATA%var(sys_size + (i-1)*nnode + j)%sf => pb_ts(1)%sf(0:m, 0:n, 0:p, j, i) 
+                        MPI_IO_DATA%var(sys_size + (i-1)*nnode + j + nb*nnode)%sf => mv_ts(1)%sf(0:m, 0:n, 0:p, j, i) 
+                end do
+            end do                  
+        end if
+#endif
         ! Define global(g) and local(l) sizes for flow variables
         sizes_glb(1) = m_glb + 1; sizes_loc(1) = m + 1
         if (n > 0) then
@@ -129,6 +117,7 @@ contains
             call MPI_TYPE_COMMIT(MPI_IO_DATA%view(i), ierr)
         end do
 
+#ifndef MFC_POST_PROCESS
         if(qbmm .and. .not. polytropic) then
             do i = sys_size + 1, sys_size + 2*nb*4
             call MPI_TYPE_CREATE_SUBARRAY(num_dims, sizes_glb, sizes_loc, start_idx, &
@@ -137,6 +126,7 @@ contains
 
             end do
         end if
+#endif
 
 #endif
 
@@ -191,7 +181,7 @@ contains
         real(kind(0d0)), intent(OUT) :: Rc_min_glb
 
 #ifdef MFC_MPI
-#ifdef MFC_SIMULATION
+#if defined(MFC_SIMULATION) | defined(MFC_TEST)
 
         ! Reducing local extrema of ICFL, VCFL, CCFL and Rc numbers to their
         ! global extrema and bookkeeping the results on the rank 0 processor

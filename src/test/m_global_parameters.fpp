@@ -330,8 +330,6 @@ module m_global_parameters
     !$acc declare create(pb_ts, mv_ts)
     ! ======================================================================
 
-    logical :: barotropic
-
 contains
 
     !> Assigns default values to the user inputs before reading
@@ -380,9 +378,6 @@ contains
         weno_flat = .true.
         riemann_flat = .true.
         cu_mpi = .false.
-
-        ! barotropic EOS
-        barotropic = .false.
 
         bc_x%beg = dflt_int; bc_x%end = dflt_int
         bc_y%beg = dflt_int; bc_y%end = dflt_int

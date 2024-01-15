@@ -43,18 +43,14 @@ module m_data_output
 
         !>  Interface for the conservative data
         !! @param q_cons_vf The conservative variables
-        subroutine s_write_abstract_data_files(q_cons_vf, pb, mv)
+        subroutine s_write_abstract_data_files(q_cons_vf)
 
-            import :: scalar_field, sys_size
+            import :: scalar_field, sys_size, pres_field
 
             ! Conservative variables
             type(scalar_field), &
                 dimension(sys_size), &
                 intent(IN) :: q_cons_vf
-
-
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), intent(INOUT) :: pb 
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), intent(INOUT) :: mv 
 
         end subroutine s_write_abstract_data_files ! -------------------
     end interface ! ========================================================
@@ -72,13 +68,10 @@ contains
     !>  Writes grid and initial condition data files to the "0"
         !!  time-step directory in the local processor rank folder
         !! @param q_cons_vf The conservative variables
-    subroutine s_write_serial_data_files(q_cons_vf, pb, mv) ! -----------
+    subroutine s_write_serial_data_files(q_cons_vf) ! -----------
         type(scalar_field), &
             dimension(sys_size), &
             intent(IN) :: q_cons_vf
-
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), intent(INOUT) :: pb 
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), intent(INOUT) :: mv 
 
         logical :: file_exist !< checks if file exists
 
@@ -152,27 +145,28 @@ contains
             close (1)
         end do
 
+        !Outputting pb and mv for non-polytropic qbmm
         if(qbmm .and. .not. polytropic) then
             do i = 1, nb
-                do r = 1, 4
-                    write (file_num, '(I0)') r + (i-1)*4 + sys_size
+                do r = 1, nnode
+                    write (file_num, '(I0)') r + (i-1)*nnode + sys_size
                     file_loc = trim(t_step_dir)//'/pb'//trim(file_num) &
                                //'.dat'
                     open (1, FILE=trim(file_loc), FORM='unformatted', &
                           STATUS=status)
-                    write (1) pb(:, :, :, r, i)
+                    write (1) pb%sf(:, :, :, r, i)
                     close (1)
                 end do
             end do
 
             do i = 1, nb
-                do r = 1, 4
-                    write (file_num, '(I0)') r + (i-1)*4 + sys_size
+                do r = 1, nnode
+                    write (file_num, '(I0)') r + (i-1)*nnode + sys_size
                     file_loc = trim(t_step_dir)//'/mv'//trim(file_num) &
                                //'.dat'
                     open (1, FILE=trim(file_loc), FORM='unformatted', &
                           STATUS=status)
-                    write (1) mv(:, :, :, r, i)
+                    write (1) mv%sf(:, :, :, r, i)
                     close (1)
                 end do
             end do
@@ -256,23 +250,23 @@ contains
 
             if(qbmm .and. .not. polytropic) then
                 do i = 1, nb
-                    do r = 1, 4
+                    do r = 1, nnode
                         write (file_loc, '(A,I0,A,I0,A,I2.2,A,I6.6,A)') trim(t_step_dir)//'/pres.', i, '.', r, '.',  proc_rank, '.', t_step, '.dat'
 
                         open (2, FILE=trim(file_loc))
                         do j = 0, m
-                            write (2, FMT) x_cb(j), pb(j, 0, 0, r, i)
+                            write (2, FMT) x_cb(j), pb%sf(j, 0, 0, r, i)
                         end do
                         close (2)
                     end do
                 end do
                 do i = 1, nb
-                    do r = 1, 4
+                    do r = 1, nnode
                         write (file_loc, '(A,I0,A,I0,A,I2.2,A,I6.6,A)') trim(t_step_dir)//'/mv.', i, '.', r, '.',  proc_rank, '.', t_step, '.dat'
 
                         open (2, FILE=trim(file_loc))
                         do j = 0, m
-                            write (2, FMT) x_cb(j), mv(j, 0, 0, r, i)
+                            write (2, FMT) x_cb(j), mv%sf(j, 0, 0, r, i)
                         end do
                         close (2)
                     end do
@@ -301,26 +295,26 @@ contains
             end do
             if(qbmm .and. .not. polytropic) then
                 do i = 1, nb
-                    do r = 1, 4
+                    do r = 1, nnode
                         write (file_loc, '(A,I0,A,I0,A,I2.2,A,I6.6,A)') trim(t_step_dir)//'/pres.', i, '.', r, '.',  proc_rank, '.', t_step, '.dat'
 
                         open (2, FILE=trim(file_loc))
                         do j = 0, m
                             do k = 0, n
-                                write (2, FMT) x_cb(j), y_cb(k), pb(j, k, 0, r, i)
+                                write (2, FMT) x_cb(j), y_cb(k), pb%sf(j, k, 0, r, i)
                             end do
                         end do
                         close (2)
                     end do
                 end do
                 do i = 1, nb
-                    do r = 1, 4
+                    do r = 1, nnode
                         write (file_loc, '(A,I0,A,I0,A,I2.2,A,I6.6,A)') trim(t_step_dir)//'/mv.', i, '.', r, '.',  proc_rank, '.', t_step, '.dat'
 
                         open (2, FILE=trim(file_loc))
                         do j = 0, m
                             do k = 0, n
-                                write (2, FMT) x_cb(j), y_cb(k), mv(j, k, 0, r, i)
+                                write (2, FMT) x_cb(j), y_cb(k), mv%sf(j, k, 0, r, i)
                             end do
                         end do
                         close (2)
@@ -347,14 +341,14 @@ contains
             end do
             if(qbmm .and. .not. polytropic) then
                 do i = 1, nb
-                    do r = 1, 4
+                    do r = 1, nnode
                         write (file_loc, '(A,I0,A,I0,A,I2.2,A,I6.6,A)') trim(t_step_dir)//'/pres.', i, '.', r, '.',  proc_rank, '.', t_step, '.dat'
 
                         open (2, FILE=trim(file_loc))
                         do j = 0, m
                             do k = 0, n
                                 do l = 0, p
-                                    write (2, FMT) x_cb(j), y_cb(k), z_cb(l), pb(j, k, l, r, i)
+                                    write (2, FMT) x_cb(j), y_cb(k), z_cb(l), pb%sf(j, k, l, r, i)
                                 end do
                             end do
                         end do
@@ -362,14 +356,14 @@ contains
                     end do
                 end do
                 do i = 1, nb
-                    do r = 1, 4
+                    do r = 1, nnode
                         write (file_loc, '(A,I0,A,I0,A,I2.2,A,I6.6,A)') trim(t_step_dir)//'/mv.', i, '.', r, '.',  proc_rank, '.', t_step, '.dat'
 
                         open (2, FILE=trim(file_loc))
                         do j = 0, m
                             do k = 0, n
                                 do l = 0, p
-                                    write (2, FMT) x_cb(j), y_cb(k), z_cb(l), mv(j, k, l, r, i)
+                                    write (2, FMT) x_cb(j), y_cb(k), z_cb(l), mv%sf(j, k, l, r, i)
                                 end do
                             end do
                         end do
@@ -384,16 +378,12 @@ contains
     !> Writes grid and initial condition data files in parallel to the "0"
         !!  time-step directory in the local processor rank folder
         !! @param q_cons_vf The conservative variables
-    subroutine s_write_parallel_data_files(q_cons_vf, pb, mv) ! --
+    subroutine s_write_parallel_data_files(q_cons_vf) ! --
 
         ! Conservative variables
         type(scalar_field), &
             dimension(sys_size), &
             intent(IN) :: q_cons_vf
-
-        
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), intent(INOUT) :: pb 
-        real(kind(0d0)), dimension(0:, 0:, 0:, 1:, 1:), intent(INOUT) :: mv 
 
 #ifdef MFC_MPI
 
@@ -412,8 +402,8 @@ contains
         integer :: i
 
         ! Initialize MPI data I/O
-        call s_initialize_mpi_data(q_cons_vf, pb, mv)
-
+        call s_initialize_mpi_data(q_cons_vf)
+        
         ! Open the file to write all flow variables
         write (file_loc, '(I0,A)') t_step_start, '.dat'
         file_loc = trim(restart_dir)//trim(mpiiofs)//trim(file_loc)
@@ -449,8 +439,9 @@ contains
                 call MPI_FILE_WRITE_ALL(ifile, MPI_IO_DATA%var(i)%sf, data_size, &
                                         MPI_DOUBLE_PRECISION, status, ierr)
             end do
+            !Additional variables pb and mv for non-polytropic qbmm
             if(qbmm .and. .not. polytropic) then
-                do i = sys_size + 1, sys_size + 2*nb*4! adv_idx%end
+                do i = sys_size + 1, sys_size + 2*nb*nnode
                     var_MOK = int(i, MPI_OFFSET_KIND)
 
                     ! Initial displacement to skip at beginning of file

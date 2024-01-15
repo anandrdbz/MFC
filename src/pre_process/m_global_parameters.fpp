@@ -97,6 +97,9 @@ module m_global_parameters
     logical :: parallel_io !< Format of the data files
     integer :: precision !< Precision of output files
 
+    logical :: vel_profile !< Set hypertangent streamwise velocity profile
+    logical :: instability_wave !< Superimpose instability waves to surrounding fluid flow
+ 
     ! Perturb density of surrounding air so as to break symmetry of grid
     logical :: perturb_flow
     integer :: perturb_flow_fluid   !< Fluid to be perturbed with perturb_flow flag
@@ -185,6 +188,11 @@ module m_global_parameters
 
     integer, allocatable, dimension(:, :, :) :: logic_grid
 
+    type(pres_field) :: pb
+    type(pres_field) :: mv
+
+    ! Barotropic
+    logical :: barotropic
 
 contains
 
@@ -239,15 +247,14 @@ contains
 
         hypoelasticity = .false.
 
-        bc_x%beg = dflt_int
-        bc_x%end = dflt_int
-        bc_y%beg = dflt_int
-        bc_y%end = dflt_int
-        bc_z%beg = dflt_int
-        bc_z%end = dflt_int
+        bc_x%beg = dflt_int; bc_x%end = dflt_int
+        bc_y%beg = dflt_int; bc_y%end = dflt_int
+        bc_z%beg = dflt_int; bc_z%end = dflt_int
 
         parallel_io = .false.
         precision = 2
+        vel_profile = .false.
+        instability_wave = .false.
         perturb_flow = .false.
         perturb_flow_fluid = dflt_int
         perturb_sph = .false.
@@ -259,6 +266,10 @@ contains
 
         do i = 1, num_patches_max
             patch_icpp(i)%geometry = dflt_int
+            patch_icpp(i)%model%scale(:)     = 1d0
+            patch_icpp(i)%model%translate(:) = 0d0
+            patch_icpp(i)%model%filepath(:)  = ' '
+            patch_icpp(i)%model%spc          = 10
             patch_icpp(i)%x_centroid = dflt_real
             patch_icpp(i)%y_centroid = dflt_real
             patch_icpp(i)%z_centroid = dflt_real
@@ -289,6 +300,8 @@ contains
 
             patch_icpp(i)%p0 = dflt_real
             patch_icpp(i)%m0 = dflt_real
+
+            patch_icpp(i)%hcid = dflt_int
         end do
 
         ! Tait EOS
@@ -337,6 +350,9 @@ contains
             fluid_pp(i)%k_v = dflt_real
             fluid_pp(i)%G = 0d0
         end do
+
+        ! Barotropic
+        barotropic = .false.
 
     end subroutine s_assign_default_values_to_user_inputs ! ----------------
 
@@ -453,49 +469,30 @@ contains
                     R0(:) = 1d0
                     V0(:) = 1d0
                 else if (nb > 1) then
-                    if (R0_type == 1) then
-                        !call s_simpson
-                    else
-                        print *, 'Invalid R0 type - abort'
-                        stop
-                    end if
                     V0(:) = 1d0
+                    !R0 and weight initialized in s_simpson
                 else
                     stop 'Invalid value of nb'
                 end if
 
-                print *, 'R0 weights: ', weight(:)
-                print *, 'R0 abscissas: ', R0(:)
-
+                !Initialize pref,rhoref for polytropic qbmm (done in s_initialize_nonpoly for non-polytropic)
                 if(.not. qbmm) then
-                    if (.not. polytropic .and. .not. qbmm) then
-                        !call s_initialize_nonpoly
-                    else
+                    if ( polytropic ) then
                         rhoref = 1.d0
                         pref = 1.d0
                     end if
                 end if
 
+                !Initialize pb0,pv,pref,rhoref for polytropic qbmm (done in s_initialize_nonpoly for non-polytropic) 
                 if(qbmm) then
                     if(polytropic) then
                         allocate(pb0(nb))
-                        if(Web /= dflt_real) then
-                            do i = 1, nb
-                                pb0(i) = pref + 2d0 * fluid_pp(1)%ss / (R0(i)*R0ref)
-                            end do
-                        else
-                            do i = 1, nb
-                                pb0 = pref
-                            end do
+                        if(Web == dflt_real) then                            
+                            pb0 = pref
+                            pb0 = pb0 / pref
+                            pref = 1d0                  
                         end if
-
-
-                        pb0 = pb0 / pref
-                        pref = 1d0
                         rhoref = 1d0
-
-                    else
-                        !call s_initialize_nonpoly
                     end if
                 end if
             end if
@@ -571,20 +568,12 @@ contains
                     R0(:) = 1d0
                     V0(:) = 0d0
                 else if (nb > 1) then
-                    if (R0_type == 1) then
-                        !call s_simpson
-                    else
-                        print *, 'Invalid R0 type - abort'
-                        stop
-                    end if
                     V0(:) = 1d0
                 else
                     stop 'Invalid value of nb'
                 end if
 
-                if ((.not. polytropic) .and. (.not. qbmm)) then
-                    !call s_initialize_nonpoly
-                else
+                if (polytropic) then
                     rhoref = 1.d0
                     pref = 1.d0
                 end if
@@ -610,13 +599,24 @@ contains
 
 #ifdef MFC_MPI
 
-        allocate (MPI_IO_DATA%view(1:sys_size))
-        allocate (MPI_IO_DATA%var(1:sys_size))
+        if(qbmm .and. .not. polytropic) then
+            allocate (MPI_IO_DATA%view(1:sys_size + 2*nb*4))
+            allocate (MPI_IO_DATA%var(1:sys_size + 2*nb*4))
+        else
+            allocate (MPI_IO_DATA%view(1:sys_size))
+            allocate (MPI_IO_DATA%var(1:sys_size))                
+        end if
 
         do i = 1, sys_size
             allocate (MPI_IO_DATA%var(i)%sf(0:m, 0:n, 0:p))
             MPI_IO_DATA%var(i)%sf => null()
         end do
+        if(qbmm .and. .not. polytropic) then
+            do i = sys_size + 1, sys_size + 2*nb*4
+                allocate (MPI_IO_DATA%var(i)%sf(0:m, 0:n, 0:p))
+                MPI_IO_DATA%var(i)%sf => null()
+            end do
+        end if
 
 #endif
 

@@ -141,7 +141,7 @@ contains
             polytropic, thermal, &
             integral, integral_wrt, num_integrals, &
             polydisperse, poly_sigma, qbmm, &
-            R0_type, barotropic
+            R0_type
 
         ! Checking that an input file has been provided by the user. If it
         ! has, then the input file is read in, otherwise, simulation exits.
@@ -836,8 +836,6 @@ contains
             call s_2nd_order_tvd_rk(t_step, time_avg)
         elseif (time_stepper == 3) then
             call s_3rd_order_tvd_rk(t_step, time_avg)
-        elseif (time_stepper == 4) then
-            call s_rlw(t_step, time_avg)
         end if
 
         ! Time-stepping loop controls

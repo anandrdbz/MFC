@@ -68,7 +68,7 @@ contains
         ! Setting number of time-stages for selected time-stepping scheme
         if (time_stepper == 1) then
             num_ts = 1
-        elseif (any(time_stepper == (/2, 3, 4/))) then
+        elseif (any(time_stepper == (/2, 3/))) then
             num_ts = 2
         end if
 
@@ -317,68 +317,6 @@ contains
         ! ==================================================================
 
     end subroutine s_1st_order_tvd_rk ! ------------------------------------
-
-    subroutine s_rlw(t_step, time_avg)
-
-        integer, intent(IN) :: t_step
-        real(kind(0d0)), intent(INOUT) :: time_avg
-
-        integer :: i, j, k, l, q!< Generic loop iterator
-        real(kind(0d0)) :: start, finish
-
-        call cpu_time(start)
-
-        call s_compute_rhs(q_cons_ts(1)%vf, q_prim_vf, rhs_vf, pb_ts(1)%sf, rhs_pb, mv_ts(1)%sf, rhs_mv, t_step, 1)
-
-        if (run_time_info) then
-            call s_write_run_time_information(q_prim_vf, t_step)
-        end if
-
-        if (probe_wrt) then
-            call s_time_step_cycling(t_step)
-        end if
-
-        if (t_step == t_step_stop) return
-
-!$acc parallel loop collapse(4) gang vector default(present)
-        do i = 1, sys_size
-            do l = 0, p
-                do k = 0, n
-                    do j = 0, m
-                        q_cons_ts(2)%vf(i)%sf(j, k, l) = &
-                            0.25d0*(q_cons_ts(1)%vf(i)%sf(j - 1, k, l) + q_cons_ts(1)%vf(i)%sf(j + 1, k, l) + &
-                            q_cons_ts(1)%vf(i)%sf(j , k + 1, l) + q_cons_ts(1)%vf(i)%sf(j ,k - 1, l)) &
-                            + dt*rhs_vf(i)%sf(j, k, l)
-                    end do
-                end do
-            end do
-        end do  
-
-        call s_compute_rhs(q_cons_ts(2)%vf, q_prim_vf, rhs_vf, pb_ts(2)%sf, rhs_pb, mv_ts(2)%sf, rhs_mv, t_step, 2)
-              
-!$acc parallel loop collapse(4) gang vector default(present)
-        do i = 1, sys_size
-            do l = 0, p
-                do k = 0, n
-                    do j = 0, m
-                        q_cons_ts(1)%vf(i)%sf(j, k, l) = &
-                            (q_cons_ts(1)%vf(i)%sf(j, k, l) &
-                             + dt*rhs_vf(i)%sf(j, k, l))
-                    end do
-                end do
-            end do
-        end do
-
-        call cpu_time(finish)
-
-        if (t_step >= 4) then
-            time_avg = (abs(finish - start) + (t_step - 4)*time_avg)/(t_step - 3)
-        else
-            time_avg = 0d0
-        end if
-
-    end subroutine s_rlw
-
 
     !> 2nd order TVD RK time-stepping algorithm
         !! @param t_step Current time-step

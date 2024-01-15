@@ -1,17 +1,29 @@
 !>
-!! @file m_patches.f90
+!! @file m_patches.fpp
 !! @brief Contains module m_patches
+
+#:include 'case.fpp'
+#:include '1dHardcodedIC.fpp'
+#:include '2dHardcodedIC.fpp'
+#:include '3dHardcodedIC.fpp'
+#:include 'macros.fpp'
+
 module m_patches
 
     ! Dependencies =============================================================
-    
-    use m_derived_types        !< Definitions of the derived types
+    use m_model                 ! Subroutine(s) related to STL files
+
+    use m_derived_types         ! Definitions of the derived types
 
     use m_global_parameters    !< Definitions of the global parameters
 
     use m_helper
 
+    use m_mpi_common
+
     use m_assign_variables
+
+    use m_mpi_common
     ! ==========================================================================
 
     implicit none
@@ -25,7 +37,7 @@ module m_patches
         s_ellipsoid, &
         s_rectangle, &
         s_sweep_line, &
-        s_isentropic_vortex, &
+        s_2D_TaylorGreen_vortex, &
         s_1D_analytical, &
         s_1d_bubble_pulse, &
         s_2D_analytical, &
@@ -34,7 +46,8 @@ module m_patches
         s_sphere, &
         s_cuboid, &
         s_cylinder, &
-        s_sweep_plane
+        s_sweep_plane, &
+        s_model
 
 
     real(kind(0d0)) :: x_centroid, y_centroid, z_centroid
@@ -64,8 +77,9 @@ module m_patches
     !! x-, y- and z-coordinate directions. They are used as a means to concisely
     !! perform the actions necessary to lay out a particular patch on the grid.
 
-contains
+    character(len=5) :: istr ! string to store int to string result for error checking
 
+contains
     !>          The line segment patch is a 1D geometry that may be used,
     !!              for example, in creating a Riemann problem. The geometry
     !!              of the patch is well-defined when its centroid and length
@@ -81,7 +95,7 @@ contains
 
         real(kind(0d0)) :: pi_inf, gamma, lit_gamma
 
-        integer :: i, j  !< Generic loop operators
+        integer :: i, j, k !< Generic loop operators
 
         pi_inf = fluid_pp(1)%pi_inf
         gamma = fluid_pp(1)%gamma
@@ -114,12 +128,7 @@ contains
                 call s_assign_patch_primitive_variables(patch_id, i, 0, 0, &
                                             eta, q_prim_vf, patch_id_fp)
 
-                !IF ( (q_prim_vf(1)%sf(i,0,0) < 1.e-12) .AND. (model_eqns .NE. 4)) THEN
-                !    !zero density, reassign according to Tait EOS
-                !    q_prim_vf(1)%sf(i,0,0) = &
-                !        (((q_prim_vf(E_idx)%sf(i,0,0) + pi_inf)/(pref + pi_inf))**(1d0/lit_gamma)) * &
-                !        rhoref*(1d0-q_prim_vf(alf_idx)%sf(i,0,0))
-                !END IF
+                @:analytical()
             end if
         end do
 
@@ -176,6 +185,8 @@ contains
                 if ((logic_grid(i, j, 0) == 1)) then
                     call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
                                                     eta, q_prim_vf, patch_id_fp)
+
+                    @:analytical()
                 end if
             end do
         end do
@@ -195,7 +206,7 @@ contains
         type(scalar_field), dimension(1:sys_size) :: q_prim_vf
         real(kind(0d0)) :: radius
 
-        integer :: i, j !< Generic loop iterators
+        integer :: i, j, k !< Generic loop iterators
 
         ! Transferring the circular patch's radius, centroid, smearing patch
         ! identity and smearing coefficient information
@@ -235,6 +246,8 @@ contains
                     then
                     call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
                                                 eta, q_prim_vf, patch_id_fp)
+                    
+                    @:analytical()
                 end if
 
             end do
@@ -254,7 +267,7 @@ contains
         real(kind(0d0)) :: radius
 
         ! Generic loop iterators
-        integer :: i, j
+        integer :: i, j, k
 
         real(kind(0d0)) :: myr, thickness
 
@@ -287,6 +300,8 @@ contains
 
                     call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
                                                     eta, q_prim_vf, patch_id_fp)
+
+                    @:analytical()
 
                     q_prim_vf(alf_idx)%sf(i, j, 0) = patch_icpp(patch_id)%alpha(1)* &
                                                     dexp(-0.5d0*((myr - radius)**2.d0)/(thickness/3.d0)**2.d0)
@@ -344,6 +359,8 @@ contains
 
                         call s_assign_patch_primitive_variables(patch_id, i, j, k, &
                                                     eta, q_prim_vf, patch_id_fp)
+                            
+                        @:analytical()
 
                         q_prim_vf(alf_idx)%sf(i, j, k) = patch_icpp(patch_id)%alpha(1)* &
                                                         dexp(-0.5d0*((myr - radius)**2.d0)/(thickness/3.d0)**2.d0)
@@ -367,7 +384,7 @@ contains
         type(scalar_field), dimension(1:sys_size) :: q_prim_vf
         real(kind(0d0)) :: a, b
 
-        integer :: i, j !< Generic loop operators
+        integer :: i, j, k !< Generic loop operators
 
         ! Transferring the elliptical patch's radii, centroid, smearing
         ! patch identity, and smearing coefficient information
@@ -408,6 +425,8 @@ contains
 
                     call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
                                                     eta, q_prim_vf, patch_id_fp)
+                
+                    @:analytical()
                 end if
             end do
         end do
@@ -481,6 +500,8 @@ contains
 
                         call s_assign_patch_primitive_variables(patch_id, i, j, k, &
                                                      eta, q_prim_vf, patch_id_fp)
+                                    
+                        @:analytical()
                     end if
                 end do
             end do
@@ -505,8 +526,8 @@ contains
 
         real(kind(0d0)) :: pi_inf, gamma, lit_gamma !< Equation of state parameters
 
-        integer :: i, j !< generic loop iterators
-
+        integer :: i, j, k !< generic loop iterators
+        
         pi_inf = fluid_pp(1)%pi_inf
         gamma = fluid_pp(1)%gamma
         lit_gamma = (1d0 + gamma)/gamma
@@ -547,6 +568,8 @@ contains
                     call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
                                                     eta, q_prim_vf, patch_id_fp)
 
+                    @:analytical()
+
                     if ((q_prim_vf(1)%sf(i, j, 0) < 1.e-10) .and. (model_eqns == 4)) then
                         !zero density, reassign according to Tait EOS
                         q_prim_vf(1)%sf(i, j, 0) = &
@@ -574,7 +597,7 @@ contains
         type(scalar_field), dimension(1:sys_size) :: q_prim_vf
         real(kind(0d0)) :: a, b, c
 
-        integer :: i, j !< Generic loop operators
+        integer :: i, j, k !< Generic loop operators
 
         ! Transferring the centroid information of the line to be swept
         x_centroid = patch_icpp(patch_id)%x_centroid
@@ -613,7 +636,8 @@ contains
                     then
                     call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
                                                       eta, q_prim_vf, patch_id_fp)
-
+                    
+                    @:analytical()
                 end if
 
             end do
@@ -621,224 +645,21 @@ contains
 
     end subroutine s_sweep_line ! ------------------------------------------
 
-    !> The isentropic vortex is a 2D geometry that may be used,
-        !!              for example, to generate an isentropic flow disturbance.
+    !> The Taylor Green vortex is 2D decaying vortex that may be used,
+        !!              for example, to verify the effects of viscous attenuation.
         !!              Geometry of the patch is well-defined when its centroid
-        !!              and radius are provided. Notice that the patch DOES NOT
-        !!              allow for the smoothing of its boundary.
+        !!              are provided.
         !! @param patch_id is the patch identifier
-    subroutine s_isentropic_vortex(patch_id, patch_id_fp, q_prim_vf) ! ----------------------------
-
-        ! Patch identifier
-        integer, intent(IN) :: patch_id
-        integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
-        type(scalar_field), dimension(1:sys_size) :: q_prim_vf
-
-        ! Generic loop iterators
-        integer :: i, j
-        real(kind(0d0)) :: radius
-
-        ! Transferring isentropic vortex patch's centroid and radius info
-        x_centroid = patch_icpp(patch_id)%x_centroid
-        y_centroid = patch_icpp(patch_id)%y_centroid
-        radius = patch_icpp(patch_id)%radius
-
-        ! Since the isentropic vortex patch does not allow for its boundary
-        ! to get smoothed, the pseudo volume fraction is set to 1 to ensure
-        ! that only the current patch contributes to the fluid state in the
-        ! cells that this patch covers.
-        eta = 1d0
-
-        ! Verifying whether the isentropic vortex includes a particular cell
-        ! and verifying whether the current patch has permission to write to
-        ! that cell. If both queries work out the primitive variables of the
-        ! the current patch are assigned to this cell.
-        do j = 0, n
-            do i = 0, m
-
-                if ((x_cc(i) - x_centroid)**2 &
-                    + (y_cc(j) - y_centroid)**2 <= radius**2 &
-                    .and. &
-                    patch_icpp(patch_id)%alter_patch(patch_id_fp(i, j, 0))) &
-                    then
-
-                    call s_assign_patch_primitive_variables(patch_id, &
-                                                            i, j, 0, &
-                                            eta, q_prim_vf, patch_id_fp)
-
-                end if
-
-            end do
-        end do
-
-    end subroutine s_isentropic_vortex ! -----------------------------------
-
-    !>  This patch assigns the primitive variables as analytical
-        !!  functions such that the code can be verified.
-        !!  @param patch_id is the patch identifier
-    subroutine s_1D_analytical(patch_id, patch_id_fp, q_prim_vf) ! ---------------------------------
-
-        ! Patch identifier
-        integer, intent(IN) :: patch_id
-        integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
-        type(scalar_field), dimension(1:sys_size) :: q_prim_vf
-
-        ! Placeholders for the cell boundary values
-        real(kind(0d0)) :: a, b, c, d, pi_inf, gamma, lit_gamma
-
-        ! Generic loop iterators
-        integer :: i, j
-
-        pi_inf = fluid_pp(1)%pi_inf
-        gamma = fluid_pp(1)%gamma
-        lit_gamma = (1d0 + gamma)/gamma
-
-        ! Transferring the patch's centroid and length information
-        x_centroid = patch_icpp(patch_id)%x_centroid
-        length_x = patch_icpp(patch_id)%length_x
-
-        ! Computing the beginning and the end x- and y-coordinates
-        ! of the patch based on its centroid and lengths
-        x_boundary%beg = x_centroid - 0.5d0*length_x
-        x_boundary%end = x_centroid + 0.5d0*length_x
-
-        ! Since the patch doesn't allow for its boundaries to be
-        ! smoothed out, the pseudo volume fraction is set to 1 to
-        ! ensure that only the current patch contributes to the fluid
-        ! state in the cells that this patch covers.
-        eta = 1d0
-
-        ! Checking whether the line segment covers a particular cell in the
-        ! domain and verifying whether the current patch has the permission
-        ! to write to that cell. If both queries check out, the primitive
-        ! variables of the current patch are assigned to this cell.
-        do i = 0, m
-            if (x_boundary%beg <= x_cc(i) .and. &
-                x_boundary%end >= x_cc(i) .and. &
-                patch_icpp(patch_id)%alter_patch(patch_id_fp(i, 0, 0))) then
-
-                call s_assign_patch_primitive_variables(patch_id, i, 0, 0, &
-                                                eta, q_prim_vf, patch_id_fp)
-
-                !what variables to alter
-                !bump in pressure
-                q_prim_vf(E_idx)%sf(i, 0, 0) = q_prim_vf(E_idx)%sf(i, 0, 0)* &
-                                            (1d0 + 0.2d0*dexp(-1d0*((x_cb(i) - x_centroid)**2.d0)/(2.d0*0.005d0)))
-
-                !bump in void fraction
-                !q_prim_vf(adv_idx%beg)%sf(i,0,0) = q_prim_vf(adv_idx%beg)%sf(i,0,0) * &
-                !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0)/(2.d0*0.005d0)) )
-
-                !bump in R(x)
-                !q_prim_vf(adv_idx%end+1)%sf(i,0,0) = q_prim_vf(adv_idx%end+1)%sf(i,0,0) * &
-                !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0)/(2.d0*0.005d0)) )
-
-                !IF (model_eqns == 4) THEN
-                !reassign density
-                !IF (num_fluids == 1) THEN
-                ! q_prim_vf(1)%sf(i, 0, 0) = &
-                !     (((q_prim_vf(E_idx)%sf(i, 0, 0) + pi_inf)/(pref + pi_inf))**(1d0/lit_gamma))* &
-                !     rhoref*(1d0 - q_prim_vf(alf_idx)%sf(i, 0, 0))
-                !END IF
-                !ELSE IF (model_eqns == 2) THEN
-                !can manually adjust density here
-                !q_prim_vf(1)%sf(i,0,0) = q_prim_vf(1)%sf(i,0,0) * &
-                !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0)/(2.d0*0.005d0)) )
-                !END IF
-            end if
-        end do
-
-    end subroutine s_1D_analytical ! ---------------------------------------
-
-    subroutine s_1d_bubble_pulse(patch_id, patch_id_fp, q_prim_vf) ! ---------------------------------
-        ! Description: This patch assigns the primitive variables as analytical
-        !       functions such that the code can be verified.
-
-        ! Patch identifier
-        integer, intent(IN) :: patch_id
-        integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
-        type(scalar_field), dimension(1:sys_size) :: q_prim_vf
-
-        ! Placeholders for the cell boundary values
-        real(kind(0d0)) :: fac, a, b, c, d, pi_inf, gamma, lit_gamma
-
-        ! Generic loop iterators
-        integer :: i, j
-
-        pi_inf = fluid_pp(1)%pi_inf
-        gamma = fluid_pp(1)%gamma
-        lit_gamma = (1d0 + gamma)/gamma
-
-        ! Transferring the patch's centroid and length information
-        x_centroid = patch_icpp(patch_id)%x_centroid
-        length_x = patch_icpp(patch_id)%length_x
-
-        ! Computing the beginning and the end x- and y-coordinates
-        ! of the patch based on its centroid and lengths
-        x_boundary%beg = x_centroid - 0.5d0*length_x
-        x_boundary%end = x_centroid + 0.5d0*length_x
-
-        ! Since the patch doesn't allow for its boundaries to be
-        ! smoothed out, the pseudo volume fraction is set to 1 to
-        ! ensure that only the current patch contributes to the fluid
-        ! state in the cells that this patch covers.
-        eta = 1d0
-
-        ! Checking whether the line segment covers a particular cell in the
-        ! domain and verifying whether the current patch has the permission
-        ! to write to that cell. If both queries check out, the primitive
-        ! variables of the current patch are assigned to this cell.
-        do i = 0, m
-            if (x_boundary%beg <= x_cc(i) .and. &
-                x_boundary%end >= x_cc(i) .and. &
-                patch_icpp(patch_id)%alter_patch(patch_id_fp(i, 0, 0))) then
-
-                call s_assign_patch_primitive_variables(patch_id, i, 0, 0, &
-                                                eta, q_prim_vf, patch_id_fp)
-
-                !what variables to alter
-                !sinusoid in pressure
-                q_prim_vf(E_idx)%sf(i, 0, 0) = q_prim_vf(E_idx)%sf(i, 0, 0)* &
-                                            (1d0 + 0.1d0*sin(-1d0*(x_cb(i) - x_centroid)*2d0*pi/length_x))
-
-                !bump in void fraction
-                !q_prim_vf(adv_idx%beg)%sf(i,0,0) = q_prim_vf(adv_idx%beg)%sf(i,0,0) * &
-                !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0)/(2.d0*0.005d0)) )
-
-                !bump in R(x)
-                !q_prim_vf(adv_idx%end+1)%sf(i,0,0) = q_prim_vf(adv_idx%end+1)%sf(i,0,0) * &
-                !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0)/(2.d0*0.005d0)) )
-
-                !IF (model_eqns == 4) THEN
-                !reassign density
-                !IF (num_fluids == 1) THEN
-                q_prim_vf(1)%sf(i, 0, 0) = &
-                    (((q_prim_vf(E_idx)%sf(i, 0, 0) + pi_inf)/(pref + pi_inf))**(1d0/lit_gamma))* &
-                    rhoref*(1d0 - q_prim_vf(alf_idx)%sf(i, 0, 0))
-                !END IF
-                !ELSE IF (model_eqns == 2) THEN
-                !can manually adjust density here
-                !q_prim_vf(1)%sf(i,0,0) = q_prim_vf(1)%sf(i,0,0) * &
-                !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0)/(2.d0*0.005d0)) )
-                !END IF
-            end if
-        end do
-
-    end subroutine s_1D_bubble_pulse ! ---------------------------------------
-
-    !>  This patch assigns the primitive variables as analytical
-        !!  functions such that the code can be verified.
-        !!  @param patch_id is the patch identifier
-    subroutine s_2D_analytical(patch_id, patch_id_fp, q_prim_vf) ! ---------------------------------
+    subroutine s_2D_TaylorGreen_Vortex(patch_id, patch_id_fp, q_prim_vf) ! ----------------------------
 
         integer, intent(IN) :: patch_id
         integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
         type(scalar_field), dimension(1:sys_size) :: q_prim_vf
 
-        real(kind(0d0)) :: a, b, c, d !< placeholderrs for the cell boundary values
         real(kind(0d0)) :: pi_inf, gamma, lit_gamma !< equation of state parameters
+        real(kind(0d0)) :: L0, U0 !< Taylor Green Vortex parameters
 
-        integer :: i, j !< generic loop iterators
+        integer :: i, j, k !< generic loop iterators
 
         pi_inf = fluid_pp(1)%pi_inf
         gamma = fluid_pp(1)%gamma
@@ -862,7 +683,10 @@ contains
         ! ensure that only the current patch contributes to the fluid
         ! state in the cells that this patch covers.
         eta = 1d0
-
+        ! U0 is the characteristic velocity of the vortex
+        U0 = patch_icpp(patch_id)%vel(1) 
+        ! L0 is the characteristic length of the vortex
+        L0 = patch_icpp(patch_id)%vel(2)
         ! Checking whether the patch covers a particular cell in the
         ! domain and verifying whether the current patch has the
         ! permission to write to that cell. If both queries check out,
@@ -879,68 +703,189 @@ contains
                     call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
                                                     eta, q_prim_vf, patch_id_fp)
 
-                    !what variables to alter
-                    !x-y bump in pressure
-                    q_prim_vf(E_idx)%sf(i, j, 0) = q_prim_vf(E_idx)%sf(i, j, 0)* &
-                            (1d0 + 0.2d0*dexp(-1d0*((x_cb(i) - x_centroid)**2.d0 + (y_cb(j) - y_centroid)**2.d0)/(2.d0*0.005d0)))
+                    @:analytical()
 
-                    !x-bump
-                    !q_prim_vf(E_idx)%sf(i, j, 0) = q_prim_vf(E_idx)%sf(i, j, 0)* &
-                    !(1d0 + 0.2d0*dexp(-1d0*((x_cb(i) - x_centroid)**2.d0)/(2.d0*0.005d0)))
-
-                    !bump in void fraction
-                    !q_prim_vf(adv_idx%beg)%sf(i,j,0) = q_prim_vf(adv_idx%beg)%sf(i,j,0) * &
-                    !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0 + (y_cb(j)-y_centroid)**2.d0)/(2.d0*0.005d0)) )
-
-                    !bump in R(x)
-                    !q_prim_vf(adv_idx%end+1)%sf(i,j,0) = q_prim_vf(adv_idx%end+1)%sf(i,j,0) * &
-                    !    ( 1d0 + 0.2d0*exp(-1d0*((x_cb(i)-x_centroid)**2.d0 + (y_cb(j)-y_centroid)**2.d0)/(2.d0*0.005d0)) )
-
-                    !reassign density
-                    !q_prim_vf(1)%sf(i, j, 0) = &
-                    !(((q_prim_vf(E_idx)%sf(i, j, 0) + pi_inf)/(pref + pi_inf))**(1d0/lit_gamma))* &
-                    !rhoref*(1d0 - q_prim_vf(alf_idx)%sf(i, j, 0))
-
+                    ! Assign Parameters =========================================================
+                    q_prim_vf(mom_idx%beg  )%sf(i,j,0) = U0*SIN(x_cc(i)/L0)*COS(y_cc(j)/L0)
+                    q_prim_vf(mom_idx%end  )%sf(i,j,0) = -U0*COS(x_cc(i)/L0)*SIN(y_cc(j)/L0)
+                    q_prim_vf(E_idx        )%sf(i,j,0) = patch_icpp(patch_id)%pres + (COS(2*x_cc(i))/L0 + &
+                                                            COS(2*y_cc(j))/L0)* &
+                                                            (q_prim_vf(1)%sf(i,j,0)*U0*U0)/16
                     ! ================================================================================
 
-                    ! Sinusoidal initial condition for all flow variables =============================
+                end if
+            end do
+        end do
 
-                    ! Cell-center values
-    !                        a = 0d0
-    !                        b = 0d0
-    !                        c = 0d0
-    !                        d = 0d0
-    !                        q_prim_vf(adv_idx%beg)%sf(i,j,0) = SIN(x_cc(i)) * SIN(y_cc(j))
-    !                        q_prim_vf(1)%sf(i,j,0) = q_prim_vf(adv_idx%beg)%sf(i,j,0) * 1d0
-    !                        q_prim_vf(cont_idx%end)%sf(i,j,0) = (1d0 - q_prim_vf(adv_idx%beg)%sf(i,j,0)) * 1d0
-    !                        q_prim_vf(mom_idx%beg)%sf(i,j,0) = SIN(x_cc(i))
-    !                        q_prim_vf(mom_idx%end)%sf(i,j,0) = SIN(y_cc(j))
-    !                        q_prim_vf(E_idx)%sf(i,j,0) = 1d0
+    end subroutine s_2D_TaylorGreen_Vortex ! -----------------------------------
 
-                    ! Cell-average values
-    !                       a = x_cc(i) - 5d-1*dx ! x-beg
-    !                       b = x_cc(i) + 5d-1*dx ! x-end
-    !                       c = y_cc(j) - 5d-1*dy ! y-beg
-    !                       d = y_cc(j) + 5d-1*dy ! y-end
-    !                       q_prim_vf(adv_idx%beg)%sf(i,j,0) = 1d0/((b-a)*(d-c)) * &
-    !                               (COS(a)*COS(c) - COS(a)*COS(d) - COS(b)*COS(c) + COS(b)*COS(d))
-    !                       q_prim_vf(1)%sf(i,j,0) = q_prim_vf(adv_idx%beg)%sf(i,j,0) * 1d0
-    !                       q_prim_vf(cont_idx%end)%sf(i,j,0) = (1d0 - q_prim_vf(adv_idx%beg)%sf(i,j,0)) * 1d0
-    !                       q_prim_vf(mom_idx%beg)%sf(i,j,0) = (COS(a) - COS(b))/(b-a)
-    !                       q_prim_vf(mom_idx%end)%sf(i,j,0) = (COS(c) - COS(d))/(d-c)
-    !                       q_prim_vf(E_idx)%sf(i,j,0) = 1d0
-                    ! ================================================================================
+    !>  This patch assigns the primitive variables as analytical
+        !!  functions such that the code can be verified.
+        !!  @param patch_id is the patch identifier
+    subroutine s_1D_analytical(patch_id, patch_id_fp, q_prim_vf) ! ---------------------------------
 
-                    ! Initial pressure profile smearing for bubble collapse case of Tiwari (2013) ====
-                    !IF((       (x_cc(i))**2                     &
-                    !         + (y_cc(j))**2 <= 1d0**2)) THEN
-                    !         q_prim_vf(E_idx)%sf(i,j,0) = 1d5 / 25d0
-                    !ELSE
-                    !    q_prim_vf(E_idx)%sf(i,j,0) = 1d5 + 1d0/SQRT(x_cc(i)**2+y_cc(j)**2) &
-                    !                                    * ((1d5/25d0) - 1d5)
-                    !END IF
-                    ! ================================================================================
+        ! Patch identifier
+        integer, intent(IN) :: patch_id
+        integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
+        type(scalar_field), dimension(1:sys_size) :: q_prim_vf
 
+        ! Placeholders for the cell boundary values
+        real(kind(0d0)) :: a, b, c, d, pi_inf, gamma, lit_gamma
+
+        ! Generic loop iterators
+        integer :: i, j, k
+
+        @:Hardcoded1DVariables()
+
+        pi_inf = fluid_pp(1)%pi_inf
+        gamma = fluid_pp(1)%gamma
+        lit_gamma = (1d0 + gamma)/gamma
+
+        ! Transferring the patch's centroid and length information
+        x_centroid = patch_icpp(patch_id)%x_centroid
+        length_x = patch_icpp(patch_id)%length_x
+
+        ! Computing the beginning and the end x- and y-coordinates
+        ! of the patch based on its centroid and lengths
+        x_boundary%beg = x_centroid - 0.5d0*length_x
+        x_boundary%end = x_centroid + 0.5d0*length_x
+
+        ! Since the patch doesn't allow for its boundaries to be
+        ! smoothed out, the pseudo volume fraction is set to 1 to
+        ! ensure that only the current patch contributes to the fluid
+        ! state in the cells that this patch covers.
+        eta = 1d0
+
+        ! Checking whether the line segment covers a particular cell in the
+        ! domain and verifying whether the current patch has the permission
+        ! to write to that cell. If both queries check out, the primitive
+        ! variables of the current patch are assigned to this cell.
+        do i = 0, m
+            if (x_boundary%beg <= x_cc(i) .and. &
+                x_boundary%end >= x_cc(i) .and. &
+                patch_icpp(patch_id)%alter_patch(patch_id_fp(i, 0, 0))) then
+
+                call s_assign_patch_primitive_variables(patch_id, i, 0, 0, &
+                                                eta, q_prim_vf, patch_id_fp)
+
+                @:Hardcoded1D()
+            end if
+        end do
+
+    end subroutine s_1D_analytical ! ---------------------------------------
+
+    subroutine s_1d_bubble_pulse(patch_id, patch_id_fp, q_prim_vf) ! ---------------------------------
+        ! Description: This patch assigns the primitive variables as analytical
+        !       functions such that the code can be verified.
+
+        ! Patch identifier
+        integer, intent(IN) :: patch_id
+        integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
+        type(scalar_field), dimension(1:sys_size) :: q_prim_vf
+
+        ! Placeholders for the cell boundary values
+        real(kind(0d0)) :: fac, a, b, c, d, pi_inf, gamma, lit_gamma
+
+        ! Generic loop iterators
+        integer :: i, j, k
+
+        pi_inf = fluid_pp(1)%pi_inf
+        gamma = fluid_pp(1)%gamma
+        lit_gamma = (1d0 + gamma)/gamma
+
+        ! Transferring the patch's centroid and length information
+        x_centroid = patch_icpp(patch_id)%x_centroid
+        length_x = patch_icpp(patch_id)%length_x
+
+        ! Computing the beginning and the end x- and y-coordinates
+        ! of the patch based on its centroid and lengths
+        x_boundary%beg = x_centroid - 0.5d0*length_x
+        x_boundary%end = x_centroid + 0.5d0*length_x
+
+        ! Since the patch doesn't allow for its boundaries to be
+        ! smoothed out, the pseudo volume fraction is set to 1 to
+        ! ensure that only the current patch contributes to the fluid
+        ! state in the cells that this patch covers.
+        eta = 1d0
+
+        ! Checking whether the line segment covers a particular cell in the
+        ! domain and verifying whether the current patch has the permission
+        ! to write to that cell. If both queries check out, the primitive
+        ! variables of the current patch are assigned to this cell.
+        do i = 0, m
+            if (x_boundary%beg <= x_cc(i) .and. &
+                x_boundary%end >= x_cc(i) .and. &
+                patch_icpp(patch_id)%alter_patch(patch_id_fp(i, 0, 0))) then
+
+                call s_assign_patch_primitive_variables(patch_id, i, 0, 0, &
+                                                eta, q_prim_vf, patch_id_fp)
+
+                @:analytical()
+                
+            end if
+        end do
+
+    end subroutine s_1D_bubble_pulse ! ---------------------------------------
+
+    !>  This patch assigns the primitive variables as analytical
+        !!  functions such that the code can be verified.
+        !!  @param patch_id is the patch identifier
+    subroutine s_2D_analytical(patch_id, patch_id_fp, q_prim_vf) ! ---------------------------------
+
+        integer, intent(IN) :: patch_id
+        integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
+        type(scalar_field), dimension(1:sys_size) :: q_prim_vf
+
+        real(kind(0d0)) :: a, b, c, d !< placeholderrs for the cell boundary values
+        real(kind(0d0)) :: pi_inf, gamma, lit_gamma !< equation of state parameters
+        real(kind(0d0)) :: l, U0 !< Taylor Green Vortex parameters
+
+        integer :: i, j, k !< generic loop iterators
+
+        @:Hardcoded2DVariables()
+
+        pi_inf = fluid_pp(1)%pi_inf
+        gamma = fluid_pp(1)%gamma
+        lit_gamma = (1d0 + gamma)/gamma
+
+        ! Transferring the patch's centroid and length information
+        x_centroid = patch_icpp(patch_id)%x_centroid
+        y_centroid = patch_icpp(patch_id)%y_centroid
+        length_x = patch_icpp(patch_id)%length_x
+        length_y = patch_icpp(patch_id)%length_y
+
+        ! Computing the beginning and the end x- and y-coordinates
+        ! of the patch based on its centroid and lengths
+        x_boundary%beg = x_centroid - 0.5d0*length_x
+        x_boundary%end = x_centroid + 0.5d0*length_x
+        y_boundary%beg = y_centroid - 0.5d0*length_y
+        y_boundary%end = y_centroid + 0.5d0*length_y
+
+        ! Since the patch doesn't allow for its boundaries to be
+        ! smoothed out, the pseudo volume fraction is set to 1 to
+        ! ensure that only the current patch contributes to the fluid
+        ! state in the cells that this patch covers.
+        eta = 1d0
+        l = 1d0
+        U0 = 0.1
+        ! Checking whether the patch covers a particular cell in the
+        ! domain and verifying whether the current patch has the
+        ! permission to write to that cell. If both queries check out,
+        ! the primitive variables of the current patch are assigned
+        ! to this cell.
+
+        do j = 0, n
+            do i = 0, m
+                if (x_boundary%beg <= x_cc(i) .and. &
+                    x_boundary%end >= x_cc(i) .and. &
+                    y_boundary%beg <= y_cc(j) .and. &
+                    y_boundary%end >= y_cc(j) .and. &
+                    patch_icpp(patch_id)%alter_patch(patch_id_fp(i, j, 0))) then
+
+                    call s_assign_patch_primitive_variables(patch_id, i, j, 0, &
+                                                    eta, q_prim_vf, patch_id_fp)
+
+                    @:Hardcoded2D()
                 end if
             end do
         end do
@@ -958,6 +903,8 @@ contains
         real(kind(0d0)) :: pi_inf, gamma, lit_gamma !< equation of state parameters
 
         integer :: i, j, k !< generic loop iterators
+
+        @:Hardcoded3DVariables()
 
         pi_inf = fluid_pp(1)%pi_inf
         gamma = fluid_pp(1)%gamma
@@ -1014,54 +961,7 @@ contains
                         call s_assign_patch_primitive_variables(patch_id, i, j, k, &
                                                     eta, q_prim_vf, patch_id_fp)
 
-                        !gaussian ball
-                        !what variables to alter
-                        !bump in pressure
-                        q_prim_vf(E_idx)%sf(i, j, k) = q_prim_vf(E_idx)%sf(i, j, k)* &
-                                                    (1d0 + 0.2d0*exp(-1d0* &
-                                                                        ((x_cb(i) - x_centroid)**2.d0 + &
-                                                                        (y_cb(j) - y_centroid)**2.d0 + &
-                                                                        (z_cb(k) - z_centroid)**2.d0) &
-                                                                        /(2.d0*0.5d0)))
-
-                        !bump in void fraction
-                        !                       q_prim_vf(adv_idx%beg)%sf(i, j, k) = q_prim_vf(adv_idx%beg)%sf(i, j, k)* &
-                        !                                                           (1d0 + 0.2d0*exp(-1d0* &
-                        !                                                                           ((x_cb(i) - x_centroid)**2.d0 + (y_cb(j) - y_centroid)**2.d0 + (z_cb(k) - z_centroid)**2.d0) &
-                        !                                                                          /(2.d0*0.005d0)))
-
-                        !bump in R(x)
-                        !       q_prim_vf(adv_idx%end + 1)%sf(i, j, k) = q_prim_vf(adv_idx%end + 1)%sf(i, j, k)* &
-                        !                                               (1d0 + 0.2d0*exp(-1d0* &
-                        !                                                                               ((x_cb(i) - x_centroid)**2.d0 + (y_cb(j) - y_centroid)**2.d0 + (z_cb(k) - z_centroid)**2.d0) &
-    !                                                                                  /(2.d0*0.005d0)))
-
-                        !reassign density
-                        !         q_prim_vf(1)%sf(i, j, k) = &
-                        !             (((q_prim_vf(E_idx)%sf(i, j, k) + pi_inf)/(pref + pi_inf))**(1d0/lit_gamma))* &
-                        !            rhoref*(1d0 - q_prim_vf(E_idx + 1)%sf(i, j, k))
-
-                        ! ================================================================================
-
-                        ! Constant x-velocity in cylindrical grid ========================================
-    !                        q_prim_vf(cont_idx%beg )%sf(i,j,k) = 1d0
-    !                        q_prim_vf(cont_idx%end )%sf(i,j,k) = 0d0
-    !                        q_prim_vf(mom_idx%beg  )%sf(i,j,k) = 0d0
-    !                        q_prim_vf(mom_idx%beg+1)%sf(i,j,k) = COS(z_cc(k))
-    !                        q_prim_vf(mom_idx%end  )%sf(i,j,k) = -SIN(z_cc(k))
-    !                        q_prim_vf(E_idx        )%sf(i,j,k) = 1d0
-    !                        q_prim_vf(adv_idx%beg  )%sf(i,j,k) = 1d0
-                        ! ================================================================================
-
-                        ! Couette flow in cylindrical grid ===============================================
-                        !q_prim_vf(cont_idx%beg )%sf(i,j,k) = 1d0
-                        !q_prim_vf(cont_idx%end )%sf(i,j,k) = 0d0
-                        !q_prim_vf(mom_idx%beg  )%sf(i,j,k) = 0d0
-                        !q_prim_vf(mom_idx%beg+1)%sf(i,j,k) = y_cc(j)*COS(z_cc(k))*SIN(z_cc(k))
-                        !q_prim_vf(mom_idx%end  )%sf(i,j,k) = -y_cc(j)*SIN(z_cc(k))**2
-                        !q_prim_vf(E_idx        )%sf(i,j,k) = 1d0
-                        !q_prim_vf(adv_idx%beg  )%sf(i,j,k) = 1d0
-                        ! ================================================================================
+                        @:Hardcoded3D()
 
                     end if
 
@@ -1272,25 +1172,9 @@ contains
                         call s_assign_patch_primitive_variables(patch_id, i, j, k, &
                                                     eta, q_prim_vf, patch_id_fp)
 
+                        
+                        @:analytical()
                     end if
-
-                    ! Initialization of the pressure field that corresponds to the bubble-collapse
-                    !! test case found in Tiwari et al. (2013)
-                    ! radius_pressure = SQRT(x_cc(i)**2) ! 1D
-                    ! radius_pressure = SQRT(x_cc(i)**2 + cart_y**2) ! 2D
-                    ! radius_pressure = SQRT(x_cc(i)**2 + cart_y**2 + cart_z**2) ! 3D
-                    ! pressure_bubble = 1.E+04
-                    ! pressure_inf    = 1.E+05
-                    ! q_prim_vf(E_idx)%sf(i,j,k) = pressure_inf + radius / radius_pressure * (pressure_bubble - pressure_inf)
-                    !
-                    ! IF(       ((  x_cc(i) - x_centroid)**2                    &
-                    !          + (   cart_y - y_centroid)**2                    &
-                    !          + (   cart_z - z_centroid)**2) <= radius**2)   &
-                    !                               THEN
-                    !
-                    !    q_prim_vf(E_idx)%sf(i,j,k) = pressure_bubble
-                    !
-                    ! END IF
 
                 end do
             end do
@@ -1365,6 +1249,8 @@ contains
 
                         call s_assign_patch_primitive_variables(patch_id, i, j, k, &
                                                     eta, q_prim_vf, patch_id_fp)
+                        
+                        @:analytical()
 
                     end if
                 end do
@@ -1478,6 +1364,8 @@ contains
 
                         call s_assign_patch_primitive_variables(patch_id, i, j, k, &
                                                     eta, q_prim_vf, patch_id_fp)
+                                        
+                        @:analytical()
 
                     end if
 
@@ -1554,6 +1442,8 @@ contains
 
                         call s_assign_patch_primitive_variables(patch_id, i, j, k, &
                                                     eta, q_prim_vf, patch_id_fp)
+                                                
+                        @:analytical()
 
                     end if
 
@@ -1563,8 +1453,106 @@ contains
 
     end subroutine s_sweep_plane ! -----------------------------------------
 
+    !> The STL patch is a 2/3D geometry that is imported from an STL file.
+    !! @param patch_id is the patch identifier
+    subroutine s_model(patch_id, patch_id_fp, q_prim_vf) ! ---------------------
+
+        integer, intent(IN)                              :: patch_id
+        integer, intent(INOUT), dimension(0:m, 0:n, 0:p) :: patch_id_fp
+        type(scalar_field),     dimension(1:sys_size)    :: q_prim_vf
+
+        integer :: i, j, k !< Generic loop iterators
+
+        type(t_bbox) :: bbox
+        type(t_model) :: model
+        type(ic_model_parameters) :: params
+
+        t_vec3 :: point
+
+        real(kind(0d0)) :: grid_mm(1:3, 1:2)
+
+        integer :: cell_num
+        integer :: ncells
+
+        t_mat4x4 :: transform
+
+        if (proc_rank == 0) then
+            print*, " * Reading model: " // trim(patch_icpp(patch_id)%model%filepath)
+        end if
+        model = f_model_read(patch_icpp(patch_id)%model%filepath)
+
+        if (proc_rank == 0) then
+            print*, " * Transforming model..."
+        end if
+        transform = f_create_transform_matrix(patch_icpp(patch_id)%model)
+        call s_transform_model(model, transform)
+
+        bbox = f_create_bbox(model)
+
+        if (proc_rank == 0) then
+            write (*,"(A, 3(2X, F20.10))") "    > Model:  Min:", bbox%min(1:3)
+            write (*,"(A, 3(2X, F20.10))") "    >         Cen:", (bbox%min(1:3) + bbox%max(1:3))/2d0
+            write (*,"(A, 3(2X, F20.10))") "    >         Max:", bbox%max(1:3)
+
+            !call s_model_write("__out__.stl", model)
+            !call s_model_write("__out__.obj", model)
+
+            grid_mm(1,:) = (/ minval(x_cc) - 0d5 * dx, maxval(x_cc) + 0d5 * dx /)
+            grid_mm(2,:) = (/ minval(y_cc) - 0d5 * dy, maxval(y_cc) + 0d5 * dy /)
+    
+            if (p .gt. 0) then
+                grid_mm(3,:) = (/ minval(z_cc) - 0d5 * dz, maxval(z_cc) + 0d5 * dz /)
+            else
+                grid_mm(3,:) = (/ 0d0, 0d0 /)
+            end if
+
+            write (*,"(A, 3(2X, F20.10))") "    > Domain: Min:", grid_mm(:,1)
+            write (*,"(A, 3(2X, F20.10))") "    >         Cen:", (grid_mm(:,1) + grid_mm(:,2))/2d0
+            write (*,"(A, 3(2X, F20.10))") "    >         Max:", grid_mm(:,2)
+        end if
+
+        ncells = (m+1)*(n+1)*(p+1)
+        do i = 0, m; do j = 0, n; do k = 0, p
+
+            cell_num = i*(n+1)*(p+1) + j*(p+1) + (k+1)
+            if (proc_rank == 0 .and. mod(cell_num, ncells / 100) == 0) then
+                write (*,"(A, I3, A)", advance="no") &
+                    CHAR(13) // "  * Generating grid: ", &
+                    NINT(100 * real(cell_num) / ncells), "%"
+            end if
+
+            point = (/ x_cc(i), y_cc(j), 0d0 /)
+            if (p .gt. 0) then
+                point(3) = z_cc(k)
+            end if
+
+            if (grid_geometry == 3) then
+                point = f_convert_cyl_to_cart(point)
+            end if
+
+            eta = f_model_is_inside(model, point, (/ dx, dy, dz /), patch_icpp(patch_id)%model%spc)
+            
+            call s_assign_patch_primitive_variables(patch_id, i, j, k, &
+                eta, q_prim_vf, patch_id_fp)
+
+            ! Note: Should probably use *eta* to compute primitive variables
+            ! if defining them analytically.
+            @:analytical()
+
+        end do; end do; end do
+
+        if (proc_rank == 0) then
+            print*, ""
+            print*, " * Cleaning up..."
+        end if
+
+        call s_model_free(model)
+
+    end subroutine s_model ! ---------------------------------------------------
+
     subroutine s_convert_cylindrical_to_cartesian_coord(cyl_y, cyl_z)
         !$acc routine seq
+
         real(kind(0d0)), intent(IN) :: cyl_y, cyl_z
 
         cart_y = cyl_y*sin(cyl_z)
@@ -1572,8 +1560,22 @@ contains
 
     end subroutine s_convert_cylindrical_to_cartesian_coord ! --------------
 
+    function f_convert_cyl_to_cart(cyl) result(cart)
+
+        !$acc routine seq
+
+        t_vec3, intent(in)  :: cyl
+        t_vec3 :: cart
+
+        cart = (/ cyl(1), &
+                  cyl(2)*sin(cyl(3)), &
+                  cyl(2)*cos(cyl(3)) /)
+
+    end function f_convert_cyl_to_cart
+
     subroutine s_convert_cylindrical_to_spherical_coord(cyl_x, cyl_y)
         !$acc routine seq
+
         real(kind(0d0)), intent(IN) :: cyl_x, cyl_y
 
         sph_phi = atan(cyl_y/cyl_x)
