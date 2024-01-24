@@ -163,10 +163,11 @@ contains
         integer :: i
         real(kind(0d0)) :: pres_mag , loc, n_tait, B_tait, p0
         real(kind(0d0)) :: R3bar, n0, ratio, nH, vfH, velH, rhoH, deno
+        real(kind(0d0)) :: x, y
 
         p0 = 101325
         pres_mag = 1D-1
-        loc = x_cc(177)
+        !loc = x_cc(177)
         n_tait = fluid_pp(1)%gamma
         B_tait = fluid_pp(1)%pi_inf
 
@@ -188,6 +189,23 @@ contains
         else if(y_cc(k) > 0.75) then
             q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0*sin(2*3.141563*(0.75d0 - 0.5d0)/1.d0)
         end if
+
+        ! x = x_cc(j) - 0.5
+        ! y = y_cc(k) - 0.5
+        ! if(x**2d0 + y**2d0 <= 0.125d0**2d0) then
+        !     q_prim_vf(momxb)%sf(j, k, l) = 1d0 * x / sqrt(x**2d0 + y**2) !* tanh((0.125d0 - sqrt(x**2 + y**2)))
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = 1d0 * y / sqrt(x**2d0 + y**2) !* tanh((0.125d0 - sqrt(x**2 + y**2)))
+        ! end if
+
+        ! if(x**2d0 + y**2d0 <= 0.125d0**2d0) then
+        !     q_prim_vf(momxb)%sf(j, k, l) = 1d0 * x / sqrt(x**2d0 + y**2) !* tanh((0.125d0 - sqrt(x**2 + y**2)))
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = 1d0 * y / sqrt(x*2d0 + y**2) !* tanh((0.125d0 - sqrt(x**2 + y**2)))
+        ! end if
+
+        ! if( (x**2d0 + y**2d0 >0.125d0**2d0) .and. (x**2d0 + y**2d0 <= 0.25d0**2d0) ) then
+        !     q_prim_vf(momxb)%sf(j, k, l) = -1d0 * x / sqrt(x**2d0 + y**2) !* tanh((0.125d0 - sqrt(x**2 + y**2)))
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0 * y / sqrt(x*2d0 + y**2) !* tanh((0.125d0 - sqrt(x**2 + y**2)))
+        ! end if
 
         !q_prim_vf(momxb)%sf(j, k, l) = 1d0*tanh(5d0*(0.5d0 - x_cc(j)))
 #if 0

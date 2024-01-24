@@ -4,7 +4,7 @@ import math
 import json
 
 # Numerical setup
-Nx = 60
+Nx = 200
 dx = 1./(1.*(Nx+1))
 
 Tend = 0.2
@@ -37,8 +37,8 @@ print(json.dumps({
     'p'                            : 0,
     'dt'                           : mydt,
     't_step_start'                 : 0,
-    't_step_stop'                  : 1800,
-    't_step_save'                  : 20,
+    't_step_stop'                  : 5600,
+    't_step_save'                  : 100,
     # ==========================================================================
 
     # Simulation Algorithm Parameters ==========================================
@@ -49,7 +49,7 @@ print(json.dumps({
     'adv_alphan'                   : 'T',
     'mpp_lim'                      : 'F',
     'mixture_err'                  : 'F',
-    'time_stepper'                 : 4,
+    'time_stepper'                 : 3,
     'weno_order'                   : 5,
     'weno_eps'                     : 1.E-16,
     'weno_Re_flux'                 : 'F',  
