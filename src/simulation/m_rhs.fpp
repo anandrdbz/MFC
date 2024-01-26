@@ -1157,7 +1157,11 @@ contains
 
                     !if(i == 25) then
                     !$acc update host(jac_igr, jac_old_igr, fd_coeff)
+                    q = 1
                     print *, "ITER",q, maxval(abs(jac_igr(q, -1:m+1, -1:n+1) - jac_old_igr(q,-1:m+1, -1:n+1))), maxval(abs( jac_old_igr(q,-1:m+1,-1:n+1))), maxval(abs(fd_coeff(-1:m+1, -1:n+1)))          
+                    q = 2
+                    print *, "ITER",q, maxval(abs(jac_igr(q, -1:m+1, -1:n+1) - jac_old_igr(q,-1:m+1, -1:n+1))), maxval(abs( jac_old_igr(q,-1:m+1,-1:n+1))), maxval(abs(fd_coeff(-1:m+1, -1:n+1)))          
+
                     !end if
                     !print *, "PR INIT", proc_rank, jac_old_igr(q, 0:buff_size-1, 199), jac_old_igr(q, m+1:m+buff_size, 199) 
 
