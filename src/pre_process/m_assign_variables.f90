@@ -154,6 +154,21 @@ contains
 
     end subroutine s_assign_patch_mixture_primitive_variables ! ------------
 
+    function f_bump(j, k)
+        integer, intent(IN) :: j, k
+        real(kind(0d0)) :: f_bump
+        real(kind(0d0)) :: r 
+
+        r = sqrt((x_cc(j) - 0.5)**2d0 + (y_cc(k) - 0.5)**2d0)
+        if(r >= 0.3d0) then
+            f_bump = 0d0
+        else
+            f_bump = exp(-0.01d0 / (0.3d0**2d0 - r**2d0))
+        end if
+
+
+    end function f_bump
+
     !Stable perturbation in pressure (Ando)
     subroutine s_perturb_primitive(j, k, l, q_prim_vf)
 
@@ -164,6 +179,7 @@ contains
         real(kind(0d0)) :: pres_mag , loc, n_tait, B_tait, p0
         real(kind(0d0)) :: R3bar, n0, ratio, nH, vfH, velH, rhoH, deno
         real(kind(0d0)) :: x, y
+        real(kind(0d0)) :: pi = 3.141563
 
         p0 = 101325
         pres_mag = 1D-1
@@ -182,13 +198,37 @@ contains
         !     q_prim_vf(momxb)%sf(j, k, l) = -1d0*sin(2*3.141563*(0.75d0 - 0.5d0)/1.d0)
         ! end if
 
-        if(y_cc(k) >= 0.25d0 .and. y_cc(k) <= 0.75d0) then        
-            q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0*sin(2*3.141563*(y_cc(k) - 0.5d0)/1.d0)
-        else if(y_cc(k) < 0.25) then
-            q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0*sin(2*3.141563*(0.25d0 - 0.5d0)/1.d0)
-        else if(y_cc(k) > 0.75) then
-            q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0*sin(2*3.141563*(0.75d0 - 0.5d0)/1.d0)
-        end if
+        ! if(y_cc(k) >= 0.25d0 .and. y_cc(k) <= 0.75d0) then        
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0*sin(2*3.141563*(y_cc(k) - 0.5d0)/1.d0)
+        ! else if(y_cc(k) < 0.25) then
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0*sin(2*3.141563*(0.25d0 - 0.5d0)/1.d0)
+        ! else if(y_cc(k) > 0.75) then
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0*sin(2*3.141563*(0.75d0 - 0.5d0)/1.d0)
+        ! end if
+
+
+
+        ! if(j > k) then
+        !     q_prim_vf(momxb)%sf(j, k, l) = 1d0*sin(2*3.141563*x_cc(j))*f_bump(j, k) 
+        ! else if(k > j) then
+        !     q_prim_vf(momxb)%sf(j, k, l) = 1d0*sin(2*3.141563*(x_cc(j) - 0.5))*f_bump(j, k) 
+        ! else
+        !     q_prim_vf(momxb)%sf(j, k, l) = 0d0
+        ! end if
+
+        ! if(j > k) then
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = 1d0*sin(2*3.141563*y_cc(k))*f_bump(j, k) 
+        ! else if(k > j) then
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = 1d0*sin(2*3.141563*(y_cc(k) - 0.5))*f_bump(j, k) 
+        ! else
+        !     q_prim_vf(momxb + 1)%sf(j, k, l) = 0d0
+        ! end if
+
+        q_prim_vf(1)%sf(j, k, l) = 1d0
+        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.4d0)**2d0 + (y_cc(k) - 0.45d0)**2d0)/ 0.08d0**2d0) 
+        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.55d0)**2d0 + (y_cc(k) - 0.55d0)**2d0)/ 0.08d0**2d0) 
+        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.6d0)**2d0 + (y_cc(k) - 0.42d0)**2d0)/ 0.08d0**2d0) 
+        q_prim_vf(E_idx)%sf(j, k, l) = 0.2 * (q_prim_vf(1)%sf(j, k, l))**1.4d0
 
         ! x = x_cc(j) - 0.5
         ! y = y_cc(k) - 0.5
@@ -207,7 +247,6 @@ contains
         !     q_prim_vf(momxb + 1)%sf(j, k, l) = -1d0 * y / sqrt(x*2d0 + y**2) !* tanh((0.125d0 - sqrt(x**2 + y**2)))
         ! end if
 
-        !q_prim_vf(momxb)%sf(j, k, l) = 1d0*tanh(5d0*(0.5d0 - x_cc(j)))
 #if 0
 ! C         if(j < 177) then
 ! C             q_prim_vf(E_idx)%sf(j, k, l) = 0.5 * q_prim_vf(E_idx)%sf(j, k, l) 

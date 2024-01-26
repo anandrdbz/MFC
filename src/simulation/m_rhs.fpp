@@ -730,16 +730,17 @@ contains
              ix, iy, iz)
         call nvtxEndRange
 
+
         !APPLY BC FOR F
 
         do j = -buff_size, m+buff_size
-            dx(j) = 1d0 / (200 + 1)
+            dx(j) = 1d0 / (m_glb + 1)
         end do
 
         do k = -buff_size, n + buff_size
-            dy(k) = 1d0 / (200 + 1)
+            dy(k) = 1d0 / (n_glb + 1)
         end do
-        
+        !$acc update device(dx, dy)
         
         if (t_step == t_step_stop) return
         ! ==================================================================
@@ -770,6 +771,9 @@ contains
             ix%end = m - ix%beg; iy%end = n - iy%beg; iz%end = p - iz%beg
 
             bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end
+
+            !bcxb = -1; bcye = -1;  bcxe = -1; bcyb = -1
+
 
             !print *, 'BC', bcxb, bcxe, bcyb, bcye
 
@@ -921,7 +925,7 @@ contains
 
 
                 ! Get F_igr
-                alf_igr = 10d0*(dx(1)**2)
+                alf_igr = 2d0*(dx(1)**2)
 
                 !$acc update device(alf_igr)
 
@@ -959,184 +963,12 @@ contains
                 end do
 
                 !print *, maxval(abs(dux_igr)), maxval(abs(duy_igr)), maxval(abs(dvx_igr)), maxval(abs(dvy_igr))
-                print *, maxval(abs(F_igr(1, -1:m+1, -1:n+1))), maxval(abs(F_igr(2, -1:m+1, -1:n+1))), maxval(abs(F_igr(3, -1:m+1, -1:n+1))), maxval(abs(F_igr(4, -1:m+1, -1:n+1)))
-
-
-                !!!START OF 1D
-
-               !  !$acc parallel loop collapse(2) gang vector default(present)
-               !  do k = iy%beg, iy%end
-               !      do j = ix%beg, ix%end
-               !          rhs_1d_igr( j, k) = alf_igr *2d0 *  (dvy_igr(j, k)**2d0)
-               !      end do
-               !  end do
-
-               ! !$acc parallel loop collapse(2) gang vector default(present) private(rho_lx, rho_rx, rho_ly, rho_ry)
-               !  do k = iy%beg + 1, iy%end - 1
-               !      do j = ix%beg + 1, ix%end - 1
-               !          ! rho_lx = 1d0 * (rho_igr(j,k) + rho_igr(j-1,k)) / 2d0
-               !          ! rho_rx = 1d0 * (rho_igr(j,k) + rho_igr(j+1,k)) / 2d0
-               !          ! rho_ly = 1d0 * (rho_igr(j,k) + rho_igr(j,k-1)) / 2d0
-               !          ! rho_ry = 1d0 * (rho_igr(j,k) + rho_igr(j,k+1)) / 2d0
-                        
-               !          rho_lx = rho_igr(j+1,k)
-               !          rho_rx = rho_igr(j,k)
-               !          rho_ly = rho_igr(j,k+1)
-               !          rho_ry = rho_igr(j,k)
-
-               !          fd_1d_coeff(j,k) = 1d0 / rho_igr(j,k)
-
-               !          if(k == 0) then
-               !              fd_1d_coeff(j,k) = fd_1d_coeff(j,k) + (alf_igr / dy(k)**2d0)*(1d0 / rho_ry)
-               !              if(bcyb >= -1) then
-               !                  fd_1d_coeff(j,k) = fd_1d_coeff(j,k) + (alf_igr / dy(k)**2d0)*(1d0 / rho_ly)
-               !              end if
-               !          else if(k == n) then
-               !              fd_1d_coeff(j,k) = fd_1d_coeff(j,k) + (alf_igr / dy(k)**2d0)*(1d0 / rho_ry)
-               !              if(bcye >= -1) then
-               !                  fd_1d_coeff(j,k) = fd_1d_coeff(j,k) + (alf_igr / dy(k)**2d0)*(1d0 / rho_ly)
-               !              end if
-               !          else
-               !              fd_1d_coeff(j,k) = fd_1d_coeff(j,k) + (alf_igr / dy(k)**2d0)*(1d0 / rho_ly + 1d0 / rho_ry)
-               !          end if
-               !      end do
-               !  end do
-
-               !  omega = 1.6
-
-               !  do i = 1, 100
-
-               !  !$acc parallel loop gang vector collapse(3) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)
-               !      do k = iy%beg + 1, iy%end - 1
-               !          do j = ix%beg + 1, ix%end - 1
-
-               !              ! rho_lx = 1d0 * (rho_igr(j,k) + rho_igr(j-1,k)) / 2d0
-               !              ! rho_rx = 1d0 * (rho_igr(j,k) + rho_igr(j+1,k)) / 2d0
-               !              ! rho_ly = 1d0 * (rho_igr(j,k) + rho_igr(j,k-1)) / 2d0
-               !              ! rho_ry = 1d0 * (rho_igr(j,k) + rho_igr(j,k+1)) / 2d0
-
-               !              rho_lx = rho_igr(j+1,k)
-               !              rho_rx = rho_igr(j,k)
-               !              rho_ly = rho_igr(j,k+1)
-               !              rho_ry = rho_igr(j,k)
-
-               !              F_1d_igr(j, k) = rhs_1d_igr(j, k)
-
-               !              if(k == 0) then
-               !                  F_1d_igr(j, k) = F_1d_igr(j,k) + (alf_igr/ dy(k)**2d0) * (1d0 /rho_ry ) * F_1d_igr(j,k+1) 
-               !                  if(bcyb >= -1) then
-               !                     F_1d_igr(j,k) = F_1d_igr(j,k) + (alf_igr / dy(k)**2d0) * (1d0 / rho_ly) * F_1d_igr(j,k-1)
-               !                  end if
-               !              else if(k == n) then
-               !                  F_1d_igr(j,k) = F_1d_igr(j,k) + (alf_igr / dy(k)**2d0) * (1d0 /rho_ly) * F_1d_igr(j,k-1)
-               !                  if(bcye>= -1) then
-               !                      F_1d_igr(j,k) = F_1d_igr(j,k) + (alf_igr / dy(k)**2d0) * (1d0 /rho_ry)* F_1d_igr(j,k+1)
-               !                  end if                            
-               !              else
-               !                  F_1d_igr(j,k) = F_1d_igr(j,k)+ (alf_igr / dy(k)**2d0) * ((1d0 /rho_ly)* F_1d_igr(j,k-1) + (1d0/rho_ry)* F_1d_igr(j,k+1)) 
-               !              end if
-
-
-               !              F_1d_igr(j, k) = omega * (1 / fd_1d_coeff(j,k))*F_1d_igr(j,k) + (1 - omega)*F_1d_old_igr(j, k)
-
-               !          end do
-               !      end do 
-
-               !      if(proc_rank == 0 .and. i == 100) then
-               !              !print *, "MAX RHS SOL",  maxval(abs(jac_rhs_igr(q, -1:m+1, -1:n+1))), maxval(abs(jac_igr(q, -1:m+1, -1:n+1)))
-               !              !print *, "ITER 1D" ,  maxval(abs(F_1d_igr( -1:m+1, -1:n+1)) - abs(F_1d_old_igr(-1:m+1, -1:n+1))) / maxval(abs(F_1d_igr( -1:m+1, -1:n+1)))
-               !      end if               
-
-               !      if(bcxb >= -1) then
-               !      !$acc parallel loop gang vector collapse(3) default(present) 
-               !          do k = 0, n
-               !              do j = 1, buff_size
-               !                  F_1d_igr(-j, k) = F_1d_igr(m-j+1,k)
-               !              end do
-               !          end do                                               
-               !      end if
-
-               !      if(bcxe >= -1) then
-               !          !$acc parallel loop gang vector collapse(3) default(present)
-               !          do k = 0, n
-               !              do j = 1, buff_size
-               !                  F_1d_igr(m+j, k) = F_1d_igr(j-1,k)
-               !              end do
-               !          end do                                                   
-               !      end if
-
-               !      if(bcyb >= -1) then
-               !          !$acc parallel loop gang vector collapse(3) default(present)                           
-               !          do k = 1, buff_size
-               !              do j = ix%beg, ix%end
-               !                  F_1d_igr(j,-k) = F_1d_igr(j,n-k+1)
-               !              end do
-               !          end do
-                                                  
-               !      end if
-
-               !      if(bcye >= -1) then
-               !          !$acc parallel loop gang vector collapse(3) default(present)                        
-               !          do k = 1, buff_size
-               !              do j = ix%beg, ix%end
-               !                  F_1d_igr(j,n+k) = F_1d_igr(j,k-1)
-               !              end do
-               !          end do                                      
-               !      end if           
-
-               !      !$acc parallel loop gang vector collapse(3) default(present)
-               !      do k = iy%beg, iy%end
-               !          do j = ix%beg, ix%end
-               !              F_1d_old_igr(j, k) = F_1d_igr(j, k)
-               !          end do
-               !      end do               
-               !  end do
-
-
-               !  if(bcxb < -1) then
-               !      !$acc parallel loop gang vector collapse(3) default(present)
-               !      do k = 0, n
-               !          do j = 1, buff_size
-               !              F_1d_igr(-j,k) = F_1d_igr(0,k)
-               !          end do
-               !      end do
-               !  end if
-
-               !  if(bcxe < -1) then
-               !      !$acc parallel loop gang vector collapse(3) default(present)
-
-               !      do k = 0, n
-               !          do j = 1, buff_size
-               !              F_1d_igr(m+j,k) = F_1d_igr(m,k)
-               !          end do
-               !      end do
-               !  end if
-
-               !  if(bcyb < -1) then
-               !      !$acc parallel loop gang vector collapse(3) default(present)
-               !      do k = 1, buff_size
-               !          do j = ix%beg, ix%end
-               !              F_1d_igr(j,-k) = F_1d_igr(j,0)
-               !          end do
-               !      end do
-               !  end if
-
-               !  if(bcye < -1) then
-               !  !$acc parallel loop gang vector collapse(3) default(present)
-               !      do k = 1, buff_size
-               !          do j = ix%beg, ix%end
-               !              F_1d_igr(j,n+k) = F_1d_igr(j,n)
-               !          end do
-               !      end do
-               !  end if
-
-
-                !!!END OF 1D
+                !print *, maxval(abs(F_igr(1, -1:m+1, -1:n+1))), maxval(abs(F_igr(2, -1:m+1, -1:n+1))), maxval(abs(F_igr(3, -1:m+1, -1:n+1))), maxval(abs(F_igr(4, -1:m+1, -1:n+1)))
 
 
                 !$acc parallel loop collapse(2) gang vector default(present)
-                do k = iy%beg, iy%end
-                    do j = ix%beg, ix%end
+                do k = iy%beg + 1, iy%end - 1
+                    do j = ix%beg + 1, ix%end - 1
                         rhs_igr(1, j, k) = rho_igr(j, k) *alf_igr  *2d0 * (dux_igr(j, k)**2d0 + duy_igr(j, k) * dvx_igr(j, k))
                         rhs_igr(2, j, k) = rho_igr(j, k) *alf_igr  *2d0 * (dux_igr(j, k)*duy_igr(j, k) + duy_igr(j, k) * dvy_igr(j, k))                        
                         rhs_igr(3, j, k) = rho_igr(j, k) *alf_igr  *2d0 * (dvx_igr(j, k)*dux_igr(j, k) + dvy_igr(j, k) * dvx_igr(j, k))
@@ -1147,20 +979,23 @@ contains
                 ! print *, "MAX", maxval(dux_igr(0:m,0:n)), maxval(duy_igr(0:m,0:n)), maxval(dvx_igr(0:m,0:n)), maxval(dvy_igr(0:m,0:n))
 
                 !$acc parallel loop collapse(2) gang vector default(present)
-                do k = iy%beg + 1, iy%end - 1
-                    do j = ix%beg + 1, ix%end - 1
+                do k = iy%beg + 2, iy%end - 1
+                    do j = ix%beg + 2, ix%end - 1
+                        rho_lx = 1d0 * (rho_igr(j,k) + rho_igr(j-1,k)) / 2d0
+                        rho_ly = 1d0 * (rho_igr(j,k) + rho_igr(j,k-1)) / 2d0
+
                         jac_rhs_igr(1, j, k) = (1d0 / dx(j))*(rhs_igr(1,j-1, k) - rhs_igr(1,j,k))  + (1d0 / dy(k))*(rhs_igr(2,j, k-1) - rhs_igr(2,j,k)) 
                         jac_rhs_igr(2, j, k) = (1d0 / dx(j))*(rhs_igr(3,j-1, k) - rhs_igr(3,j,k))  + (1d0 / dy(k))*(rhs_igr(4,j, k-1) - rhs_igr(4,j,k)) 
                     end do
                 end do
 
                 !$acc parallel loop collapse(2) gang vector default(present) private(rho_lx, rho_rx, rho_ly, rho_ry)
-                do k = iy%beg + 1, iy%end - 1
-                    do j = ix%beg + 1, ix%end - 1
-                        ! rho_lx = 1d0 * (rho_igr(j,k) + rho_igr(j-1,k)) / 2d0
-                        ! rho_rx = 1d0 * (rho_igr(j,k) + rho_igr(j+1,k)) / 2d0
-                        ! rho_ly = 1d0 * (rho_igr(j,k) + rho_igr(j,k-1)) / 2d0
-                        ! rho_ry = 1d0 * (rho_igr(j,k) + rho_igr(j,k+1)) / 2d0
+                do k = 0, n
+                    do j = 0, m
+                        rho_lx = 1d0 * (rho_igr(j,k) + rho_igr(j-1,k)) / 2d0
+                        rho_rx = 1d0 * (rho_igr(j,k) + rho_igr(j+1,k)) / 2d0
+                        rho_ly = 1d0 * (rho_igr(j,k) + rho_igr(j,k-1)) / 2d0
+                        rho_ry = 1d0 * (rho_igr(j,k) + rho_igr(j,k+1)) / 2d0
                         
                         rho_lx = rho_igr(j-1,k)
                         rho_rx = rho_igr(j,k)
@@ -1193,21 +1028,21 @@ contains
 
                 !print *, "PR INIT", proc_rank, jac_old_igr(1, 0:buff_size-1, n), jac_old_igr(1, m+1:m+buff_size, n) 
 
-                omega = 0.67
+                omega = 1.4
 
                 !print *, "RHO DIFF", maxval(abs(rho_igr(100, 0:n+1) - rho_igr(100, -1:n)))
 
-                do i = 1, 100
+                do i = 1, 10
 
                     !$acc parallel loop gang vector collapse(3) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)
                     do q = 1, 2
-                        do k = iy%beg + 1, iy%end - 1
-                            do j = ix%beg + 1, ix%end - 1
+                        do k = 0, n
+                            do j = 0, m
 
-                                ! rho_lx = 1d0 * (rho_igr(j,k) + rho_igr(j-1,k)) / 2d0
-                                ! rho_rx = 1d0 * (rho_igr(j,k) + rho_igr(j+1,k)) / 2d0
-                                ! rho_ly = 1d0 * (rho_igr(j,k) + rho_igr(j,k-1)) / 2d0
-                                ! rho_ry = 1d0 * (rho_igr(j,k) + rho_igr(j,k+1)) / 2d0
+                                rho_lx = 1d0 * (rho_igr(j,k) + rho_igr(j-1,k)) / 2d0
+                                rho_rx = 1d0 * (rho_igr(j,k) + rho_igr(j+1,k)) / 2d0
+                                rho_ly = 1d0 * (rho_igr(j,k) + rho_igr(j,k-1)) / 2d0
+                                rho_ry = 1d0 * (rho_igr(j,k) + rho_igr(j,k+1)) / 2d0
 
                                  rho_lx = rho_igr(j-1,k)
                                  rho_rx = rho_igr(j,k)
@@ -1233,8 +1068,8 @@ contains
                                     rho_ry = 0d0
                                 end if
 
-                                jac_igr(q,j,k) = jac_igr(q,j,k)+ (1d0 / dx(j)**2d0) * (rho_lx* jac_old_igr(q,j-1,k) + rho_rx* jac_old_igr(q,j+1,k)) &
-                                        + (1d0 / dy(k)**2d0) * (rho_ly* jac_old_igr(q,j,k-1) + rho_ry* jac_old_igr(q,j,k+1)) 
+                                jac_igr(q,j,k) = jac_igr(q,j,k)+ (1d0 / dx(j)**2d0) * (rho_lx* jac_igr(q,j-1,k) + rho_rx* jac_igr(q,j+1,k)) &
+                                        + (1d0 / dy(k)**2d0) * (rho_ly* jac_igr(q,j,k-1) + rho_ry* jac_igr(q,j,k+1)) 
 
                                 jac_igr(q, j, k) = omega * (1 / fd_coeff(j,k))*jac_igr(q,j,k) + (1 - omega)*jac_old_igr(q, j, k)
 
@@ -1313,8 +1148,11 @@ contains
                                     end do
                                 !end do
                             end if
-                        end if           
+                        end if
 
+                        !if(i == 25) then
+                            !print *, "ITER",q, maxval(abs(jac_igr(q, -1:m+1, -1:n+1) - jac_old_igr(q, -1:m+1, -1:n+1)))           
+                        !end if
                         !print *, "PR INIT", proc_rank, jac_old_igr(q, 0:buff_size-1, 199), jac_old_igr(q, m+1:m+buff_size, 199) 
 
 
@@ -1381,8 +1219,8 @@ contains
                 end if
 
                 !$acc parallel loop gang vector collapse(2) default(present)
-                do k = iy%beg + 1, iy%end - 1
-                    do j = ix%beg + 1, ix%end - 1                        
+                do k = iy%beg , iy%end - 1
+                    do j = ix%beg , ix%end - 1                        
                         F_igr(1, j, k) = 1d0* (rhs_igr(1, j, k) - rho_igr(j,k)*(1d0 / dx(j))*(jac_igr(1,j+1,k) - jac_igr(1,j,k)))
                         F_igr(2, j, k) = 1d0* (rhs_igr(2, j, k) - rho_igr(j,k)*(1d0 / dy(k))*(jac_igr(1,j,k+1) - jac_igr(1,j,k)))
                         F_igr(3, j, k) = 1d0* (rhs_igr(3, j, k) - rho_igr(j,k)*(1d0 / dx(j))*(jac_igr(2,j+1,k) - jac_igr(2,j,k)))

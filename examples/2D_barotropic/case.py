@@ -9,7 +9,7 @@ dx = 1./(1.*(Nx+1))
 
 Tend = 0.2
 maxwavespeed = 1.
-lam = 0.1
+lam = 0.2
 
 mydt = lam*dx/maxwavespeed
 Nt = int(Tend/mydt)
@@ -37,8 +37,8 @@ print(json.dumps({
     'p'                            : 0,
     'dt'                           : mydt,
     't_step_start'                 : 0,
-    't_step_stop'                  : 5600,
-    't_step_save'                  : 100,
+    't_step_stop'                  : 3000,
+    't_step_save'                  : 60,
     # ==========================================================================
 
     # Simulation Algorithm Parameters ==========================================
@@ -49,7 +49,7 @@ print(json.dumps({
     'adv_alphan'                   : 'T',
     'mpp_lim'                      : 'F',
     'mixture_err'                  : 'F',
-    'time_stepper'                 : 3,
+    'time_stepper'                 : 4,
     'weno_order'                   : 5,
     'weno_eps'                     : 1.E-16,
     'weno_Re_flux'                 : 'F',  
@@ -62,8 +62,8 @@ print(json.dumps({
     'avg_state'                    : 2,
     'bc_x%beg'                     : -1,
     'bc_x%end'                     : -1,
-    'bc_y%beg'                     : -3,
-    'bc_y%end'                     : -3,
+    'bc_y%beg'                     : -1,
+    'bc_y%end'                     : -1,
     'barotropic'                   : 'T',
     # ==========================================================================
 
