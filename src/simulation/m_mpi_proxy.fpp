@@ -748,189 +748,202 @@ contains
 
         integer, intent(IN) :: mpi_dir
         integer, intent(IN) :: pbc_loc
-        integer :: i, j, k, l, r
+        integer :: i, j, k, l, r, q
 
         !print *, "MPI", proc_rank, F_igr(1, 0:buff_size-1, 50)
 
-        if(mpi_dir == 1) then
-            if(pbc_loc == -1) then
+        do q = 1, 2
+            if(mpi_dir == 1) then
+                if(pbc_loc == -1) then
 
-                if(bc_x%end >= 0) then
+                    if(bc_x%end >= 0) then
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = 0, n
+                            do j = m - (buff_size - 1), m
+                                r = j - m - 1 + buff_size + k*buff_size
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
+                        end do
+
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
+                                q_cons_buff_send(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%end, 0, &
+                                q_cons_buff_recv(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
+                                MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc end host_data
+                            !$acc wait
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
+                                q_cons_buff_send(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%end, 0, &
+                                q_cons_buff_recv(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
+                                MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+
+                        end if                 
+
+                    else
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = 0, n
+                            do j = 0, buff_size - 1
+                                r = j + k*buff_size
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
+                        end do
+
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
+                                q_cons_buff_send(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
+                                q_cons_buff_recv(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
+                                MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc end host_data
+                            !$acc wait                        
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
+                                q_cons_buff_send(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
+                                q_cons_buff_recv(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
+                                MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                        end if
+                        
+                    end if
+
+                    if (cu_mpi .eqv. .false.) then
+                        !$acc update device(q_cons_buff_recv)
+                    end if
+
                     !$acc parallel loop gang vector collapse(2) default(present) private(r)
                     do k = 0, n
-                        do j = m - (buff_size - 1), m
-                            r = j - m - 1 + buff_size + k*buff_size
-                            q_cons_buff_send(r) = F_igr(1, j, k)
+                        do j = -buff_size, -1
+                            r = j + buff_size + k*buff_size
+                            F_igr(q, j, k) = q_cons_buff_recv(r)
                         end do
                     end do
+                else
 
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
+                    if(bc_x%beg >= 0) then
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = 0, n
+                            do j = 0, buff_size - 1
+                                r = j + k*buff_size
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
+                        end do
+
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
+                                q_cons_buff_send(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
+                                q_cons_buff_recv(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%end, 1, &
+                                MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc end host_data
+                            !$acc wait
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
+                                q_cons_buff_send(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
+                                q_cons_buff_recv(0), &
+                                buff_size*(n + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_x%end, 1, &
+                                MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                        end if
+                    else
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = 0, n
+                            do j = m - (buff_size - 1), m
+                                r = j - m - 1 + buff_size + k*buff_size
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
+                        end do
+
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
                             buff_size*(n + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_x%end, 0, &
                             q_cons_buff_recv(0), &
                             buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
-                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                        !$acc end host_data
-                        !$acc wait
-                    else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
+                            MPI_DOUBLE_PRECISION, bc_x%end, 1, &
+                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)                        
+                            !$acc end host_data
+                            !$acc wait
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
                             buff_size*(n + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_x%end, 0, &
                             q_cons_buff_recv(0), &
                             buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
-                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-
-                    end if                 
-
-                else
-                    !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                    do k = 0, n
-                        do j = 0, buff_size - 1
-                            r = j + k*buff_size
-                            q_cons_buff_send(r) = F_igr(1, j, k)
-                        end do
-                    end do
-
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
-                            q_cons_buff_send(0), &
-                            buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
-                            q_cons_buff_recv(0), &
-                            buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
-                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                        !$acc end host_data
-                        !$acc wait                        
-                    else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
-                            q_cons_buff_send(0), &
-                            buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
-                            q_cons_buff_recv(0), &
-                            buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
-                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                    end if
-                    
-                end if
-
-                if (cu_mpi .eqv. .false.) then
-                    !$acc update device(q_cons_buff_recv)
-                end if
-
-                !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                do k = 0, n
-                    do j = -buff_size, -1
-                        r = j + buff_size + k*buff_size
-                        F_igr(1, j, k) = q_cons_buff_recv(r)
-                    end do
-                end do
-            else
-
-                if(bc_x%beg >= 0) then
-                    !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                    do k = 0, n
-                        do j = 0, buff_size - 1
-                            r = j + k*buff_size
-                            q_cons_buff_send(r) = F_igr(1, j, k)
-                        end do
-                    end do
-
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
-                            q_cons_buff_send(0), &
-                            buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
-                            q_cons_buff_recv(0), &
-                            buff_size*(n + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_x%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                        !$acc end host_data
-                        !$acc wait
-                    else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
-                            q_cons_buff_send(0), &
-                            buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%beg, 1, &
-                            q_cons_buff_recv(0), &
-                            buff_size*(n + 1)*(p + 1), &
-                            MPI_DOUBLE_PRECISION, bc_x%end, 1, &
-                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                        end if
                     end if
-                else
+
+                    if (cu_mpi .eqv. .false.) then
+                        !$acc update device(q_cons_buff_recv)
+                    end if
+
                     !$acc parallel loop gang vector collapse(2) default(present) private(r)
                     do k = 0, n
-                        do j = m - (buff_size - 1), m
-                            r = j - m - 1 + buff_size + k*buff_size
-                            q_cons_buff_send(r) = F_igr(1, j, k)
+                        do j = m + 1, m + buff_size
+                            r = j - m - 1 + k*buff_size
+                            F_igr(q, j, k) = q_cons_buff_recv(r)
                         end do
                     end do
 
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(n + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_x%end, 0, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(n + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_x%end, 1, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)                        
-                        !$acc end host_data
-                        !$acc wait
-                    else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(n + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_x%end, 0, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(n + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_x%end, 1, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                    end if
                 end if
+            else if(mpi_dir == 2) then
+                if(pbc_loc == -1) then
 
-                if (cu_mpi .eqv. .false.) then
-                    !$acc update device(q_cons_buff_recv)
-                end if
-
-                !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                do k = 0, n
-                    do j = m + 1, m + buff_size
-                        r = j - m - 1 + k*buff_size
-                        F_igr(1, j, k) = q_cons_buff_recv(r)
-                    end do
-                end do
-
-            end if
-        else if(mpi_dir == 2) then
-            if(pbc_loc == -1) then
-
-                if(bc_y%end >= 0) then
-                    !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                    do k = n - (buff_size - 1), n
-                        do j = -buff_size, m + buff_size
-                            r = j + buff_size + (k - n + buff_size - 1)*(m + 2*buff_size + 1)
-                            q_cons_buff_send(r) = F_igr(1, j, k)
+                    if(bc_y%end >= 0) then
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = n - (buff_size - 1), n
+                            do j = -buff_size, m + buff_size
+                                r = j + buff_size + (k - n + buff_size - 1)*(m + 2*buff_size + 1)
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
                         end do
-                    end do
 
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
+                                q_cons_buff_send(0), &
+                                buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_y%end, 0, &
+                                q_cons_buff_recv(0), &
+                                buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                                MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
+                                MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc end host_data
+                            !$acc wait
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 0, &
@@ -938,151 +951,140 @@ contains
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                        !$acc end host_data
-                        !$acc wait
+                        end if
+
                     else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%end, 0, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = 0, buff_size - 1
+                            do j = -buff_size, m + buff_size
+                                r = j + buff_size + k*(m + 2*buff_size + 1)
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
+                        end do
+
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
+                            q_cons_buff_send(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
+                            q_cons_buff_recv(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
+                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc end host_data
+                            !$acc wait
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
+                            q_cons_buff_send(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
+                            q_cons_buff_recv(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
+                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                        end if
+                        
                     end if
 
+                    if (cu_mpi .eqv. .false.) then
+                        !$acc update device(q_cons_buff_recv)
+                    end if
+
+                    !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                    do k = -buff_size, - 1
+                        do j = -buff_size, m + buff_size
+                            r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1)
+                            F_igr(q, j, k) = q_cons_buff_recv(r)
+                        end do
+                    end do
                 else
+
+                    if(bc_y%beg >= 0) then
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = 0, buff_size - 1
+                            do j = -buff_size, m + buff_size
+                                r = j + buff_size + k*(m + 2*buff_size + 1)
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
+                        end do
+
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
+                            q_cons_buff_send(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
+                            q_cons_buff_recv(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%end, 1, &
+                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc end host_data
+                            !$acc wait
+
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
+                            q_cons_buff_send(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
+                            q_cons_buff_recv(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%end, 1, &
+                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                        end if
+
+                    else
+                        !$acc parallel loop gang vector collapse(2) default(present) private(r)
+                        do k = n - (buff_size - 1), n
+                            do j = -buff_size, m + buff_size
+                                r = j + buff_size + (k - n + buff_size - 1)*(m + 2*buff_size + 1)
+                                q_cons_buff_send(r) = F_igr(q, j, k)
+                            end do
+                        end do
+
+                        if(cu_mpi) then
+                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            call MPI_SENDRECV( &
+                            q_cons_buff_send(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%end, 0, &
+                            q_cons_buff_recv(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%end, 1, &
+                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc end host_data
+                            !$acc wait
+
+                        else
+                            !$acc update host(q_cons_buff_send)
+                            call MPI_SENDRECV( &
+                            q_cons_buff_send(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%end, 0, &
+                            q_cons_buff_recv(0), &
+                            buff_size*(m + 2*buff_size + 1)*(p + 1), &
+                            MPI_DOUBLE_PRECISION, bc_y%end, 1, &
+                            MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                        end if
+                    end if
+
+                    if (cu_mpi .eqv. .false.) then
+                        !$acc update device(q_cons_buff_recv)
+                    end if
+
                     !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                    do k = 0, buff_size - 1
+                    do k = n+1, n+buff_size
                         do j = -buff_size, m + buff_size
-                            r = j + buff_size + k*(m + 2*buff_size + 1)
-                            q_cons_buff_send(r) = F_igr(1, j, k)
+                            r = j + buff_size + (k - n - 1)*(m + 2*buff_size + 1)
+                            F_igr(q, j, k) = q_cons_buff_recv(r)
                         end do
                     end do
 
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                        !$acc end host_data
-                        !$acc wait
-                    else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                    end if
-                    
-                end if
-
-                if (cu_mpi .eqv. .false.) then
-                    !$acc update device(q_cons_buff_recv)
-                end if
-
-                !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                do k = -buff_size, - 1
-                    do j = -buff_size, m + buff_size
-                        r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1)
-                        F_igr(1, j, k) = q_cons_buff_recv(r)
-                    end do
-                end do
-            else
-
-                if(bc_y%beg >= 0) then
-                    !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                    do k = 0, buff_size - 1
-                        do j = -buff_size, m + buff_size
-                            r = j + buff_size + k*(m + 2*buff_size + 1)
-                            q_cons_buff_send(r) = F_igr(1, j, k)
-                        end do
-                    end do
-
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%end, 1, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                        !$acc end host_data
-                        !$acc wait
-
-                    else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%end, 1, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                    end if
-
-                else
-                    !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                    do k = n - (buff_size - 1), n
-                        do j = -buff_size, m + buff_size
-                            r = j + buff_size + (k - n + buff_size - 1)*(m + 2*buff_size + 1)
-                            q_cons_buff_send(r) = F_igr(1, j, k)
-                        end do
-                    end do
-
-                    if(cu_mpi) then
-                        !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%end, 0, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%end, 1, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                        !$acc end host_data
-                        !$acc wait
-
-                    else
-                        !$acc update host(q_cons_buff_send)
-                        call MPI_SENDRECV( &
-                        q_cons_buff_send(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%end, 0, &
-                        q_cons_buff_recv(0), &
-                        buff_size*(m + 2*buff_size + 1)*(p + 1), &
-                        MPI_DOUBLE_PRECISION, bc_y%end, 1, &
-                        MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                    end if
-                end if
-
-                if (cu_mpi .eqv. .false.) then
-                    !$acc update device(q_cons_buff_recv)
-                end if
-
-                !$acc parallel loop gang vector collapse(2) default(present) private(r)
-                do k = n+1, n+buff_size
-                    do j = -buff_size, m + buff_size
-                        r = j + buff_size + (k - n - 1)*(m + 2*buff_size + 1)
-                        F_igr(1, j, k) = q_cons_buff_recv(r)
-                    end do
-                end do
-
-            end if            
-        end if
+                end if            
+            end if
+        end do
 
                 
 
