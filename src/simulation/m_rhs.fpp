@@ -1133,7 +1133,7 @@ contains
                         if(bcyb >= 0) then
                             do q = 1, 2
                                 call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 2, -1)
-                            end if
+                            end do
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
@@ -1150,7 +1150,7 @@ contains
                         if(bcye >= 0) then
                             do q = 1, 2
                                 call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 2, 1)
-                            end if
+                            end do
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
