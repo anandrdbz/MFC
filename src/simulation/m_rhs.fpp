@@ -697,11 +697,9 @@ contains
         ! ==================================================================
         !$acc update device(ix, iy, iz)
 
-        bc_x%beg = -1; bc_x%end = -1; bc_y%beg = -1; bc_y%end = -1
         call nvtxStartRange("RHS-MPI")
         call s_populate_conservative_variables_buffers(q_cons_vf, pb, mv)
         call nvtxEndRange
-        bc_x%beg = 0; bc_x%end = 0; bc_y%beg = 0; bc_y%end = 0
 
         ! Association/Population of Working Variables ======================
         !$acc parallel loop collapse(4) gang vector default(present)
@@ -1098,7 +1096,7 @@ contains
 
                     if(bcxb >= -1) then
                         if(bcxb >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 1, -1)
+                            !call s_mpi_sendrecv_F_igr(jac_igr, 1, -1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present) 
                             do q = 1, 2
@@ -1114,7 +1112,7 @@ contains
 
                     if(bcxe >= -1) then
                         if(bcxe >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 1, 1)
+                            !call s_mpi_sendrecv_F_igr(jac_igr, 1, 1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
@@ -1129,7 +1127,7 @@ contains
 
                     if(bcyb >= -1) then
                         if(bcyb >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 2, -1)
+                            !call s_mpi_sendrecv_F_igr(jac_igr, 2, -1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
@@ -1144,7 +1142,7 @@ contains
 
                     if(bcye >= -1) then
                         if(bcye >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 2, 1)
+                            !call s_mpi_sendrecv_F_igr(jac_igr, 2, 1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
