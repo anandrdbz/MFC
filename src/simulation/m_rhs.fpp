@@ -644,6 +644,15 @@ contains
             @:ALLOCATE(nbub(0:m, 0:n, 0:p))
         end if
 
+        do j = -buff_size, m+buff_size
+            dx(j) = 1d0 / (m_glb + 1)
+        end do
+
+        do k = -buff_size, n + buff_size
+            dy(k) = 1d0 / (n_glb + 1)
+        end do
+        !$acc update device(dx, dy)
+
     end subroutine s_initialize_rhs_module ! -------------------------------
 
     subroutine s_compute_rhs(q_cons_vf, q_prim_vf, rhs_vf, pb, rhs_pb, mv, rhs_mv, t_step, lw) ! -------
@@ -739,15 +748,6 @@ contains
 
 
         !APPLY BC FOR F
-
-        do j = -buff_size, m+buff_size
-            dx(j) = 1d0 / (m_glb + 1)
-        end do
-
-        do k = -buff_size, n + buff_size
-            dy(k) = 1d0 / (n_glb + 1)
-        end do
-        !$acc update device(dx, dy)
         
         if (t_step == t_step_stop) return
         ! ==================================================================

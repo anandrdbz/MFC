@@ -49,7 +49,7 @@ print(json.dumps({
     'adv_alphan'                   : 'T',
     'mpp_lim'                      : 'F',
     'mixture_err'                  : 'F',
-    'time_stepper'                 : 3,
+    'time_stepper'                 : 4,
     'weno_order'                   : 5,
     'weno_eps'                     : 1.E-16,
     'weno_Re_flux'                 : 'F',  
@@ -72,7 +72,7 @@ print(json.dumps({
     'format'                       : 1,
     'precision'                    : 2,
     'prim_vars_wrt'                :'T',
-    'parallel_io'                  :'F',
+    'parallel_io'                  :'T',
     # ==========================================================================
 
 
