@@ -1031,11 +1031,12 @@ contains
                 omega = 1.4
 
                 !print *, "RHO DIFF", maxval(abs(rho_igr(100, 0:n+1) - rho_igr(100, -1:n)))
-
+                !$acc loop seq
                 do i = 1, 10
+                    !$acc loop seq
+                     do q = 1, 2
 
-                    !$acc parallel loop gang vector collapse(3) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)
-                    do q = 1, 2
+                    !$acc parallel loop gang vector collapse(2) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
                         do k = 0, n
                             do j = 0, m
 
@@ -1084,18 +1085,14 @@ contains
 
                         if(bcxb >= -1) then
                             if(bcxb >= 0) then
-                                !do q = 1, 2
-                                    call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 1, -1)
-                                !end do
+                                call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 1, -1)
                             else
-                        !$acc parallel loop gang vector collapse(3) default(present) 
-                                !do q = 1, 2
-                                    do k = 0, n
-                                        do j = 1, buff_size
-                                            jac_igr(q,-j, k) = jac_igr(q,m-j+1,k)
-                                        end do
+                                !$acc parallel loop gang vector collapse(2) default(present) 
+                                do k = 0, n
+                                    do j = 1, buff_size
+                                        jac_igr(q,-j, k) = jac_igr(q,m-j+1,k)
                                     end do
-                                !end do
+                                end do
                             end if
                         end if
 
@@ -1106,47 +1103,37 @@ contains
                                 !end do
                             else
                                 !$acc parallel loop gang vector collapse(3) default(present)
-                                !do q = 1, 2
                                     do k = 0, n
                                         do j = 1, buff_size
                                             jac_igr(q,m+j, k) = jac_igr(q,j-1,k)
                                         end do
                                     end do
-                                !end do
                             end if
                         end if
 
                         if(bcyb >= -1) then
                             if(bcyb >= 0) then
-                                !do q = 1, 2
                                     call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 2, -1)
-                                !end do
                             else
                                 !$acc parallel loop gang vector collapse(3) default(present)
-                                !do q = 1, 2
-                                    do k = 1, buff_size
-                                        do j = ix%beg, ix%end
-                                            jac_igr(q,j,-k) = jac_igr(q,j,n-k+1)
-                                        end do
+                                do k = 1, buff_size
+                                    do j = ix%beg, ix%end
+                                        jac_igr(q,j,-k) = jac_igr(q,j,n-k+1)
                                     end do
-                                !end do
+                                end do
                             end if
                         end if
 
                         if(bcye >= -1) then
                             if(bcye >= 0) then
-                                !do q = 1, 2
-                                    call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 2, 1)
-                                !end do
+                                call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 2, 1)
                             else
                                 !$acc parallel loop gang vector collapse(3) default(present)
-                                !do q = 1, 2
-                                    do k = 1, buff_size
-                                        do j = ix%beg, ix%end
-                                            jac_igr(q,j,n+k) = jac_igr(q,j,k-1)
-                                        end do
+                                do k = 1, buff_size
+                                    do j = ix%beg, ix%end
+                                        jac_igr(q,j,n+k) = jac_igr(q,j,k-1)
                                     end do
-                                !end do
+                                end do
                             end if
                         end if
 
@@ -1156,14 +1143,12 @@ contains
                         !print *, "PR INIT", proc_rank, jac_old_igr(q, 0:buff_size-1, 199), jac_old_igr(q, m+1:m+buff_size, 199) 
 
 
-                        !$acc parallel loop gang vector collapse(3) default(present)
-                        !do q = 1, 2
-                            do k = iy%beg, iy%end
-                                do j = ix%beg, ix%end
-                                    jac_old_igr(q, j, k) = jac_igr(q, j, k)
-                                end do
+                        !$acc parallel loop gang vector collapse(2) default(present)
+                        do k = iy%beg, iy%end
+                            do j = ix%beg, ix%end
+                                jac_old_igr(q, j, k) = jac_igr(q, j, k)
                             end do
-                        !end do 
+                        end do 
 
                         !print *, "PR", proc_rank, jac_old_igr(q, -buff_size:-1, 98), jac_igr(q, m-buff_size+1:m, 98) 
                         !print *, "PR", proc_rank, jac_old_igr(q, 0:buff_size-1, 199), jac_old_igr(q, m+1:m+buff_size, 199) 
