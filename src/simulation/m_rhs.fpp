@@ -1159,7 +1159,7 @@ contains
                                         jac_igr(q,j,n+k) = jac_igr(q,j,k-1)
                                     end do
                                 end do
-                            end if
+                            end do
                         end if
                     end if
 
