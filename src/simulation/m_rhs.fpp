@@ -163,7 +163,7 @@ module m_rhs
 
     real(kind(0d0)), allocatable, dimension(:, :) :: rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, fd_coeff
     real(kind(0d0)), allocatable, dimension(:, :, :) :: jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr
-    real(kind(0d0)) :: alf_igr
+    real(kind(0d0)) :: alf_igr, omega
     real(kind(0d0)), allocatable, dimension(:, :) :: F_1d_igr, F_1d_old_igr, rhs_1d_igr, fd_1d_coeff
 
     integer :: bcxb, bcxe, bcyb, bcye
@@ -176,7 +176,7 @@ module m_rhs
 !$acc   bub_mom_src,alf_sum, &
 !$acc   blkmod1, blkmod2, alpha1, alpha2, Kterm, divu, qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
 !$acc   dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
-!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff)
+!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff)
 
     real(kind(0d0)), allocatable, dimension(:, :, :) :: nbub !< Bubble number density
 !$acc declare create(nbub)
@@ -577,8 +577,17 @@ contains
             @:ALLOCATE(F_igr(1:4, ix%beg:ix%end, iy%beg:iy%end), rhs_igr(1:4, ix%beg:ix%end, iy%beg:iy%end)) 
             @:ALLOCATE(jac_igr(1:2, ix%beg:ix%end, iy%beg:iy%end), jac_old_igr(1:2, ix%beg:ix%end, iy%beg:iy%end), jac_rhs_igr(1:2, ix%beg:ix%end, iy%beg:iy%end))
             @:ALLOCATE(fd_coeff(ix%beg:ix%end, iy%beg:iy%end), duy_igr(ix%beg:ix%end, iy%beg:iy%end), dvy_igr(ix%beg:ix%end, iy%beg:iy%end))
-            @:ALLOCATE(F_1d_igr(ix%beg:ix%end, iy%beg:iy%end), F_1d_old_igr(ix%beg:ix%end, iy%beg:iy%end), fd_1d_coeff(ix%beg:ix%end, iy%beg:iy%end), rhs_1d_igr(ix%beg:ix%end, iy%beg:iy%end))           
-            
+            !$acc parallel loop collapse(3) gang vector default(present)
+            do l = iy%beg, iy%end
+                do j = ix%beg, ix%end
+                   do i = 1, 2
+                        jac_igr(i, j, k) = 0d0
+                        jac_old_igr(i, j, k) = 0d0
+                        jac_rhs_igr(i, j, k) = 0d0
+                   end do
+                end do
+            end do
+                         
         end if
 
         if (any(Re_size > 0)) then
@@ -619,7 +628,7 @@ contains
 
 
 !$acc parallel loop collapse(4) gang vector default(present)
-        do id = 1, num_dims
+        do id = 1, 1
             do i = 1, sys_size
                 do l = startz, p - startz
                     do k = starty, n - starty
@@ -647,7 +656,6 @@ contains
         integer, intent(IN) :: t_step
         integer, intent(IN), optional :: lw
         real(kind(0d0)), dimension(0:m) :: res
-        real(kind(0d0)) :: omega 
         
         real(kind(0d0)) :: top, bottom  !< Numerator and denominator when evaluating flux limiter function
         real(kind(0d0)), dimension(num_fluids) :: myalpha_rho, myalpha
@@ -772,7 +780,7 @@ contains
 
             bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end
 
-            !bcxb = -1; bcye = -1;  bcxe = -1; bcyb = -1
+            bcxb = -1; bcye = -1;  bcxe = -1; bcyb = -1
 
 
             !print *, 'BC', bcxb, bcxe, bcyb, bcye
@@ -962,10 +970,13 @@ contains
                     end do
                 end do
 
-                !print *, maxval(abs(dux_igr)), maxval(abs(duy_igr)), maxval(abs(dvx_igr)), maxval(abs(dvy_igr))
-                !print *, maxval(abs(F_igr(1, -1:m+1, -1:n+1))), maxval(abs(F_igr(2, -1:m+1, -1:n+1))), maxval(abs(F_igr(3, -1:m+1, -1:n+1))), maxval(abs(F_igr(4, -1:m+1, -1:n+1)))
+                !$acc update host(dux_igr, duy_igr, dvx_igr, dvy_igr, F_igr)
+                print *, maxval(abs(dux_igr(0:m,0:n))), maxval(abs(duy_igr(0:m,0:n))), maxval(abs(dvx_igr(0:m,0:n))),maxval(abs(dvy_igr(0:m,0:n)))
+                print *, maxval(abs(F_igr(1, -1:m+1, -1:n+1))), maxval(abs(F_igr(2, -1:m+1, -1:n+1))), maxval(abs(F_igr(3, -1:m+1, -1:n+1))), maxval(abs(F_igr(4, -1:m+1, -1:n+1)))
 
-
+                !$acc update host(rho_igr, alf_igr)
+                print *, maxval(abs(rho_igr))
+                print *, alf_igr
                 !$acc parallel loop collapse(2) gang vector default(present)
                 do k = iy%beg + 1, iy%end - 1
                     do j = ix%beg + 1, ix%end - 1
@@ -976,7 +987,8 @@ contains
                     end do
                 end do
 
-                ! print *, "MAX", maxval(dux_igr(0:m,0:n)), maxval(duy_igr(0:m,0:n)), maxval(dvx_igr(0:m,0:n)), maxval(dvy_igr(0:m,0:n))
+                !$acc update host(rhs_igr) 
+                print *, "MAX", maxval(abs(rhs_igr(0:m,0:n)))
 
                 !$acc parallel loop collapse(2) gang vector default(present)
                 do k = iy%beg + 2, iy%end - 1
@@ -1029,6 +1041,7 @@ contains
                 !print *, "PR INIT", proc_rank, jac_old_igr(1, 0:buff_size-1, n), jac_old_igr(1, m+1:m+buff_size, n) 
 
                 omega = 1.4
+                !$acc update device(omega)
 
                 !print *, "RHO DIFF", maxval(abs(rho_igr(100, 0:n+1) - rho_igr(100, -1:n)))
                 !$acc loop seq
@@ -1102,7 +1115,7 @@ contains
                                     call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 1, 1)
                                 !end do
                             else
-                                !$acc parallel loop gang vector collapse(3) default(present)
+                                !$acc parallel loop gang vector collapse(2) default(present)
                                     do k = 0, n
                                         do j = 1, buff_size
                                             jac_igr(q,m+j, k) = jac_igr(q,j-1,k)
@@ -1115,7 +1128,7 @@ contains
                             if(bcyb >= 0) then
                                     call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 2, -1)
                             else
-                                !$acc parallel loop gang vector collapse(3) default(present)
+                                !$acc parallel loop gang vector collapse(2) default(present)
                                 do k = 1, buff_size
                                     do j = ix%beg, ix%end
                                         jac_igr(q,j,-k) = jac_igr(q,j,n-k+1)
@@ -1128,7 +1141,7 @@ contains
                             if(bcye >= 0) then
                                 call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 2, 1)
                             else
-                                !$acc parallel loop gang vector collapse(3) default(present)
+                                !$acc parallel loop gang vector collapse(2) default(present)
                                 do k = 1, buff_size
                                     do j = ix%beg, ix%end
                                         jac_igr(q,j,n+k) = jac_igr(q,j,k-1)
@@ -1138,7 +1151,8 @@ contains
                         end if
 
                         !if(i == 25) then
-                            !print *, "ITER",q, maxval(abs(jac_igr(q, -1:m+1, -1:n+1) - jac_old_igr(q, -1:m+1, -1:n+1)))           
+                            !$acc update host(jac_igr, jac_old_igr, fd_coeff)
+                            print *, "ITER",q, maxval(abs(jac_igr(q, -1:m+1, -1:n+1) - jac_old_igr(-1:m+1, -1:n+1))), maxval(abs( jac_old_igr(q,-1:m+1,-1:n+1))), maxval(abs(fd_coeff(-1:m+1, -1:n+1)))          
                         !end if
                         !print *, "PR INIT", proc_rank, jac_old_igr(q, 0:buff_size-1, 199), jac_old_igr(q, m+1:m+buff_size, 199) 
 

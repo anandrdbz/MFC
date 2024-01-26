@@ -38,7 +38,7 @@ print(json.dumps({
     'dt'                           : mydt,
     't_step_start'                 : 0,
     't_step_stop'                  : 3000,
-    't_step_save'                  : 60,
+    't_step_save'                  : 1,
     # ==========================================================================
 
     # Simulation Algorithm Parameters ==========================================
