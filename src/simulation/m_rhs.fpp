@@ -1097,7 +1097,8 @@ contains
 
                     if(bcxb >= -1) then
                         if(bcxb >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 1, -1)
+                            call s_mpi_sendrecv_F_igr1(jac_igr, 1, -1)
+                            call s_mpi_sendrecv_F_igr2(jac_igr, 1, -1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present) 
                             do q = 1, 2
@@ -1112,7 +1113,8 @@ contains
 
                     if(bcxe >= -1) then
                         if(bcxe >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 1, 1)
+                            call s_mpi_sendrecv_F_igr1(jac_igr, 1, 1)
+                            call s_mpi_sendrecv_F_igr2(jac_igr, 1, 1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
@@ -1127,7 +1129,8 @@ contains
 
                     if(bcyb >= -1) then
                         if(bcyb >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 2, -1)
+                            call s_mpi_sendrecv_F_igr1(jac_igr, 2, -1)
+                            call s_mpi_sendrecv_F_igr2(jac_igr, 2, -1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
@@ -1142,7 +1145,8 @@ contains
 
                     if(bcye >= -1) then
                         if(bcye >= 0) then
-                            call s_mpi_sendrecv_F_igr(jac_igr, 2, 1)
+                            call s_mpi_sendrecv_F_igr1(jac_igr, 2, 1)
+                            call s_mpi_sendrecv_F_igr2(jac_igr, 2, 1)
                         else
                             !$acc parallel loop gang vector collapse(3) default(present)
                             do q = 1, 2
