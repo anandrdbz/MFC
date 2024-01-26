@@ -888,10 +888,11 @@ contains
                     end do
 
                     ! print*, 'gamma_K', gamma_K
-                    call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
-                                            qK_cons_vf(alf_idx)%sf(j, k, l), &
-                                            dyn_pres_K, pi_inf_K, gamma_K, rho_K, pres)
+                    !call s_compute_pressure(qK_cons_vf(E_idx)%sf(j, k, l), &
+                    !                        qK_cons_vf(alf_idx)%sf(j, k, l), &
+                    !                        dyn_pres_K, pi_inf_K, gamma_K, rho_K, pres)
 
+                    pres = 0.2 * (alpha_rho_K(1))**1.4
                     qK_prim_vf(E_idx)%sf(j, k, l) = pres
 
                     if (bubbles) then

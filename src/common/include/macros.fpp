@@ -11,7 +11,7 @@
 
 #:def ALLOCATE(*args)
     allocate(${', '.join(args)}$)
-    !$acc enter data create(${', '.join([ arg.split('(')[0] for arg in args ])}$)
+    !$acc enter data create(${', '.join(args)}$)
 #:enddef ALLOCATE
 
 #:def DEALLOCATE(*args)

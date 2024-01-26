@@ -686,7 +686,6 @@ contains
 
         ix%end = m - ix%beg; iy%end = n - iy%beg; iz%end = p - iz%beg
         ! ==================================================================
-
         !$acc update device(ix, iy, iz)
 
         call nvtxStartRange("RHS-MPI")
@@ -730,13 +729,13 @@ contains
 
         !end if
 
-        call nvtxStartRange("RHS-CONVERT")
+        !call nvtxStartRange("RHS-CONVERT")
          call s_convert_conservative_to_primitive_variables( &
              q_cons_qp%vf, &
              q_prim_qp%vf, &
              gm_alpha_qp%vf, &
              ix, iy, iz)
-        call nvtxEndRange
+        !call nvtxEndRange
 
 
         !APPLY BC FOR F
@@ -780,7 +779,7 @@ contains
 
             bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end
 
-            bcxb = -1; bcye = -1;  bcxe = -1; bcyb = -1
+            !bcxb = -1; bcye = -1;  bcxe = -1; bcyb = -1
 
 
             !print *, 'BC', bcxb, bcxe, bcyb, bcye
@@ -938,6 +937,13 @@ contains
                 !$acc update device(alf_igr)
 
                 !$acc parallel loop collapse(2) gang vector default(present)
+                do k = iy%beg, iy%end
+                    do j = ix%beg, ix%end
+                        rho_igr(j,k) = q_prim_qp%vf(contxb)%sf(j,k,0)
+                   end do
+                end do
+
+                !$acc parallel loop collapse(2) gang vector default(present)
                 do k = iy%beg + 1, iy%end - 1
                     do j = ix%beg+1, ix%end-1
                         dux_igr(j, k) = (1/(2d0*dx(j))) * ( &
@@ -963,12 +969,6 @@ contains
                     end do
                 end do
 
-                !$acc parallel loop collapse(2) gang vector default(present)
-                do k = iy%beg, iy%end
-                    do j = ix%beg, ix%end
-                        rho_igr(j,k) = q_prim_qp%vf(contxb)%sf(j,k,0)
-                    end do
-                end do
 
                 !$acc update host(dux_igr, duy_igr, dvx_igr, dvy_igr, F_igr)
                 print *, maxval(abs(dux_igr(0:m,0:n))), maxval(abs(duy_igr(0:m,0:n))), maxval(abs(dvx_igr(0:m,0:n))),maxval(abs(dvy_igr(0:m,0:n)))
@@ -1040,13 +1040,11 @@ contains
 
                 !print *, "PR INIT", proc_rank, jac_old_igr(1, 0:buff_size-1, n), jac_old_igr(1, m+1:m+buff_size, n) 
 
-                omega = 1.4
+                omega = 0.67
                 !$acc update device(omega)
 
                 !print *, "RHO DIFF", maxval(abs(rho_igr(100, 0:n+1) - rho_igr(100, -1:n)))
-                !$acc loop seq
                 do i = 1, 10
-                    !$acc loop seq
                      do q = 1, 2
 
                     !$acc parallel loop gang vector collapse(2) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
@@ -1082,8 +1080,8 @@ contains
                                     rho_ry = 0d0
                                 end if
 
-                                jac_igr(q,j,k) = jac_igr(q,j,k)+ (1d0 / dx(j)**2d0) * (rho_lx* jac_igr(q,j-1,k) + rho_rx* jac_igr(q,j+1,k)) &
-                                        + (1d0 / dy(k)**2d0) * (rho_ly* jac_igr(q,j,k-1) + rho_ry* jac_igr(q,j,k+1)) 
+                                jac_igr(q,j,k) = jac_igr(q,j,k)+ (1d0 / dx(j)**2d0) * (rho_lx* jac_old_igr(q,j-1,k) + rho_rx*jac_old_igr(q,j+1,k)) &
+                                        + (1d0 / dy(k)**2d0) * (rho_ly* jac_old_igr(q,j,k-1) + rho_ry* jac_old_igr(q,j,k+1)) 
 
                                 jac_igr(q, j, k) = omega * (1 / fd_coeff(j,k))*jac_igr(q,j,k) + (1 - omega)*jac_old_igr(q, j, k)
 
@@ -1111,9 +1109,7 @@ contains
 
                         if(bcxe >= -1) then
                             if(bcxe >= 0) then
-                                !do q = 1, 2
                                     call s_mpi_sendrecv_F_igr(jac_igr(q:q, ix%beg:ix%end, iy%beg:iy%end), 1, 1)
-                                !end do
                             else
                                 !$acc parallel loop gang vector collapse(2) default(present)
                                     do k = 0, n
@@ -1227,6 +1223,7 @@ contains
                     end do
                 end do 
 
+                !$acc update host(F_igr)
                 print *, "F", maxval(abs(F_igr(1:4, -1:m+1, -1:n+1)))
 
                 !$acc parallel loop gang vector collapse(2) default(present)
@@ -1250,11 +1247,13 @@ contains
                     end do
                 end do
 
-                print *, "Flux rho X", maxval(abs(flux_n(1)%vf(1)%sf(1:4, -1:m+1, -1:n+1)))
-                print *, "Flux u X", maxval(abs(flux_n(1)%vf(2)%sf(1:4, -1:m+1, -1:n+1)))
-                print *, "Flux v X", maxval(abs(flux_n(1)%vf(3)%sf(1:4, -1:m+1, -1:n+1)))
+                do i = 1, 3
+                    !$acc update host(flux_n(1)%vf(i)%sf)
+                end do
+                print *, "Flux rho X", maxval(abs(flux_n(1)%vf(1)%sf( -1:m+1, -1:n+1, 0)))
+                print *, "Flux u X", maxval(abs(flux_n(1)%vf(2)%sf( -1:m+1, -1:n+1, 0)))
+                print *, "Flux v X", maxval(abs(flux_n(1)%vf(3)%sf( -1:m+1, -1:n+1, 0)))
 
-                
                 !$acc parallel loop collapse(3) gang vector default(present)
                 do i = 1, 3
                     do k = 0, n
@@ -1283,10 +1282,13 @@ contains
                         end do
                     end do
                 end do
+                do i = 1, 3
+                    !$acc update host(rhs_vf(i)%sf)
+                end do
 
                 print *, "RHS RHO X", maxval(abs(rhs_vf(1)%sf(0:m, 0:n, 0)))
-                print *, "RHS U X", maxval(abs(rhs_vf(1)%sf(0:m, 0:n, 0)))
-                print *, "RHS V X", maxval(abs(rhs_vf(1)%sf(0:m, 0:n, 0)))
+                print *, "RHS U X", maxval(abs(rhs_vf(2)%sf(0:m, 0:n, 0)))
+                print *, "RHS V X", maxval(abs(rhs_vf(3)%sf(0:m, 0:n, 0)))
 
                 !!$acc parallel loop collapse(4) gang vector default(present)
                 !do j = 1, sys_size
@@ -1527,10 +1529,7 @@ contains
                 !$acc parallel loop gang vector collapse(2) default(present)
                 do k = -1, n+1
                     do j = 0, m
-                        ! Mass -> rho*u
-                        flux_n(id)%vf(1)%sf(j,k,0) = &
-                            q_prim_qp%vf(contxb)%sf(j,k,0) * &
-                            q_prim_qp%vf( momxb+1)%sf(j,k,0)
+                        flux_n(id)%vf(1)%sf(j,k,0) = q_prim_qp%vf(contxb)%sf(j,k,0) *  q_prim_qp%vf(momxb+1)%sf(j,k,0)
 
                         flux_n(id)%vf(2)%sf(j,k,0) = &
                              q_prim_qp%vf(contxb)%sf(j,k,0) * &
@@ -1543,9 +1542,16 @@ contains
                             F_igr(4, j, k)
                     end do
                 end do
+                do i = 1, 3
+                    !$acc update host(flux_n(2)%vf(i)%sf)
+                end do
+                print *, "Flux rho Y", maxval(abs(flux_n(2)%vf(1)%sf( -1:m, -1:n+1, 0)))
+                print *, "Flux u Y", maxval(abs(flux_n(2)%vf(2)%sf( -1:m, -1:n+1, 0)))
+                print *, "Flux v Y", maxval(abs(flux_n(2)%vf(3)%sf( -1:m, -1:n+1, 0)))
 
 
-                !print *, "V MAX", maxval(abs(q_prim_qp%vf(momxb+1)%sf(:, :, 0)))
+                !$acc update host(q_prim_qp%vf(momxb+1)%sf)
+                print *, "V MAX", maxval(abs(q_prim_qp%vf(momxb+1)%sf(0:m, -1:n+1, 0)))
                 !print *, "V LOC", maxloc(abs(q_prim_qp%vf(momxb+1)%sf(:, :, 0)))
                 
                          
@@ -1580,6 +1586,12 @@ contains
                         end do
                     end do
                 end do
+                do i = 1, 3
+                    !$acc update host(rhs_vf(i)%sf)
+                end do
+                print *, "RHS RHO Y", maxval(abs(rhs_vf(1)%sf(0:m, 0:n, 0)))
+                print *, "RHS U Y", maxval(abs(rhs_vf(2)%sf(0:m, 0:n, 0)))
+                print *, "RHS V Y", maxval(abs(rhs_vf(3)%sf(0:m, 0:n, 0)))
 
                 ! j = 149; k = 112
                 ! print *, "VEL",  q_prim_qp%vf(3)%sf(j, k, 0) 

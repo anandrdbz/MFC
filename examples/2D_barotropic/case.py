@@ -49,7 +49,7 @@ print(json.dumps({
     'adv_alphan'                   : 'T',
     'mpp_lim'                      : 'F',
     'mixture_err'                  : 'F',
-    'time_stepper'                 : 4,
+    'time_stepper'                 : 3,
     'weno_order'                   : 5,
     'weno_eps'                     : 1.E-16,
     'weno_Re_flux'                 : 'F',  
@@ -65,6 +65,7 @@ print(json.dumps({
     'bc_y%beg'                     : -1,
     'bc_y%end'                     : -1,
     'barotropic'                   : 'T',
+    'cu_mpi'                   : 'F',
     # ==========================================================================
 
     # Formatted Database Files Structure Parameters ============================
@@ -91,8 +92,8 @@ print(json.dumps({
     'patch_icpp(2)%y_centroid'     : 0.5,
     'patch_icpp(2)%length_x'       : 0.5,
     'patch_icpp(2)%length_y'       : 1.0,
-    'patch_icpp(2)%vel(1)'         : -0.0*u,
-    'patch_icpp(2)%vel(2)'         : -0.0*u,
+    'patch_icpp(2)%vel(1)'         : 0.0*u,
+    'patch_icpp(2)%vel(2)'         : 0.0*u,
     'patch_icpp(2)%alpha_rho(1)'   : rho, 
     'patch_icpp(2)%pres'           : 0.2*(rho)**1.4,
     'patch_icpp(2)%alpha(1)'       : 1.,
