@@ -988,7 +988,7 @@ contains
                 end do
 
                 !$acc update host(rhs_igr) 
-                print *, "MAX", maxval(abs(rhs_igr(0:m,0:n)))
+                print *, "MAX", maxval(abs(rhs_igr(1:4, 0:m,0:n)))
 
                 !$acc parallel loop collapse(2) gang vector default(present)
                 do k = iy%beg + 2, iy%end - 1
@@ -1152,7 +1152,7 @@ contains
 
                         !if(i == 25) then
                             !$acc update host(jac_igr, jac_old_igr, fd_coeff)
-                            print *, "ITER",q, maxval(abs(jac_igr(q, -1:m+1, -1:n+1) - jac_old_igr(-1:m+1, -1:n+1))), maxval(abs( jac_old_igr(q,-1:m+1,-1:n+1))), maxval(abs(fd_coeff(-1:m+1, -1:n+1)))          
+                            print *, "ITER",q, maxval(abs(jac_igr(q, -1:m+1, -1:n+1) - jac_old_igr(q,-1:m+1, -1:n+1))), maxval(abs( jac_old_igr(q,-1:m+1,-1:n+1))), maxval(abs(fd_coeff(-1:m+1, -1:n+1)))          
                         !end if
                         !print *, "PR INIT", proc_rank, jac_old_igr(q, 0:buff_size-1, 199), jac_old_igr(q, m+1:m+buff_size, 199) 
 
@@ -1227,6 +1227,8 @@ contains
                     end do
                 end do 
 
+                print *, "F", maxval(abs(F_igr(1:4, -1:m+1, -1:n+1)))
+
                 !$acc parallel loop gang vector collapse(2) default(present)
                 do k = 0, n
                     do j = -1, m+1
@@ -1247,6 +1249,11 @@ contains
                             F_igr(3, j, k)
                     end do
                 end do
+
+                print *, "Flux rho X", maxval(abs(flux_n(1)%vf(1)%sf(1:4, -1:m+1, -1:n+1)))
+                print *, "Flux u X", maxval(abs(flux_n(1)%vf(2)%sf(1:4, -1:m+1, -1:n+1)))
+                print *, "Flux v X", maxval(abs(flux_n(1)%vf(3)%sf(1:4, -1:m+1, -1:n+1)))
+
                 
                 !$acc parallel loop collapse(3) gang vector default(present)
                 do i = 1, 3
@@ -1276,6 +1283,10 @@ contains
                         end do
                     end do
                 end do
+
+                print *, "RHS RHO X", maxval(abs(rhs_vf(1)%sf(0:m, 0:n, 0)))
+                print *, "RHS U X", maxval(abs(rhs_vf(1)%sf(0:m, 0:n, 0)))
+                print *, "RHS V X", maxval(abs(rhs_vf(1)%sf(0:m, 0:n, 0)))
 
                 !!$acc parallel loop collapse(4) gang vector default(present)
                 !do j = 1, sys_size
