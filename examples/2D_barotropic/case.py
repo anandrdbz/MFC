@@ -4,7 +4,7 @@ import math
 import json
 
 # Numerical setup
-Nx = 200
+Nx = 30
 dx = 1./(1.*(Nx+1))
 
 Tend = 0.2
@@ -72,7 +72,7 @@ print(json.dumps({
     'format'                       : 1,
     'precision'                    : 2,
     'prim_vars_wrt'                :'T',
-    'parallel_io'                  :'T',
+    'parallel_io'                  :'F',
     # ==========================================================================
 
 

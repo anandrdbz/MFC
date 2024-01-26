@@ -591,7 +591,7 @@ contains
             end if
        end if
 #endif
-
+        print *, "IX", ixb, ixe
         !$acc update device(ixb, ixe, iyb, iye, izb, ize)
 
         @:ALLOCATE(gammas (1:num_fluids))

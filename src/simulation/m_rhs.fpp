@@ -697,9 +697,11 @@ contains
         ! ==================================================================
         !$acc update device(ix, iy, iz)
 
+        bc_x%beg = -1; bc_x%end = -1; bc_y%beg = -1; bc_y%end = -1
         call nvtxStartRange("RHS-MPI")
         call s_populate_conservative_variables_buffers(q_cons_vf, pb, mv)
         call nvtxEndRange
+        bc_x%beg = 0; bc_x%end = 0; bc_y%beg = 0; bc_y%end = 0
 
         ! Association/Population of Working Variables ======================
         !$acc parallel loop collapse(4) gang vector default(present)
@@ -779,8 +781,7 @@ contains
 
             bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end
 
-            !bcxb = -1; bcye = -1;  bcxe = -1; bcyb = -1
-
+!            bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1
 
             !print *, 'BC', bcxb, bcxe, bcyb, bcye
 
@@ -1109,6 +1110,7 @@ contains
                             end do
                         end if
                     end if
+
 
                     if(bcxe >= -1) then
                         if(bcxe >= 0) then

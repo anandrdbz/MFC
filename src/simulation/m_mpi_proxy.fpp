@@ -787,6 +787,7 @@ contains
                                 buff_size*(n + 1)*(p + 1), &
                                 MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
                                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
 
                         end if                 
 
@@ -821,12 +822,9 @@ contains
                                 buff_size*(n + 1)*(p + 1), &
                                 MPI_DOUBLE_PRECISION, bc_x%beg, 0, &
                                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
                         end if
                         
-                    end if
-
-                    if (cu_mpi .eqv. .false.) then
-                        !$acc update device(q_cons_buff_recv)
                     end if
 
                     !$acc parallel loop gang vector collapse(2) default(present) private(r)
@@ -869,6 +867,7 @@ contains
                                 buff_size*(n + 1)*(p + 1), &
                                 MPI_DOUBLE_PRECISION, bc_x%end, 1, &
                                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
                         end if
                     else
                         !$acc parallel loop gang vector collapse(2) default(present) private(r)
@@ -901,11 +900,8 @@ contains
                             buff_size*(n + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_x%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
                         end if
-                    end if
-
-                    if (cu_mpi .eqv. .false.) then
-                        !$acc update device(q_cons_buff_recv)
                     end if
 
                     !$acc parallel loop gang vector collapse(2) default(present) private(r)
@@ -951,6 +947,7 @@ contains
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
                         end if
 
                     else
@@ -984,12 +981,9 @@ contains
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
                         end if
                         
-                    end if
-
-                    if (cu_mpi .eqv. .false.) then
-                        !$acc update device(q_cons_buff_recv)
                     end if
 
                     !$acc parallel loop gang vector collapse(2) default(present) private(r)
@@ -1033,6 +1027,7 @@ contains
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
                         end if
 
                     else
@@ -1067,11 +1062,8 @@ contains
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+                            !$acc update device(q_cons_buff_recv)
                         end if
-                    end if
-
-                    if (cu_mpi .eqv. .false.) then
-                        !$acc update device(q_cons_buff_recv)
                     end if
 
                     !$acc parallel loop gang vector collapse(2) default(present) private(r)
