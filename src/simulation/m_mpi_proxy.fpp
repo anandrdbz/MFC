@@ -1541,11 +1541,9 @@ contains
 
                 end if
 
-#if defined(MFC_OpenACC) && defined(__PGI)
                 if (cu_mpi .eqv. .false.) then
                     !$acc update device(q_cons_buff_recv)
                 end if
-#endif
 
                 ! Unpacking buffer received from bc_x%beg
 !$acc parallel loop collapse(4) gang vector default(present) private(r)
@@ -2110,11 +2108,10 @@ contains
 
                 end if
 
-#if defined(MFC_OpenACC) && defined(__PGI)
                 if (cu_mpi .eqv. .false.) then
                     !$acc update device(q_cons_buff_recv)
                 end if
-#endif
+
 
                 ! Unpacking buffer received from bc_y%beg
 !$acc parallel loop collapse(4) gang vector default(present) private(r)
@@ -2393,11 +2390,10 @@ contains
 
                 end if
 
-#if defined(MFC_OpenACC) && defined(__PGI)
                 if (cu_mpi .eqv. .false.) then
                     !$acc update device(q_cons_buff_recv)
                 end if
-#endif
+
 
                 ! Unpacking buffer received form bc_y%end
 !$acc parallel loop collapse(4) gang vector default(present) private(r)
@@ -2643,11 +2639,9 @@ contains
 
                 end if
 
-#if defined(MFC_OpenACC) && defined(__PGI)
                 if (cu_mpi .eqv. .false.) then
                     !$acc update device(q_cons_buff_recv)
                 end if
-#endif
 
                 ! Unpacking buffer from bc_z%beg
 !$acc parallel loop collapse(4) gang vector default(present) private(r)
@@ -2888,11 +2882,10 @@ contains
 
                 end if
 
-#if defined(MFC_OpenACC) && defined(__PGI)
                 if (cu_mpi .eqv. .false.) then
                     !$acc update device(q_cons_buff_recv)
                 end if
-#endif
+
 
                 ! Unpacking buffer received from bc_z%end
 !$acc parallel loop collapse(4) gang vector default(present) private(r)
