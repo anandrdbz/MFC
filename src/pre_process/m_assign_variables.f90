@@ -225,9 +225,9 @@ contains
         ! end if
 
         q_prim_vf(1)%sf(j, k, l) = 1d0
-        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.4d0)**2d0 + (y_cc(k) - 0.45d0)**2d0)/ 0.08d0**2d0) 
-        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.55d0)**2d0 + (y_cc(k) - 0.55d0)**2d0)/ 0.08d0**2d0) 
-        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.6d0)**2d0 + (y_cc(k) - 0.42d0)**2d0)/ 0.08d0**2d0) 
+        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.40d0)**2d0 + (y_cc(k) - 0.45d0)**2d0 + (z_cc(l) - 0.42d0)**2d0)/ 0.08d0**2d0) 
+        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.55d0)**2d0 + (y_cc(k) - 0.55d0)**2d0 + (z_cc(l) - 0.55d0)**2d0)/ 0.08d0**2d0) 
+        q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.60d0)**2d0 + (y_cc(k) - 0.42d0)**2d0 + (z_cc(l) - 0.58d0)**2d0)/ 0.08d0**2d0) 
         q_prim_vf(E_idx)%sf(j, k, l) = 0.2 * (q_prim_vf(1)%sf(j, k, l))**1.4d0
 
         ! x = x_cc(j) - 0.5
