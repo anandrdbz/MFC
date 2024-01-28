@@ -1156,11 +1156,6 @@ contains
                         end do
                     end do
 
-                        !call MPI_Barrier(MPI_COMM_WORLD)  
-
-                        !print *, "PR INIT", proc_rank, fd_coeff(0:buff_size-1, 199), fd_coeff(m+1:m+buff_size, 199)                    
-
-
                     if(bcxb >= -1) then
                         if(bcxb >= 0) then
                             call s_mpi_sendrecv_F_igr(jac_igr, 1, -1)
