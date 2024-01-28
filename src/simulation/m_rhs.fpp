@@ -1261,7 +1261,7 @@ contains
                             end if
                         end if
 
-                        !$acc parallel loop gang vector collapse(3) default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = iz%beg, iz%end
                                 do k = iy%beg, iy%end
