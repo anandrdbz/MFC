@@ -164,9 +164,8 @@ module m_rhs
     real(kind(0d0)), allocatable, dimension(:, :, :) :: rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, fd_coeff, duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr
     real(kind(0d0)), allocatable, dimension(:, :, :, :) :: jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr
     real(kind(0d0)) :: alf_igr, omega
-    real(kind(0d0)), allocatable, dimension(:, :) :: F_1d_igr, F_1d_old_igr, rhs_1d_igr, fd_1d_coeff
 
-    integer :: bcxb, bcxe, bcyb, bcye
+    integer :: bcxb, bcxe, bcyb, bcye, bczb, bcze
 
 !$acc declare create(q_cons_qp,q_prim_qp,  &
 !$acc   dq_prim_dx_qp,dq_prim_dy_qp,dq_prim_dz_qp,dqL_prim_dx_n,dqL_prim_dy_n, &
@@ -176,7 +175,7 @@ module m_rhs
 !$acc   bub_mom_src,alf_sum, &
 !$acc   blkmod1, blkmod2, alpha1, alpha2, Kterm, divu, qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
 !$acc   dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
-!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff, &
+!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, bczb, bcze, omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff, &
 !$acc   duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr)
 
     real(kind(0d0)), allocatable, dimension(:, :, :) :: nbub !< Bubble number density
@@ -692,7 +691,7 @@ contains
 
         real(kind(0d0)) :: mytime, sound
         real(kind(0d0)) :: start, finish
-        real(kind(0d0)) :: s2, const_sos, s1, rho_lx, rho_rx, rho_ly, rho_ry, sum
+        real(kind(0d0)) :: s2, const_sos, s1, rho_lx, rho_rx, rho_ly, rho_ry, rho_lz, rho_rz,sum
 
         integer :: i, j, k, l,  q, ii, id !< Generic loop iterators
         integer :: term_index
@@ -788,12 +787,7 @@ contains
 
             bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end; bczb = bc_z%beg; bcze = bc_z%end;
 
-            !bcxb = -1; bcye = -1;  bcxe = -1; bcyb = -1
-
-
-            !print *, 'BC', bcxb, bcxe, bcyb, bcye
-
-            !bcxb = -1; bcxe = -1
+            bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1; bczb = -1; bcze = -1;
 
             !$acc update device(ix, iy, iz, bcxb, bcxe, bcyb, bcye, bczb, bcze)
 
@@ -929,12 +923,12 @@ contains
             call nvtxStartRange("RHS_Flux_Add")
             if (id == 1) then
 
-                if (bcxb <= -5 .and. bcxb >= -13) then
+                if (bc_x%beg <= -5 .and. bc_x%beg >= -13) then
                     call s_cbc(q_prim_qp%vf, flux_n(id)%vf, &
                                flux_src_n(id)%vf, id, -1, ix, iy, iz)
                 end if
 
-                if (bcxe <= -5 .and. bcxe >= -13) then
+                if (bc_x%beg <= -5 .and. bc_x%end >= -13) then
                     call s_cbc(q_prim_qp%vf, flux_n(id)%vf, &
                                flux_src_n(id)%vf, id, 1, ix, iy, iz)
                 end if
@@ -966,9 +960,9 @@ contains
                                 q_prim_qp%vf(momxb)%sf(j,k+1,l) - &
                                 q_prim_qp%vf(momxb)%sf(j,k-1,l) ) 
 
-                            duz_igr(j,k,k) = (1/(2d0 *dz(l)) * (&
+                            duz_igr(j,k,k) = (1/(2d0 *dz(l))) * (&
                                 q_prim_qp%vf(momxb)%sf(j,k,l+1) - &
-                                q_prim_qp%vf(momxb)%sf(j,k,l-1))
+                                q_prim_qp%vf(momxb)%sf(j,k,l-1) )
                         end do
                     end do
                 end do
@@ -985,7 +979,7 @@ contains
                                 q_prim_qp%vf(momxb + 1)%sf(j,k+1,l) - &
                                 q_prim_qp%vf(momxb + 1)%sf(j,k-1,l) )
 
-                            dvz_igr(j,k,k) = (1/(2d0 *dz(l)) * (&
+                            dvz_igr(j,k,k) = (1/(2d0 *dz(l))) * (&
                                 q_prim_qp%vf(momxb + 1)%sf(j,k,l+1) - &
                                 q_prim_qp%vf(momxb +  1)%sf(j,k,l-1))
                         end do
@@ -1004,7 +998,7 @@ contains
                                 q_prim_qp%vf(momxb + 2)%sf(j,k+1,l) - &
                                 q_prim_qp%vf(momxb + 2)%sf(j,k-1,l) )
 
-                            dwz_igr(j,k,k) = (1/(2d0 *dz(l)) * (&
+                            dwz_igr(j,k,k) = (1/(2d0 *dz(l))) * (&
                                 q_prim_qp%vf(momxb + 2)%sf(j,k,l+1) - &
                                 q_prim_qp%vf(momxb +  2)%sf(j,k,l-1))
                         end do
@@ -1396,17 +1390,17 @@ contains
                 do l = iz%beg, iz%end - 1
                     do k = iy%beg , iy%end - 1
                         do j = ix%beg , ix%end - 1                        
-                            F_igr(1, j, k) = 1d0* (rhs_igr(1, j, k) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(1,j+1,k,l) - jac_igr(1,j,k,l)))
-                            F_igr(2, j, k) = 1d0* (rhs_igr(2, j, k) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(1,j,k+1,l) - jac_igr(1,j,k,l)))
-                            F_igr(3, j, k) = 1d0* (rhs_igr(3, j, k) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(1,j,k,l+1) - jac_igr(1,j,k,l)))
+                            F_igr(1, j, k, l) = 1d0* (rhs_igr(1, j, k, l) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(1,j+1,k,l) - jac_igr(1,j,k,l)))
+                            F_igr(2, j, k, l) = 1d0* (rhs_igr(2, j, k, l) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(1,j,k+1,l) - jac_igr(1,j,k,l)))
+                            F_igr(3, j, k, l) = 1d0* (rhs_igr(3, j, k, l) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(1,j,k,l+1) - jac_igr(1,j,k,l)))
 
-                            F_igr(4, j, k) = 1d0* (rhs_igr(4, j, k) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(2,j+1,k,l) - jac_igr(2,j,k,l)))
-                            F_igr(5, j, k) = 1d0* (rhs_igr(5, j, k) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(2,j,k+1,l) - jac_igr(2,j,k,l)))
-                            F_igr(6, j, k) = 1d0* (rhs_igr(6, j, k) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(2,j,k,l+1) - jac_igr(2,j,k,l)))                            
+                            F_igr(4, j, k, l) = 1d0* (rhs_igr(4, j, k, l) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(2,j+1,k,l) - jac_igr(2,j,k,l)))
+                            F_igr(5, j, k, l) = 1d0* (rhs_igr(5, j, k, l) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(2,j,k+1,l) - jac_igr(2,j,k,l)))
+                            F_igr(6, j, k, l) = 1d0* (rhs_igr(6, j, k, l) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(2,j,k,l+1) - jac_igr(2,j,k,l)))                            
 
-                            F_igr(7, j, k) = 1d0* (rhs_igr(7, j, k) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(3,j+1,k,l) - jac_igr(3,j,k,l)))
-                            F_igr(8, j, k) = 1d0* (rhs_igr(8, j, k) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(3,j,k+1,l) - jac_igr(3,j,k,l)))
-                            F_igr(9, j, k) = 1d0* (rhs_igr(9, j, k) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(3,j,k,l+1) - jac_igr(3,j,k,l)))
+                            F_igr(7, j, k, l) = 1d0* (rhs_igr(7, j, k, l) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(3,j+1,k,l) - jac_igr(3,j,k,l)))
+                            F_igr(8, j, k, l) = 1d0* (rhs_igr(8, j, k, l) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(3,j,k+1,l) - jac_igr(3,j,k,l)))
+                            F_igr(9, j, k, l) = 1d0* (rhs_igr(9, j, k, l) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(3,j,k,l+1) - jac_igr(3,j,k,l)))
 
                         end do
                     end do 
@@ -1730,23 +1724,6 @@ contains
                                flux_src_n(id)%vf, id, 1, ix, iy, iz)
                 end if
 
-                !$acc parallel loop gang vector collapse(2) default(present)
-                do k = -1, n+1
-                    do j = 0, m
-                        flux_n(id)%vf(1)%sf(j,k,0) = q_prim_qp%vf(contxb)%sf(j,k,0) *  q_prim_qp%vf(momxb+1)%sf(j,k,0)
-
-                        flux_n(id)%vf(2)%sf(j,k,0) = &
-                             q_prim_qp%vf(contxb)%sf(j,k,0) * &
-                            (q_prim_qp%vf(momxb + 1)%sf(j,k,0)*q_prim_qp%vf(momxb)%sf(j,k,0)) + &
-                            F_igr(2, j, k)
-
-                        flux_n(id)%vf(3)%sf(j, k, 0) = q_prim_qp%vf(contxb)%sf(j,k,0) * &
-                            (q_prim_qp%vf(momxb + 1)%sf(j,k,0)**2d0) + &
-                            q_prim_qp%vf(e_idx)%sf(j,k,0) + &
-                            F_igr(4, j, k)
-                    end do
-                end do
-
                 !$acc parallel loop gang vector collapse(3) default(present)
                 do l = 0, p
                     do k = -1, n+1
@@ -1772,22 +1749,7 @@ contains
                                 F_igr(8, j, k, l)
                         end do
                     end do
-                end do
-
-
-                ! do i = 1, 3
-                !     !$acc update host(flux_n(2)%vf(i)%sf)
-                ! end do
-                ! print *, "Flux rho Y", maxval(abs(flux_n(2)%vf(1)%sf( -1:m, -1:n+1, 0)))
-                ! print *, "Flux u Y", maxval(abs(flux_n(2)%vf(2)%sf( -1:m, -1:n+1, 0)))
-                ! print *, "Flux v Y", maxval(abs(flux_n(2)%vf(3)%sf( -1:m, -1:n+1, 0)))
-
-
-                ! !$acc update host(q_prim_qp%vf(momxb+1)%sf)
-                ! print *, "V MAX", maxval(abs(q_prim_qp%vf(momxb+1)%sf(0:m, -1:n+1, 0)))
-                !print *, "V LOC", maxloc(abs(q_prim_qp%vf(momxb+1)%sf(:, :, 0)))
-                
-                         
+                end do   
 
                 !$acc parallel loop gang vector collapse(4) default(present)
                 do i = 1, 4
@@ -2239,8 +2201,8 @@ contains
                 end if
 
                 !$acc parallel loop gang vector collapse(3) default(present)
-                do l = 0, p
-                    do k = -1, n+1
+                do l = -1, p+1
+                    do k = 0, n
                         do j = 0, m
 
                             flux_n(id)%vf(1)%sf(j,k,l) = &

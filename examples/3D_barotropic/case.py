@@ -103,7 +103,7 @@ print(json.dumps({
     'patch_icpp(2)%length_z'       : 1.0,
     'patch_icpp(2)%vel(1)'         : 0.0*u,
     'patch_icpp(2)%vel(2)'         : 0.0*u,
-    'patch_icpp(2)%vel(2)'         : 0.0*u,
+    'patch_icpp(2)%vel(3)'         : 0.0*u,
     'patch_icpp(2)%alpha_rho(1)'   : rho, 
     'patch_icpp(2)%pres'           : 0.2*(rho)**1.4,
     'patch_icpp(2)%alpha(1)'       : 1.,
