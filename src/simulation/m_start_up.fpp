@@ -1034,7 +1034,6 @@ contains
     subroutine s_initialize_mpi_domain()
         integer :: ierr
 #if defined(__PGI)
-print *, "REACHED HERE"
         real(kind(0d0)) :: starttime, endtime
         integer :: num_devices, local_size, num_nodes, ppn, my_device_num
         integer :: dev, devNum, local_rank
@@ -1050,7 +1049,6 @@ print *, "REACHED HERE"
 
     ! Bind GPUs if OpenACC is enabled
 #if defined(__PGI)
-print *, "REACHED HERE"
 #ifndef MFC_MPI
         local_size = 1
         local_rank = 0
