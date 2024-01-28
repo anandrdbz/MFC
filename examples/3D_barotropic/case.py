@@ -51,7 +51,7 @@ print(json.dumps({
     'adv_alphan'                   : 'T',
     'mpp_lim'                      : 'F',
     'mixture_err'                  : 'F',
-    'time_stepper'                 : 4,
+    'time_stepper'                 : 3,
     'weno_order'                   : 5,
     'weno_eps'                     : 1.E-16,
     'weno_Re_flux'                 : 'F',  
@@ -68,7 +68,7 @@ print(json.dumps({
     'bc_y%end'                     : -1,
     'bc_z%beg'                     : -1,
     'bc_z%end'                     : -1,
-    'barotropic'                   : 'T',
+    'barotropic'                   : 'F',
     'cu_mpi'                   : 'F',
     # ==========================================================================
 
