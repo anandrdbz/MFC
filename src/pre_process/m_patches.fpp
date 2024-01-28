@@ -2,6 +2,7 @@
 !! @file m_patches.fpp
 !! @brief Contains module m_patches
 
+#:include 'case.fpp'
 #:include '1dHardcodedIC.fpp'
 #:include '2dHardcodedIC.fpp'
 #:include '3dHardcodedIC.fpp'
