@@ -750,8 +750,6 @@ contains
         integer, intent(IN) :: pbc_loc
         integer :: i, j, k, l, r, q
 
-        !print *, "MPI", proc_rank, F_igr(1, 0:buff_size-1, 50)
-
         do q = 1, 3
             if(mpi_dir == 1) then
                 if(pbc_loc == -1) then
