@@ -34,8 +34,10 @@ module m_mpi_proxy
     !! time, to the relevant neighboring processor.
 
     real(kind(0d0)), private, allocatable, dimension(:) :: q_cons_buff_recv !<
-    !! q_cons_buff_recv is utilized to receive and unpack the buffer of the cell-
-    !! average conservative variables, for a single computational domain boundary
+    !! q_cons_buff_recv is utilized to receive and unpack the buffer of the
+    !cell-
+    !! average conservative variables, for a single computational domain
+    !boundary
     !! at the time, from the relevant neighboring processor.
 
     !> @name Generic flags used to identify and report MPI errors
@@ -67,17 +69,21 @@ contains
         if(qbmm .and. .not. polytropic) then
             if (n > 0) then
                 if (p > 0) then
-                    @:ALLOCATE(q_cons_buff_send(0:-1 + buff_size*(sys_size + 2*nb*4)* &
+                    @:ALLOCATE(q_cons_buff_send(0:-1 + buff_size*(sys_size +
+2*nb*4)* &
                                              & (m + 2*buff_size + 1)* &
                                              & (n + 2*buff_size + 1)* &
                                              & (p + 2*buff_size + 1)/ &
-                                             & (min(m, n, p) + 2*buff_size + 1)))
+                                             & (min(m, n, p) + 2*buff_size +
+1)))
                 else
-                    @:ALLOCATE(q_cons_buff_send(0:-1 + buff_size*(sys_size + 2*nb*4)* &
+                    @:ALLOCATE(q_cons_buff_send(0:-1 + buff_size*(sys_size +
+2*nb*4)* &
                                              & (max(m, n) + 2*buff_size + 1)))
                 end if
             else
-                @:ALLOCATE(q_cons_buff_send(0:-1 + buff_size*(sys_size + 2*nb*4)))
+                @:ALLOCATE(q_cons_buff_send(0:-1 + buff_size*(sys_size +
+2*nb*4)))
             end if
 
             @:ALLOCATE(q_cons_buff_recv(0:ubound(q_cons_buff_send, 1)))
@@ -90,7 +96,8 @@ contains
                                              & (m + 2*buff_size + 1)* &
                                              & (n + 2*buff_size + 1)* &
                                              & (p + 2*buff_size + 1)/ &
-                                             & (min(m, n, p) + 2*buff_size + 1)))
+                                             & (min(m, n, p) + 2*buff_size +
+1)))
                 else
                     @:ALLOCATE(q_cons_buff_send(0:-1 + buff_size*sys_size* &
                                              & (max(m, n) + 2*buff_size + 1)))
@@ -119,7 +126,8 @@ contains
 
         integer :: i, j !< Generic loop iterator
 
-        call MPI_BCAST(case_dir, len(case_dir), MPI_CHARACTER, 0, MPI_COMM_WORLD, ierr)
+        call MPI_BCAST(case_dir, len(case_dir), MPI_CHARACTER, 0,
+MPI_COMM_WORLD, ierr)
 
         #:for VAR in ['t_step_old', 'm', 'n', 'p', 'm_glb', 'n_glb', 'p_glb',  &
             & 't_step_start','t_step_stop','t_step_save','model_eqns',         &
@@ -142,7 +150,8 @@ contains
 
         #:for VAR in [ 'dt','weno_eps','pref','rhoref','R0ref','Web','Ca',     &
             & 'Re_inv','poly_sigma' ]
-            call MPI_BCAST(${VAR}$, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+            call MPI_BCAST(${VAR}$, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD,
+ierr)
         #:endfor
 
         #:if not MFC_CASE_OPTIMIZATION
@@ -153,27 +162,34 @@ contains
         do i = 1, num_fluids_max
             #:for VAR in [ 'gamma','pi_inf','mul0','ss','pv','gamma_v','M_v',  &
                 & 'mu_v','k_v','G' ]
-                call MPI_BCAST(fluid_pp(i)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+                call MPI_BCAST(fluid_pp(i)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0,
+MPI_COMM_WORLD, ierr)
             #:endfor
-            call MPI_BCAST(fluid_pp(i)%Re(1), 2, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+            call MPI_BCAST(fluid_pp(i)%Re(1), 2, MPI_DOUBLE_PRECISION, 0,
+MPI_COMM_WORLD, ierr)
         end do
 
         do j = 1, num_probes_max
             do i = 1,3
-                call MPI_BCAST(mono(j)%loc(i), 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+                call MPI_BCAST(mono(j)%loc(i), 1, MPI_DOUBLE_PRECISION, 0,
+MPI_COMM_WORLD, ierr)
             end do
 
-            #:for VAR in [ 'mag', 'length', 'delay', 'dir', 'npulse', 'pulse',  &
+            #:for VAR in [ 'mag', 'length', 'delay', 'dir', 'npulse', 'pulse',
+&
                 'support', 'foc_length', 'aperture' ]
-                call MPI_BCAST(mono(j)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+                call MPI_BCAST(mono(j)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0,
+MPI_COMM_WORLD, ierr)
             #:endfor
 
             #:for VAR in [ 'x','y','z' ]
-                call MPI_BCAST(probe(j)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+                call MPI_BCAST(probe(j)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0,
+MPI_COMM_WORLD, ierr)
             #:endfor
 
             #:for VAR in [ 'xmin', 'xmax', 'ymin', 'ymax', 'zmin', 'zmax' ]
-                call MPI_BCAST(integral(j)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0, MPI_COMM_WORLD, ierr)
+                call MPI_BCAST(integral(j)%${VAR}$, 1, MPI_DOUBLE_PRECISION, 0,
+MPI_COMM_WORLD, ierr)
             #:endfor
         end do
         
@@ -222,9 +238,12 @@ contains
             if (p > 0) then
 
                 if (cyl_coord .and. p > 0) then
-                    ! Implement pencil processor blocking if using cylindrical coordinates so
-                    ! that all cells in azimuthal direction are stored on a single processor.
-                    ! This is necessary for efficient application of Fourier filter near axis.
+                    ! Implement pencil processor blocking if using cylindrical
+                    ! coordinates so
+                    ! that all cells in azimuthal direction are stored on a
+                    ! single processor.
+                    ! This is necessary for efficient application of Fourier
+                    ! filter near axis.
 
                     ! Initial values of the processor factorization optimization
                     num_procs_x = 1
@@ -303,7 +322,8 @@ contains
                                     tmp_num_procs_z = num_procs/(i*j)
 
                                     if (fct_min >= abs((m + 1)/tmp_num_procs_x &
-                                                       - (n + 1)/tmp_num_procs_y) &
+                                                       - (n +
+1)/tmp_num_procs_y) &
                                         + abs((n + 1)/tmp_num_procs_y &
                                               - (p + 1)/tmp_num_procs_z) &
                                         .and. &
@@ -316,9 +336,12 @@ contains
                                         num_procs_y = j
                                         num_procs_z = num_procs/(i*j)
                                         fct_min = abs((m + 1)/tmp_num_procs_x &
-                                                      - (n + 1)/tmp_num_procs_y) &
-                                                  + abs((n + 1)/tmp_num_procs_y &
-                                                        - (p + 1)/tmp_num_procs_z)
+                                                      - (n + 1)/tmp_num_procs_y)
+&
+                                                  + abs((n + 1)/tmp_num_procs_y
+&
+                                                        - (p +
+1)/tmp_num_procs_z)
                                         ierr = 0
 
                                     end if
@@ -343,16 +366,19 @@ contains
 
                 ! Creating new communicator using the Cartesian topology
                 call MPI_CART_CREATE(MPI_COMM_WORLD, 3, (/num_procs_x, &
-                                                          num_procs_y, num_procs_z/), &
+                                                          num_procs_y,
+num_procs_z/), &
                                      (/.true., .true., .true./), &
                                      .false., MPI_COMM_CART, ierr)
 
                 ! Finding the Cartesian coordinates of the local process
                 call MPI_CART_COORDS(MPI_COMM_CART, proc_rank, 3, &
                                      proc_coords, ierr)
-                ! END: 3D Cartesian Processor Topology =============================
+                ! END: 3D Cartesian Processor Topology
+                ! =============================
 
-                ! Global Parameters for z-direction ================================
+                ! Global Parameters for z-direction
+                ! ================================
 
                 ! Number of remaining cells
                 rem_cells = mod(p + 1, num_procs_z)
@@ -392,7 +418,8 @@ contains
                 end if
                 ! ==================================================================
 
-                ! 2D Cartesian Processor Topology ==================================
+                ! 2D Cartesian Processor Topology
+                ! ==================================
             else
 
                 ! Initial estimate of optimal processor topology
@@ -445,8 +472,10 @@ contains
 
                 ! Creating new communicator using the Cartesian topology
                 call MPI_CART_CREATE(MPI_COMM_WORLD, 2, (/num_procs_x, &
-                                                          num_procs_y/), (/.true., &
-                                                                           .true./), .false., MPI_COMM_CART, &
+                                                          num_procs_y/),
+(/.true., &
+                                                                           .true./),
+.false., MPI_COMM_CART, &
                                      ierr)
 
                 ! Finding the Cartesian coordinates of the local process
@@ -744,7 +773,8 @@ contains
 
         subroutine s_mpi_sendrecv_F_igr(F_igr, mpi_dir, pbc_loc)
 
-        real(kind(0d0)), dimension(1:, startx:, starty:, startz:), intent (INOUT) :: F_igr
+        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:), intent
+(INOUT) :: F_igr
 
         integer, intent(IN) :: mpi_dir
         integer, intent(IN) :: pbc_loc
@@ -755,18 +785,21 @@ contains
                 if(pbc_loc == -1) then
 
                     if(bc_x%end >= 0) then
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = 0, n
                                 do j = m - (buff_size - 1), m
-                                    r = j - m - 1 + buff_size + k*buff_size + l*buff_size*(n+1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j - m - 1 + buff_size + k*buff_size +
+l*buff_size*(n+1)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                                 q_cons_buff_send(0), &
                                 buff_size*(n + 1)*(p + 1), &
@@ -791,18 +824,20 @@ contains
                         end if                 
 
                     else
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = 0, n
                                 do j = 0, buff_size - 1
                                     r = j + k*buff_size + l*buff_size*(n+1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                                 q_cons_buff_send(0), &
                                 buff_size*(n + 1)*(p + 1), &
@@ -831,30 +866,34 @@ contains
                         !$acc update device(q_cons_buff_recv)
                     end if
 
-                    !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                    !$acc parallel loop gang vector collapse(3) default(present)
+                    !private(r)
                     do l = 0, p
                         do k = 0, n
                             do j = -buff_size, -1
-                                r = j + buff_size + k*buff_size + l*buff_size*(n+1)
-                                F_igr(q, j, k, l) = q_cons_buff_recv(r)
+                                r = j + buff_size + k*buff_size +
+l*buff_size*(n+1)
+                                F_igr(j, k, l, q) = q_cons_buff_recv(r)
                             end do
                         end do
                     end do
                 else
 
                     if(bc_x%beg >= 0) then
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = 0, n
                                 do j = 0, buff_size - 1
                                     r = j + k*buff_size + l*buff_size*(n+1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                                 q_cons_buff_send(0), &
                                 buff_size*(n + 1)*(p + 1), &
@@ -877,18 +916,21 @@ contains
                                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         end if
                     else
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = 0, n
                                 do j = m - (buff_size - 1), m
-                                    r = j - m - 1 + buff_size + k*buff_size + l*buff_size*(n+1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j - m - 1 + buff_size + k*buff_size +
+l*buff_size*(n+1)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
                             buff_size*(n + 1)*(p + 1), &
@@ -916,12 +958,13 @@ contains
                         !$acc update device(q_cons_buff_recv)
                     end if
 
-                    !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                    !$acc parallel loop gang vector collapse(3) default(present)
+                    !private(r)
                     do l = 0, p
                         do k = 0, n
                             do j = m + 1, m + buff_size
                                 r = j - m - 1 + k*buff_size + l*buff_size*(n+1)
-                                F_igr(q, j, k, l) = q_cons_buff_recv(r)
+                                F_igr(j, k, l, q) = q_cons_buff_recv(r)
                             end do
                         end do
                     end do
@@ -931,18 +974,21 @@ contains
                 if(pbc_loc == -1) then
 
                     if(bc_y%end >= 0) then
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = n - (buff_size - 1), n
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + (k - n + buff_size - 1)*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + (k - n + buff_size -
+1)*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                                 q_cons_buff_send(0), &
                                 buff_size*(m + 2*buff_size + 1)*(p + 1), &
@@ -966,18 +1012,21 @@ contains
                         end if
 
                     else
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = 0, buff_size - 1
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + k*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + k*(m + 2*buff_size + 1)
++ l*(m+2*buff_size+1)*buff_size
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
@@ -1006,30 +1055,35 @@ contains
                         !$acc update device(q_cons_buff_recv)
                     end if
 
-                    !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                    !$acc parallel loop gang vector collapse(3) default(present)
+                    !private(r)
                     do l = 0, p
                         do k = -buff_size, - 1
                             do j = -buff_size, m + buff_size
-                                r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
-                                F_igr(q, j, k, l) = q_cons_buff_recv(r)
+                                r = j + buff_size + (k + buff_size)*(m +
+2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
+                                F_igr(j, k, l, q) = q_cons_buff_recv(r)
                             end do
                         end do
                     end do
                 else
 
                     if(bc_y%beg >= 0) then
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = 0, buff_size - 1
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + k*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + k*(m + 2*buff_size + 1)
++ l*(m+2*buff_size+1)*buff_size
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
@@ -1054,18 +1108,21 @@ contains
                         end if
 
                     else
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, p
                             do k = n - (buff_size - 1), n
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + (k - n + buff_size - 1)*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + (k - n + buff_size -
+1)*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
                             buff_size*(m + 2*buff_size + 1)*(p + 1), &
@@ -1094,12 +1151,14 @@ contains
                         !$acc update device(q_cons_buff_recv)
                     end if
 
-                    !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                    !$acc parallel loop gang vector collapse(3) default(present)
+                    !private(r)
                     do l = 0, p
                         do k = n+1, n+buff_size
                             do j = -buff_size, m + buff_size
-                                r = j + buff_size + (k - n - 1)*(m + 2*buff_size + 1) + l*(m+2*buff_size+1)*buff_size
-                                F_igr(q, j, k, l) = q_cons_buff_recv(r)
+                                r = j + buff_size + (k - n - 1)*(m + 2*buff_size
++ 1) + l*(m+2*buff_size+1)*buff_size
+                                F_igr(j, k, l, q) = q_cons_buff_recv(r)
                             end do
                         end do
                     end do
@@ -1109,24 +1168,30 @@ contains
                 if(pbc_loc == -1) then
 
                     if(bc_y%end >= 0) then
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = p - (buff_size - 1), p
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1) + (l - p - 1 + buff_size)*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + (k + buff_size)*(m +
+2*buff_size + 1) + (l - p - 1 + buff_size)*(m + 2*buff_size+ 1)*(n + 2*buff_size
++ 1)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                                 q_cons_buff_send(0), &
-                                buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                                buff_size*(m + 2*buff_size+1)*(n + 2*buff_size
++1), &
                                 MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                                 q_cons_buff_recv(0), &
-                                buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                                buff_size*(m + 2*buff_size+1)*(n + 2*buff_size
++1), &
                                 MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                             !$acc end host_data
@@ -1135,33 +1200,40 @@ contains
                             !$acc update host(q_cons_buff_send)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         end if
 
                     else
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, buff_size - 1
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1) + l*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + (k + buff_size)*(m +
+2*buff_size + 1) + l*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                             !$acc end host_data
@@ -1170,10 +1242,12 @@ contains
                             !$acc update host(q_cons_buff_send)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         end if
@@ -1184,36 +1258,43 @@ contains
                         !$acc update device(q_cons_buff_recv)
                     end if
 
-                    !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                    !$acc parallel loop gang vector collapse(3) default(present)
+                    !private(r)
                     do l = -buff_size , - 1
                         do k = -buff_size, n + buff_size
                             do j = -buff_size, m + buff_size
-                                r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1) + (l + buff_size)*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
-                                F_igr(q, j, k, l) = q_cons_buff_recv(r)
+                                r = j + buff_size + (k + buff_size)*(m +
+2*buff_size + 1) + (l + buff_size)*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
+                                F_igr(j, k, l, q) = q_cons_buff_recv(r)
                             end do
                         end do
                     end do
                 else
 
                     if(bc_y%beg >= 0) then
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = 0, buff_size - 1
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1) + l*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + (k + buff_size)*(m +
+2*buff_size + 1) + l*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                             !$acc end host_data
@@ -1223,33 +1304,41 @@ contains
                             !$acc update host(q_cons_buff_send)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         end if
 
                     else
-                        !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                        !$acc parallel loop gang vector collapse(3)
+                        !default(present) private(r)
                         do l = p - (buff_size - 1), p
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
-                                    r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1) + (l - p - 1 + buff_size)*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
-                                    q_cons_buff_send(r) = F_igr(q, j, k, l)
+                                    r = j + buff_size + (k + buff_size)*(m +
+2*buff_size + 1) + (l - p - 1 + buff_size)*(m + 2*buff_size+ 1)*(n + 2*buff_size
++ 1)
+                                    q_cons_buff_send(r) = F_igr(j, k, l, q)
                                 end do
                             end do
                         end do
 
                         if(cu_mpi) then
-                            !$acc host_data use_device(q_cons_buff_send, q_cons_buff_recv)
+                            !$acc host_data use_device(q_cons_buff_send,
+                            !q_cons_buff_recv)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                             !$acc end host_data
@@ -1259,10 +1348,12 @@ contains
                             !$acc update host(q_cons_buff_send)
                             call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1), &
+                            buff_size*(m + 2*buff_size+1)*(n + 2*buff_size +1),
+&
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         end if
@@ -1272,12 +1363,14 @@ contains
                         !$acc update device(q_cons_buff_recv)
                     end if
 
-                    !$acc parallel loop gang vector collapse(3) default(present) private(r)
+                    !$acc parallel loop gang vector collapse(3) default(present)
+                    !private(r)
                     do l = p+1, p+buff_size
                         do k = -buff_size, n + buff_size
                             do j = -buff_size, m + buff_size
-                                r = j + buff_size + (k + buff_size)*(m + 2*buff_size + 1) + (l - p - 1)*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
-                                F_igr(q, j, k, l) = q_cons_buff_recv(r)
+                                r = j + buff_size + (k + buff_size)*(m +
+2*buff_size + 1) + (l - p - 1)*(m + 2*buff_size+ 1)*(n + 2*buff_size + 1)
+                                F_igr(j, k, l, q) = q_cons_buff_recv(r)
                             end do
                         end do
                     end do
@@ -1302,7 +1395,8 @@ contains
                                                              pbc_loc)
 
         type(scalar_field), dimension(sys_size), intent(INOUT) :: q_cons_vf
-        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent (INOUT) :: pb, mv
+        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent
+(INOUT) :: pb, mv
 
         integer, intent(IN) :: mpi_dir
         integer, intent(IN) :: pbc_loc
@@ -1329,8 +1423,10 @@ contains
                             do j = m - buff_size + 1, m
                                 do i = 1, sys_size
                                     r = (i - 1) + v_size* &
-                                        ((j - m - 1) + buff_size*((k + 1) + (n + 1)*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                        ((j - m - 1) + buff_size*((k + 1) + (n +
+1)*l))
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -1344,8 +1440,10 @@ contains
                                     do i = sys_size + 1 , sys_size + 4
                                         do q = 1, nb
                                             r = (i - 1) + (q-1)*4 +  v_size* &
-                                                ((j - m - 1) + buff_size*((k + 1) + (n + 1)*l))
-                                            q_cons_buff_send(r) = pb(j, k, l, i - sys_size , q)
+                                                ((j - m - 1) + buff_size*((k +
+1) + (n + 1)*l))
+                                            q_cons_buff_send(r) = pb(j, k, l, i
+- sys_size , q)
                                         end do
                                     end do
                                 end do
@@ -1358,9 +1456,12 @@ contains
                                 do j = m - buff_size + 1, m
                                     do i = sys_size + 1, sys_size + 4
                                         do q = 1, nb
-                                            r = (i - 1)  + (q-1)*4 + nb*4 + v_size* &
-                                                ((j - m - 1) + buff_size*((k + 1) + (n + 1)*l))
-                                            q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                            r = (i - 1)  + (q-1)*4 + nb*4 +
+v_size* &
+                                                ((j - m - 1) + buff_size*((k +
+1) + (n + 1)*l))
+                                            q_cons_buff_send(r) = mv(j, k, l, i
+- sys_size, q)
                                         end do
                                     end do
                                 end do
@@ -1440,7 +1541,8 @@ contains
                                 do i = 1, sys_size
                                     r = (i - 1) + v_size* &
                                         (j + buff_size*(k + (n + 1)*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -1455,7 +1557,8 @@ contains
                                     do q = 1, nb
                                         r = (i - 1) + (q-1)*4  + v_size* &
                                             (j + buff_size*(k + (n + 1)*l))
-                                        q_cons_buff_send(r) = pb(j, k, l, i-sys_size, q)
+                                        q_cons_buff_send(r) = pb(j, k, l,
+i-sys_size, q)
                                         
                                     end do
                                 end do
@@ -1471,7 +1574,8 @@ contains
                                     do q = 1, nb
                                         r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
                                             (j + buff_size*(k + (n + 1)*l))
-                                        q_cons_buff_send(r) = mv(j, k, l, i-sys_size, q)
+                                        q_cons_buff_send(r) = mv(j, k, l,
+i-sys_size, q)
                                                                               
                                     end do
                                 end do
@@ -1574,7 +1678,8 @@ contains
                                 do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + v_size* &
                                         (j + buff_size*((k + 1) + (n + 1)*l))
-                                    pb(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                    pb(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                                   
                                 end do
                             end do
@@ -1590,7 +1695,8 @@ contains
                                 do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 +  v_size* &
                                         (j + buff_size*((k + 1) + (n + 1)*l))
-                                    mv(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                    mv(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                   
                                 end do
                             end do
@@ -1612,7 +1718,8 @@ contains
                                 do i = 1, sys_size
                                     r = (i - 1) + v_size* &
                                         (j + buff_size*(k + (n + 1)*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -1629,7 +1736,8 @@ contains
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + v_size* &
                                         (j + buff_size*(k + (n + 1)*l))
-                                    q_cons_buff_send(r) = pb(j, k, l, i-sys_size, q)
+                                    q_cons_buff_send(r) = pb(j, k, l,
+i-sys_size, q)
                                     end do
                                 end do
                             end do
@@ -1645,7 +1753,8 @@ contains
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
                                         (j + buff_size*(k + (n + 1)*l))
-                                    q_cons_buff_send(r) = mv(j, k, l, i-sys_size, q)
+                                    q_cons_buff_send(r) = mv(j, k, l,
+i-sys_size, q)
                                     end do
                                 end do
                             end do
@@ -1719,8 +1828,10 @@ contains
                             do j = m - buff_size + 1, m
                                 do i = 1, sys_size
                                     r = (i - 1) + v_size* &
-                                        ((j - m - 1) + buff_size*((k + 1) + (n + 1)*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                        ((j - m - 1) + buff_size*((k + 1) + (n +
+1)*l))
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -1734,8 +1845,10 @@ contains
                                 do i = sys_size + 1, sys_size + 4
                                     do q = 1, nb
                                         r = (i - 1) + (q-1)*4 + v_size* &
-                                            ((j - m - 1) + buff_size*((k + 1) + (n + 1)*l))
-                                        q_cons_buff_send(r) = pb(j, k, l, i-sys_size, q)
+                                            ((j - m - 1) + buff_size*((k + 1) +
+(n + 1)*l))
+                                        q_cons_buff_send(r) = pb(j, k, l,
+i-sys_size, q)
                                        
                                     end do
                                 end do
@@ -1750,8 +1863,10 @@ contains
                                 do i = sys_size + 1, sys_size + 4
                                     do q = 1, nb
                                         r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
-                                            ((j - m - 1) + buff_size*((k + 1) + (n + 1)*l))
-                                        q_cons_buff_send(r) = mv(j, k, l, i-sys_size, q)
+                                            ((j - m - 1) + buff_size*((k + 1) +
+(n + 1)*l))
+                                        q_cons_buff_send(r) = mv(j, k, l,
+i-sys_size, q)
               
                                     end do
                                 end do
@@ -1897,9 +2012,12 @@ contains
                             do k = n - buff_size + 1, n
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k - n + buff_size - 1) + buff_size*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k - n + buff_size - 1) +
+buff_size*l))
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -1913,9 +2031,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k - n + buff_size - 1) + buff_size*l))
-                                    q_cons_buff_send(r) = pb(j, k, l, i-sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k - n + buff_size - 1) +
+buff_size*l))
+                                    q_cons_buff_send(r) = pb(j, k, l,
+i-sys_size, q)
                                     end do
                                 end do
                             end do
@@ -1928,9 +2049,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k - n + buff_size - 1) + buff_size*l))
-                                    q_cons_buff_send(r) = mv(j, k, l, i-sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k - n + buff_size - 1) +
+buff_size*l))
+                                    q_cons_buff_send(r) = mv(j, k, l,
+i-sys_size, q)
                                     end do
                                 end do
                             end do
@@ -1948,10 +2072,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p
++ 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p
++ 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)                            
                         else
@@ -1976,10 +2102,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p
++ 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size+2*nb*4)*(m + 2*buff_size + 1)*(p
++ 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)                            
                         else
@@ -2006,9 +2134,11 @@ contains
                             do k = 0, buff_size - 1
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
                                          (k + buff_size*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -2022,9 +2152,11 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q - 1)*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
                                          (k + buff_size*l))
-                                    q_cons_buff_send(r) = pb(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = pb(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2037,9 +2169,11 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q - 1)*4 + nb*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
                                          (k + buff_size*l))
-                                    q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = mv(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2057,10 +2191,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)                            
                         else
@@ -2085,10 +2221,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)                            
                         else
@@ -2144,7 +2282,8 @@ contains
                                 r = (i - 1) + (q-1)*4 + v_size* &
                                     ((j + buff_size) + (m + 2*buff_size + 1)* &
                                      ((k + buff_size) + buff_size*l))
-                                pb(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                pb(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                                 end do
                             end do
                         end do
@@ -2159,7 +2298,8 @@ contains
                                 r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
                                     ((j + buff_size) + (m + 2*buff_size + 1)* &
                                      ((k + buff_size) + buff_size*l))
-                                mv(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                mv(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                                 end do
                             end do
                         end do
@@ -2178,9 +2318,11 @@ contains
                             do k = 0, buff_size - 1
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
                                          (k + buff_size*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -2194,9 +2336,11 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
                                          (k + buff_size*l))
-                                    q_cons_buff_send(r) = pb(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = pb(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2210,9 +2354,11 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
                                          (k + buff_size*l))
-                                    q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = mv(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2230,10 +2376,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         else
@@ -2258,10 +2406,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         else
@@ -2288,9 +2438,12 @@ contains
                             do k = n - buff_size + 1, n
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k - n + buff_size - 1) + buff_size*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k - n + buff_size - 1) +
+buff_size*l))
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -2304,9 +2457,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 +  v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k - n + buff_size - 1) + buff_size*l))
-                                    q_cons_buff_send(r) = pb(j, k, l, i - sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k - n + buff_size - 1) +
+buff_size*l))
+                                    q_cons_buff_send(r) = pb(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2319,9 +2475,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 +  v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k - n + buff_size - 1) + buff_size*l))
-                                    q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k - n + buff_size - 1) +
+buff_size*l))
+                                    q_cons_buff_send(r) = mv(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2339,10 +2498,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         else 
@@ -2367,10 +2528,12 @@ contains
                         if(qbmm .and. .not. polytropic) then
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size + 1)*(p + 1), &
+                            buff_size*(sys_size + 2*nb*4)*(m + 2*buff_size +
+1)*(p + 1), &
                             MPI_DOUBLE_PRECISION, bc_y%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         else 
@@ -2426,7 +2589,8 @@ contains
                                 r = (i - 1) + (q-1)*4 + v_size* &
                                     ((j + buff_size) + (m + 2*buff_size + 1)* &
                                      ((k - n - 1) + buff_size*l))
-                                pb(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                pb(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                                 end do
                             end do
                         end do
@@ -2442,7 +2606,8 @@ contains
                                 r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
                                     ((j + buff_size) + (m + 2*buff_size + 1)* &
                                      ((k - n - 1) + buff_size*l))
-                                mv(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                mv(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                                 end do
                             end do
                         end do
@@ -2467,10 +2632,13 @@ contains
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)* &
                                           (l - p + buff_size - 1)))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -2484,10 +2652,13 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)* &
                                           (l - p + buff_size - 1)))
-                                    q_cons_buff_send(r) = pb(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = pb(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2500,10 +2671,13 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)* &
                                           (l - p + buff_size - 1)))
-                                    q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = mv(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2520,10 +2694,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
 
@@ -2537,10 +2713,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
 
@@ -2557,9 +2735,12 @@ contains
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)*l))
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -2573,9 +2754,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4  + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)*l))
-                                    q_cons_buff_send(r) = pb(j, k, l, i - sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)*l))
+                                    q_cons_buff_send(r) = pb(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2589,9 +2773,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)*l))
-                                    q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)*l))
+                                    q_cons_buff_send(r) = mv(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2609,10 +2796,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
 
@@ -2626,10 +2815,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 0, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
 
@@ -2712,9 +2903,12 @@ contains
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)*l))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)*l))
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -2728,9 +2922,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)*l))
-                                    q_cons_buff_send(r) = pb(j, k, l, i - sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)*l))
+                                    q_cons_buff_send(r) = pb(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2744,9 +2941,12 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)*l))
-                                    q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)*l))
+                                    q_cons_buff_send(r) = mv(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2763,10 +2963,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
 
@@ -2779,10 +2981,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%beg, 1, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
                         
@@ -2799,10 +3003,13 @@ contains
                             do k = -buff_size, n + buff_size
                                 do j = -buff_size, m + buff_size
                                     r = (i - 1) + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)* &
                                           (l - p + buff_size - 1)))
-                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k, l)
+                                    q_cons_buff_send(r) = q_cons_vf(i)%sf(j, k,
+l)
                                 end do
                             end do
                         end do
@@ -2816,10 +3023,13 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)* &
                                           (l - p + buff_size - 1)))
-                                    q_cons_buff_send(r) = pb(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = pb(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2832,10 +3042,13 @@ contains
                                 do j = -buff_size, m + buff_size
                                     do q = 1, nb
                                     r = (i - 1) + (q-1)*4 + nb*4 + v_size* &
-                                        ((j + buff_size) + (m + 2*buff_size + 1)* &
-                                         ((k + buff_size) + (n + 2*buff_size + 1)* &
+                                        ((j + buff_size) + (m + 2*buff_size +
+1)* &
+                                         ((k + buff_size) + (n + 2*buff_size +
+1)* &
                                           (l - p + buff_size - 1)))
-                                    q_cons_buff_send(r) = mv(j, k, l, i - sys_size, q)
+                                    q_cons_buff_send(r) = mv(j, k, l, i -
+sys_size, q)
                                     end do
                                 end do
                             end do
@@ -2853,10 +3066,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
 
@@ -2869,10 +3084,12 @@ contains
                         ! Send/receive buffer to/from bc_x%end/bc_x%beg
                         call MPI_SENDRECV( &
                             q_cons_buff_send(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 0, &
                             q_cons_buff_recv(0), &
-                            buff_size*v_size*(m + 2*buff_size + 1)*(n + 2*buff_size + 1), &
+                            buff_size*v_size*(m + 2*buff_size + 1)*(n +
+2*buff_size + 1), &
                             MPI_DOUBLE_PRECISION, bc_z%end, 1, &
                             MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
 
@@ -2921,7 +3138,8 @@ contains
                                     ((j + buff_size) + (m + 2*buff_size + 1)* &
                                      ((k + buff_size) + (n + 2*buff_size + 1)* &
                                       (l - p - 1)))
-                                pb(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                pb(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                                 end do
                             end do
                         end do
@@ -2937,7 +3155,8 @@ contains
                                     ((j + buff_size) + (m + 2*buff_size + 1)* &
                                      ((k + buff_size) + (n + 2*buff_size + 1)* &
                                       (l - p - 1)))
-                                mv(j, k, l, i - sys_size, q) = q_cons_buff_recv(r)
+                                mv(j, k, l, i - sys_size, q) =
+q_cons_buff_recv(r)
                                 end do
                             end do
                         end do
@@ -2968,3 +3187,4 @@ contains
 
 
 end module m_mpi_proxy
+

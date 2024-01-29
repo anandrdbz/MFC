@@ -20,7 +20,7 @@ module m_global_parameters
 
     use m_derived_types        !< Definitions of the derived types
 
-#ifdef MFC_OpenACC
+#if defined(__PGI)
     use openacc
 #endif
 
