@@ -27,10 +27,8 @@ module m_rhs
 
     use m_variables_conversion !< State variables type conversion procedures
 
-    use m_weno                 !< Weighted and essentially non-oscillatory
-(WENO)
-                               !! schemes for spatial reconstruction of
-                               !variables
+    use m_weno                 !< Weighted and essentially non-oscillatory (WENO)
+                               !! schemes for spatial reconstruction of variables
     use m_riemann_solvers      !< Exact and approximate Riemann problem solvers
 
     use m_cbc                  !< Characteristic boundary conditions (CBC)
@@ -64,14 +62,11 @@ module m_rhs
     !! Gaussian quadrature points (QP).
 
     type(vector_field) :: q_prim_qp !<
-    !! The primitive variables at cell-interior Gaussian quadrature points.
-    !These
-    !! are calculated from the conservative variables and gradient magnitude
-    !(GM)
+    !! The primitive variables at cell-interior Gaussian quadrature points. These
+    !! are calculated from the conservative variables and gradient magnitude (GM)
     !! of the volume fractions, q_cons_qp and gm_alpha_qp, respectively.
 
-    !> @name The first-order spatial derivatives of the primitive variables at
-    !cell-
+    !> @name The first-order spatial derivatives of the primitive variables at cell-
     !! interior Guassian quadrature points. These are WENO-reconstructed from
     !! their respective cell-average values, obtained through the application
     !! of the divergence theorem on the integral-average cell-boundary values
@@ -82,8 +77,7 @@ module m_rhs
     type(vector_field) :: dq_prim_dz_qp
     !> @}
 
-    !> @name The left and right WENO-reconstructed cell-boundary values of the
-    !cell-
+    !> @name The left and right WENO-reconstructed cell-boundary values of the cell-
     !! average first-order spatial derivatives of the primitive variables. The
     !! cell-average of the first-order spatial derivatives may be found in the
     !! variables dq_prim_ds_qp, where s = x, y or z.
@@ -101,16 +95,14 @@ module m_rhs
     !! quadrature points. gm_alpha_qp is calculated from individual first-order
     !! spatial derivatives located in dq_prim_ds_qp.
 
-    !> @name The left and right WENO-reconstructed cell-boundary values of the
-    !cell-
+    !> @name The left and right WENO-reconstructed cell-boundary values of the cell-
     !! average gradient magnitude of volume fractions, located in gm_alpha_qp.
     !> @{
     type(vector_field), allocatable, dimension(:) :: gm_alphaL_n
     type(vector_field), allocatable, dimension(:) :: gm_alphaR_n
     !> @}
 
-    !> @name The cell-boundary values of the fluxes (src - source, gsrc -
-    !geometrical
+    !> @name The cell-boundary values of the fluxes (src - source, gsrc - geometrical
     !! source). These are computed by applying the chosen Riemann problem solver
     !! .on the left and right cell-boundary values of the primitive variables
     !> @{
@@ -140,8 +132,7 @@ module m_rhs
     !> @name Bubble dynamic source terms
     !> @{
     real(kind(0d0)), allocatable, dimension(:, :, :) :: bub_adv_src
-    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: bub_r_src, bub_v_src,
-bub_p_src, bub_m_src
+    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: bub_r_src, bub_v_src, bub_p_src, bub_m_src
     real(kind(0d0)), allocatable, dimension(:, :, :, :, :) :: bub_mom_src
 
     type(scalar_field) :: divu !< matrix for div(u)
@@ -149,8 +140,7 @@ bub_p_src, bub_m_src
 
     !> @name Monopole source terms
     !> @{
-    real(kind(0d0)), allocatable, dimension(:, :, :) :: mono_mass_src,
-mono_e_src
+    real(kind(0d0)), allocatable, dimension(:, :, :) :: mono_mass_src, mono_e_src
     real(kind(0d0)), allocatable, dimension(:, :, :, :) :: mono_mom_src
     !> @}
 
@@ -161,12 +151,9 @@ mono_e_src
     type(scalar_field) :: alf_sum
     !> @}
 
-    real(kind(0d0)), allocatable, dimension(:, :, :) :: blkmod1, blkmod2,
-alpha1, alpha2, Kterm
-    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: qL_rsx_vf, qL_rsy_vf,
-qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf
-    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: dqL_rsx_vf,
-dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf
+    real(kind(0d0)), allocatable, dimension(:, :, :) :: blkmod1, blkmod2, alpha1, alpha2, Kterm
+    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf
+    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf
 
     real(kind(0d0)), allocatable, dimension(:) :: gamma_min, pres_inf
     !$acc declare create(gamma_min, pres_inf)
@@ -174,33 +161,24 @@ dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf
     real(kind(0d0)), allocatable, dimension(:, :) :: Res
     !$acc declare create(Res)
 
-    real(kind(0d0)), allocatable, dimension(:, :, :) :: rho_igr, dux_igr,
-duy_igr, dvx_igr, dvy_igr, fd_coeff, duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr
-    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: jac_igr, jac_old_igr,
-rhs_igr, jac_rhs_igr, F_igr
+    real(kind(0d0)), allocatable, dimension(:, :, :) :: rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, fd_coeff, duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr
+    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr
     real(kind(0d0)) :: alf_igr, omega
 
     integer :: bcxb, bcxe, bcyb, bcye, bczb, bcze
 
 !$acc declare create(q_cons_qp,q_prim_qp,  &
 !$acc   dq_prim_dx_qp,dq_prim_dy_qp,dq_prim_dz_qp,dqL_prim_dx_n,dqL_prim_dy_n, &
-!$acc   dqL_prim_dz_n,dqR_prim_dx_n,dqR_prim_dy_n,dqR_prim_dz_n,gm_alpha_qp,
-!&
+!$acc   dqL_prim_dz_n,dqR_prim_dx_n,dqR_prim_dy_n,dqR_prim_dz_n,gm_alpha_qp,       &
 !$acc   gm_alphaL_n,gm_alphaR_n,flux_n,flux_src_n,flux_gsrc_n,       &
-!$acc   tau_Re_vf,qL_prim, qR_prim, iv,ix, iy,
-!iz,is1,is2,is3,bub_adv_src,bub_r_src,bub_v_src, bub_p_src, bub_m_src, &
+!$acc   tau_Re_vf,qL_prim, qR_prim, iv,ix, iy, iz,is1,is2,is3,bub_adv_src,bub_r_src,bub_v_src, bub_p_src, bub_m_src, &
 !$acc   bub_mom_src,alf_sum, &
-!$acc   blkmod1, blkmod2, alpha1, alpha2, Kterm, divu, qL_rsx_vf, qL_rsy_vf,
-!qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
-!$acc   dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf,
-!&
-!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, bczb, bcze,
-!omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr,
-!jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff, &
+!$acc   blkmod1, blkmod2, alpha1, alpha2, Kterm, divu, qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
+!$acc   dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
+!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, bczb, bcze, omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff, &
 !$acc   duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr)
 
-    real(kind(0d0)), allocatable, dimension(:, :, :) :: nbub !< Bubble number
-density
+    real(kind(0d0)), allocatable, dimension(:, :, :) :: nbub !< Bubble number density
 !$acc declare create(nbub)
 
 contains
@@ -240,18 +218,15 @@ contains
         @:ALLOCATE(q_prim_qp%vf(1:sys_size))
 
         do l = 1, sys_size
-            @:ALLOCATE(q_cons_qp%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end,
-iz%beg:iz%end))
+            @:ALLOCATE(q_cons_qp%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
         end do
 
         do l = mom_idx%beg, E_idx
-            @:ALLOCATE(q_prim_qp%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end,
-iz%beg:iz%end))
+            @:ALLOCATE(q_prim_qp%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
         end do
 
         do l = adv_idx%end + 1, sys_size
-            @:ALLOCATE(q_prim_qp%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end,
-iz%beg:iz%end))
+            @:ALLOCATE(q_prim_qp%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
         end do
 
         do l = 1, cont_idx%end
@@ -302,10 +277,8 @@ iz%beg:iz%end))
 
             do i = 1, num_dims
                 do l = mom_idx%beg, mom_idx%end
-                    @:ALLOCATE(qL_prim(i)%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end,
-iz%beg:iz%end))
-                    @:ALLOCATE(qR_prim(i)%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end,
-iz%beg:iz%end))
+                    @:ALLOCATE(qL_prim(i)%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
+                    @:ALLOCATE(qR_prim(i)%vf(l)%sf(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
                 end do
             end do
         end if
@@ -453,44 +426,34 @@ iz%beg:iz%end))
         if (any(Re_size > 0)) then
             if (weno_Re_flux) then
                 @:ALLOCATE(dqL_rsx_vf(ix%beg:ix%end, &
-                                          iy%beg:iy%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                          iy%beg:iy%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
                 @:ALLOCATE(dqR_rsx_vf(ix%beg:ix%end, &
-                                          iy%beg:iy%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                          iy%beg:iy%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
 
                 if (n > 0) then
 
                     @:ALLOCATE(dqL_rsy_vf(iy%beg:iy%end, &
-                                              ix%beg:ix%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                              ix%beg:ix%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
                     @:ALLOCATE(dqR_rsy_vf(iy%beg:iy%end, &
-                                              ix%beg:ix%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                              ix%beg:ix%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
                 else
                     @:ALLOCATE(dqL_rsy_vf(ix%beg:ix%end, &
-                                              iy%beg:iy%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                              iy%beg:iy%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
                     @:ALLOCATE(dqR_rsy_vf(ix%beg:ix%end, &
-                                              iy%beg:iy%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                              iy%beg:iy%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
 
                 end if
 
                 if (p > 0) then
                     @:ALLOCATE(dqL_rsz_vf(iz%beg:iz%end, &
-                                              iy%beg:iy%end, ix%beg:ix%end,
-mom_idx%beg:mom_idx%end))
+                                              iy%beg:iy%end, ix%beg:ix%end, mom_idx%beg:mom_idx%end))
                     @:ALLOCATE(dqR_rsz_vf(iz%beg:iz%end, &
-                                              iy%beg:iy%end, ix%beg:ix%end,
-mom_idx%beg:mom_idx%end))
+                                              iy%beg:iy%end, ix%beg:ix%end, mom_idx%beg:mom_idx%end))
                 else
                     @:ALLOCATE(dqL_rsz_vf(ix%beg:ix%end, &
-                                              iy%beg:iy%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                              iy%beg:iy%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
                     @:ALLOCATE(dqR_rsz_vf(ix%beg:ix%end, &
-                                              iy%beg:iy%end, iz%beg:iz%end,
-mom_idx%beg:mom_idx%end))
+                                              iy%beg:iy%end, iz%beg:iz%end, mom_idx%beg:mom_idx%end))
 
                 end if
             end if
@@ -572,8 +535,7 @@ mom_idx%beg:mom_idx%end))
                     do l = adv_idx%beg + 1, adv_idx%end
                         flux_src_n(i)%vf(l)%sf => &
                             flux_src_n(i)%vf(adv_idx%beg)%sf
-                        !$acc enter data
-                        !attach(flux_src_n(i)%vf(l)%sf(ix%beg:ix%end,iy%beg:iy%end,iz%beg:iz%end))
+                        !$acc enter data attach(flux_src_n(i)%vf(l)%sf(ix%beg:ix%end,iy%beg:iy%end,iz%beg:iz%end))
                     end do
                 end if
 
@@ -590,8 +552,7 @@ mom_idx%beg:mom_idx%end))
                     flux_src_n(i)%vf(l)%sf => &
                         flux_src_n(1)%vf(l)%sf
 
-                    !$acc enter data
-                    !attach(flux_n(i)%vf(l)%sf,flux_src_n(i)%vf(l)%sf)
+                    !$acc enter data attach(flux_n(i)%vf(l)%sf,flux_src_n(i)%vf(l)%sf)
                 end do
 
             end if
@@ -600,8 +561,7 @@ mom_idx%beg:mom_idx%end))
         ! END: Allocation/Association of flux_n, flux_src_n, and flux_gsrc_n ===
 
         if (alt_soundspeed) then
-            @:ALLOCATE(blkmod1(0:m, 0:n, 0:p), blkmod2(0:m, 0:n, 0:p),
-alpha1(0:m, 0:n, 0:p), alpha2(0:m, 0:n, 0:p), Kterm(0:m, 0:n, 0:p))
+            @:ALLOCATE(blkmod1(0:m, 0:n, 0:p), blkmod2(0:m, 0:n, 0:p), alpha1(0:m, 0:n, 0:p), alpha2(0:m, 0:n, 0:p), Kterm(0:m, 0:n, 0:p))
         end if
 
         @:ALLOCATE(gamma_min(1:num_fluids), pres_inf(1:num_fluids))
@@ -613,21 +573,11 @@ alpha1(0:m, 0:n, 0:p), alpha2(0:m, 0:n, 0:p), Kterm(0:m, 0:n, 0:p))
 !$acc update device(gamma_min, pres_inf)
 
         if (barotropic) then
-            @:ALLOCATE(rho_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),
-dux_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvx_igr(ix%beg:ix%end,
-iy%beg:iy%end, iz%beg:iz%end))
-            @:ALLOCATE(F_igr( ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:9),
-rhs_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:9)) 
-            @:ALLOCATE(jac_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end,
-1:3), jac_old_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end,1:3), jac_rhs_igr(
-ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end,1:3))
-            @:ALLOCATE(fd_coeff(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),
-duy_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvy_igr(ix%beg:ix%end,
-iy%beg:iy%end, iz%beg:iz%end))
-            @:ALLOCATE(duz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),
-dvz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dwx_igr(ix%beg:ix%end,
-iy%beg:iy%end, iz%beg:iz%end),dwy_igr(ix%beg:ix%end, iy%beg:iy%end,
-iz%beg:iz%end),dwz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
+            @:ALLOCATE(rho_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dux_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvx_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
+            @:ALLOCATE(F_igr( ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:9), rhs_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:9)) 
+            @:ALLOCATE(jac_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:3), jac_old_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end,1:3), jac_rhs_igr( ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end,1:3))
+            @:ALLOCATE(fd_coeff(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), duy_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvy_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
+            @:ALLOCATE(duz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dwx_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),dwy_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),dwz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
             
             !$acc parallel loop collapse(4) gang vector default(present)
             do i = 1, 3
@@ -713,22 +663,18 @@ iz%beg:iz%end),dwz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
 
     end subroutine s_initialize_rhs_module ! -------------------------------
 
-    subroutine s_compute_rhs(q_cons_vf, q_prim_vf, rhs_vf, pb, rhs_pb, mv,
-rhs_mv, t_step, lw) ! -------
+    subroutine s_compute_rhs(q_cons_vf, q_prim_vf, rhs_vf, pb, rhs_pb, mv, rhs_mv, t_step, lw) ! -------
 
         type(scalar_field), dimension(sys_size), intent(INOUT) :: q_cons_vf
         type(scalar_field), dimension(sys_size), intent(INOUT) :: q_prim_vf
         type(scalar_field), dimension(sys_size), intent(INOUT) :: rhs_vf
-        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent
-(INOUT) :: pb, mv
-        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent
-(INOUT) :: rhs_pb, rhs_mv
+        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent (INOUT) :: pb, mv
+        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent (INOUT) :: rhs_pb, rhs_mv
         integer, intent(IN) :: t_step
         integer, intent(IN), optional :: lw
         real(kind(0d0)), dimension(0:m) :: res
         
-        real(kind(0d0)) :: top, bottom  !< Numerator and denominator when
-evaluating flux limiter function
+        real(kind(0d0)) :: top, bottom  !< Numerator and denominator when evaluating flux limiter function
         real(kind(0d0)), dimension(num_fluids) :: myalpha_rho, myalpha
 
         real(kind(0d0)) :: tmp1, tmp2, tmp3, tmp4, &
@@ -745,8 +691,7 @@ evaluating flux limiter function
 
         real(kind(0d0)) :: mytime, sound
         real(kind(0d0)) :: start, finish
-        real(kind(0d0)) :: s2, const_sos, s1, rho_lx, rho_rx, rho_ly, rho_ry,
-rho_lz, rho_rz,sum
+        real(kind(0d0)) :: s2, const_sos, s1, rho_lx, rho_rx, rho_ly, rho_ry, rho_lz, rho_rz,sum
 
         integer :: i, j, k, l,  q, ii, id !< Generic loop iterators
         integer :: term_index
@@ -788,13 +733,11 @@ rho_lz, rho_rz,sum
         !                alf_sum%sf(j, k, l) = 0d0
         !                !$acc loop seq
         !                do i = advxb, advxe - 1
-        !                    alf_sum%sf(j, k, l) = alf_sum%sf(j, k, l) +
-        !                    q_cons_qp%vf(i)%sf(j, k, l)
+        !                    alf_sum%sf(j, k, l) = alf_sum%sf(j, k, l) + q_cons_qp%vf(i)%sf(j, k, l)
         !                end do
         !                !$acc loop seq
         !                do i = advxb, advxe - 1
-        !                    q_cons_qp%vf(i)%sf(j, k, l) = q_cons_qp%vf(i)%sf(j,
-        !                    k, l)*(1.d0 - q_cons_qp%vf(alf_idx)%sf(j, k, l)) &
+        !                    q_cons_qp%vf(i)%sf(j, k, l) = q_cons_qp%vf(i)%sf(j, k, l)*(1.d0 - q_cons_qp%vf(alf_idx)%sf(j, k, l)) &
         !                                                  /alf_sum%sf(j, k, l)
         !                end do
         !            end do
@@ -817,22 +760,17 @@ rho_lz, rho_rz,sum
         if (t_step == t_step_stop) return
         ! ==================================================================
 
-        ! if (qbmm) call s_mom_inv(q_cons_qp%vf, q_prim_qp%vf, mom_sp, mom_3d,
-        ! pb, rhs_pb, mv, rhs_mv, ix, iy, iz, nbub)
+        ! if (qbmm) call s_mom_inv(q_cons_qp%vf, q_prim_qp%vf, mom_sp, mom_3d, pb, rhs_pb, mv, rhs_mv, ix, iy, iz, nbub)
 
          call nvtxStartRange("Viscous")
-        ! if (any(Re_size > 0)) call s_get_viscous(qL_rsx_vf, qL_rsy_vf,
-        ! qL_rsz_vf, &
-        !                                     dqL_prim_dx_n, dqL_prim_dy_n,
-        !                                     dqL_prim_dz_n, &
+        ! if (any(Re_size > 0)) call s_get_viscous(qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, &
+        !                                     dqL_prim_dx_n, dqL_prim_dy_n, dqL_prim_dz_n, &
         !                                     qL_prim, &
         !                                     qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
-        !   x                                 dqR_prim_dx_n, dqR_prim_dy_n,
-        !   dqR_prim_dz_n, &
+        !   x                                 dqR_prim_dx_n, dqR_prim_dy_n, dqR_prim_dz_n, &
         !                                     qR_prim, &
         !                                     q_prim_qp, &
-        !                                     dq_prim_dx_qp, dq_prim_dy_qp,
-        !                                     dq_prim_dz_qp, &
+        !                                     dq_prim_dx_qp, dq_prim_dy_qp, dq_prim_dz_qp, &
         !                                     ix, iy, iz)
         ! call nvtxEndRange()
         
@@ -847,8 +785,7 @@ rho_lz, rho_rz,sum
 
             ix%end = m - ix%beg; iy%end = n - iy%beg; iz%end = p - iz%beg
 
-            bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end;
-bczb = bc_z%beg; bcze = bc_z%end;
+            bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end; bczb = bc_z%beg; bcze = bc_z%end;
 
             !bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1; bczb = -1; bcze = -1;
 
@@ -905,26 +842,21 @@ bczb = bc_z%beg; bcze = bc_z%end;
                             dq_prim_dx_qp%vf(iv%beg:iv%end), &
                             dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, &
                             dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
-                            id, dqL_prim_dx_n(id)%vf(iv%beg:iv%end),
-dqR_prim_dx_n(id)%vf(iv%beg:iv%end), &
+                            id, dqL_prim_dx_n(id)%vf(iv%beg:iv%end), dqR_prim_dx_n(id)%vf(iv%beg:iv%end), &
                             ix, iy, iz)
                         if (n > 0) then
-                            call s_reconstruct_cell_boundary_values_visc_deriv(
-&
+                            call s_reconstruct_cell_boundary_values_visc_deriv( &
                                 dq_prim_dy_qp%vf(iv%beg:iv%end), &
                                 dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, &
                                 dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
-                                id, dqL_prim_dy_n(id)%vf(iv%beg:iv%end),
-dqR_prim_dy_n(id)%vf(iv%beg:iv%end), &
+                                id, dqL_prim_dy_n(id)%vf(iv%beg:iv%end), dqR_prim_dy_n(id)%vf(iv%beg:iv%end), &
                                 ix, iy, iz)
                             if (p > 0) then
-                                call
-s_reconstruct_cell_boundary_values_visc_deriv( &
+                                call s_reconstruct_cell_boundary_values_visc_deriv( &
                                     dq_prim_dz_qp%vf(iv%beg:iv%end), &
                                     dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, &
                                     dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
-                                    id, dqL_prim_dz_n(id)%vf(iv%beg:iv%end),
-dqR_prim_dz_n(id)%vf(iv%beg:iv%end), &
+                                    id, dqL_prim_dz_n(id)%vf(iv%beg:iv%end), dqR_prim_dz_n(id)%vf(iv%beg:iv%end), &
                                     ix, iy, iz)
                             end if
                         end if
@@ -944,8 +876,7 @@ dqR_prim_dz_n(id)%vf(iv%beg:iv%end), &
                ! ===============================================================
                 call nvtxStartRange("RHS-Riemann")
 
-                ! Computing Riemann Solver Flux and Source Flux
-                ! =================
+                ! Computing Riemann Solver Flux and Source Flux =================
 
                 call s_riemann_solver(qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
                                       dqR_prim_dx_n(id)%vf, &
@@ -971,26 +902,20 @@ dqR_prim_dz_n(id)%vf(iv%beg:iv%end), &
                    do l = 0, p
                        do k = 0, n
                            do j = 0, m
-                               blkmod1(j, k, l) = ((gammas(1) +
-1d0)*q_prim_qp%vf(E_idx)%sf(j, k, l) + &
+                               blkmod1(j, k, l) = ((gammas(1) + 1d0)*q_prim_qp%vf(E_idx)%sf(j, k, l) + &
                                                    pi_infs(1))/gammas(1)
-                               blkmod2(j, k, l) = ((gammas(2) +
-1d0)*q_prim_qp%vf(E_idx)%sf(j, k, l) + &
+                               blkmod2(j, k, l) = ((gammas(2) + 1d0)*q_prim_qp%vf(E_idx)%sf(j, k, l) + &
                                                    pi_infs(2))/gammas(2)
                                alpha1(j, k, l) = q_cons_qp%vf(advxb)%sf(j, k, l)
 
                                if (bubbles) then
-                                   alpha2(j, k, l) = q_cons_qp%vf(alf_idx -
-1)%sf(j, k, l)
+                                   alpha2(j, k, l) = q_cons_qp%vf(alf_idx - 1)%sf(j, k, l)
                                else
-                                   alpha2(j, k, l) = q_cons_qp%vf(advxe)%sf(j,
-k, l)
+                                   alpha2(j, k, l) = q_cons_qp%vf(advxe)%sf(j, k, l)
                                end if
 
-                               Kterm(j, k, l) = alpha1(j, k, l)*alpha2(j, k,
-l)*(blkmod2(j, k, l) - blkmod1(j, k, l))/ &
-                                                (alpha1(j, k, l)*blkmod2(j, k,
-l) + alpha2(j, k, l)*blkmod1(j, k, l))
+                               Kterm(j, k, l) = alpha1(j, k, l)*alpha2(j, k, l)*(blkmod2(j, k, l) - blkmod1(j, k, l))/ &
+                                                (alpha1(j, k, l)*blkmod2(j, k, l) + alpha2(j, k, l)*blkmod1(j, k, l))
                            end do
                        end do
                    end do
@@ -1087,35 +1012,17 @@ l) + alpha2(j, k, l)*blkmod1(j, k, l))
                     do l = iz%beg + 1, iz%end - 1
                         do k = iy%beg + 1, iy%end - 1
                             do j = ix%beg + 1, ix%end - 1
-                                rhs_igr(j, k, l, 1) = rho_igr(j,k,l) *alf_igr
-*2d0 * (dux_igr(j,k,l)*dux_igr(j,k,l) + dvx_igr(j,k,l) * duy_igr(j,k,l) +
-dwx_igr(j,k,l) * duz_igr(j,k,l))
-                                rhs_igr(j, k, l, 2) = rho_igr(j,k,l) *alf_igr
-*2d0 * (duy_igr(j,k,l)*dux_igr(j,k,l) + dvy_igr(j,k,l) * duy_igr(j,k,l) +
-dwy_igr(j,k,l) * duz_igr(j,k,l))                        
-                                rhs_igr(j, k, l, 3) = rho_igr(j,k,l) *alf_igr
-*2d0 * (duz_igr(j,k,l)*dux_igr(j,k,l) + dvz_igr(j,k,l) * duy_igr(j,k,l) +
-dwz_igr(j,k,l) * duz_igr(j,k,l))
+                                rhs_igr(j, k, l, 1) = rho_igr(j,k,l) *alf_igr  *2d0 * (dux_igr(j,k,l)*dux_igr(j,k,l) + dvx_igr(j,k,l) * duy_igr(j,k,l) + dwx_igr(j,k,l) * duz_igr(j,k,l))
+                                rhs_igr(j, k, l, 2) = rho_igr(j,k,l) *alf_igr  *2d0 * (duy_igr(j,k,l)*dux_igr(j,k,l) + dvy_igr(j,k,l) * duy_igr(j,k,l) + dwy_igr(j,k,l) * duz_igr(j,k,l))                        
+                                rhs_igr(j, k, l, 3) = rho_igr(j,k,l) *alf_igr  *2d0 * (duz_igr(j,k,l)*dux_igr(j,k,l) + dvz_igr(j,k,l) * duy_igr(j,k,l) + dwz_igr(j,k,l) * duz_igr(j,k,l))
 
-                                rhs_igr(j, k, l, 4) = rho_igr(j,k,l) *alf_igr
-*2d0 * (dux_igr(j,k,l)*dvx_igr(j,k,l) + dvx_igr(j,k,l) * dvy_igr(j,k,l) +
-dwx_igr(j,k,l) * dvz_igr(j,k,l))
-                                rhs_igr(j, k, l, 5) = rho_igr(j,k,l) *alf_igr
-*2d0 * (duy_igr(j,k,l)*dvx_igr(j,k,l) + dvy_igr(j,k,l) * dvy_igr(j,k,l) +
-dwy_igr(j,k,l) * dvz_igr(j,k,l))                        
-                                rhs_igr(j, k, l, 6) = rho_igr(j,k,l) *alf_igr
-*2d0 * (duz_igr(j,k,l)*dvx_igr(j,k,l) + dvz_igr(j,k,l) * dvy_igr(j,k,l) +
-dwz_igr(j,k,l) * dvz_igr(j,k,l))
+                                rhs_igr(j, k, l, 4) = rho_igr(j,k,l) *alf_igr  *2d0 * (dux_igr(j,k,l)*dvx_igr(j,k,l) + dvx_igr(j,k,l) * dvy_igr(j,k,l) + dwx_igr(j,k,l) * dvz_igr(j,k,l))
+                                rhs_igr(j, k, l, 5) = rho_igr(j,k,l) *alf_igr  *2d0 * (duy_igr(j,k,l)*dvx_igr(j,k,l) + dvy_igr(j,k,l) * dvy_igr(j,k,l) + dwy_igr(j,k,l) * dvz_igr(j,k,l))                        
+                                rhs_igr(j, k, l, 6) = rho_igr(j,k,l) *alf_igr  *2d0 * (duz_igr(j,k,l)*dvx_igr(j,k,l) + dvz_igr(j,k,l) * dvy_igr(j,k,l) + dwz_igr(j,k,l) * dvz_igr(j,k,l))
 
-                                rhs_igr(j, k, l, 7) = rho_igr(j,k,l) *alf_igr
-*2d0 * (dux_igr(j,k,l)*dwx_igr(j,k,l) + dvx_igr(j,k,l) * dwy_igr(j,k,l) +
-dwx_igr(j,k,l) * dwz_igr(j,k,l))
-                                rhs_igr(j, k, l, 8) = rho_igr(j,k,l) *alf_igr
-*2d0 * (duy_igr(j,k,l)*dwx_igr(j,k,l) + dvy_igr(j,k,l) * dwy_igr(j,k,l) +
-dwy_igr(j,k,l) * dwz_igr(j,k,l))                        
-                                rhs_igr(j, k, l, 9) = rho_igr(j,k,l) *alf_igr
-*2d0 * (duz_igr(j,k,l)*dwx_igr(j,k,l) + dvz_igr(j,k,l) * dwy_igr(j,k,l) +
-dwz_igr(j,k,l) * dwz_igr(j,k,l))
+                                rhs_igr(j, k, l, 7) = rho_igr(j,k,l) *alf_igr  *2d0 * (dux_igr(j,k,l)*dwx_igr(j,k,l) + dvx_igr(j,k,l) * dwy_igr(j,k,l) + dwx_igr(j,k,l) * dwz_igr(j,k,l))
+                                rhs_igr(j, k, l, 8) = rho_igr(j,k,l) *alf_igr  *2d0 * (duy_igr(j,k,l)*dwx_igr(j,k,l) + dvy_igr(j,k,l) * dwy_igr(j,k,l) + dwy_igr(j,k,l) * dwz_igr(j,k,l))                        
+                                rhs_igr(j, k, l, 9) = rho_igr(j,k,l) *alf_igr  *2d0 * (duz_igr(j,k,l)*dwx_igr(j,k,l) + dvz_igr(j,k,l) * dwy_igr(j,k,l) + dwz_igr(j,k,l) * dwz_igr(j,k,l))
                                 
                            end do
                         end do
@@ -1125,47 +1032,28 @@ dwz_igr(j,k,l) * dwz_igr(j,k,l))
                     do l = iz%beg + 2, iz%end - 1
                         do k = iy%beg + 2, iy%end - 1
                             do j = ix%beg + 2, ix%end - 1
-                                rho_lx = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j-1,k,l)) / 2d0
-                                rho_ly = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k-1,l)) / 2d0
-                                rho_lz = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k,l-1)) / 2d0
+                                rho_lx = 1d0 * (rho_igr(j,k,l) + rho_igr(j-1,k,l)) / 2d0
+                                rho_ly = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k-1,l)) / 2d0
+                                rho_lz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l-1)) / 2d0
 
-                                jac_rhs_igr(j, k, l, 1) = (1d0 /
-dx(j))*(rhs_igr(j-1,k,l,1) - rhs_igr(j,k,l,1))  + (1d0 /
-dy(k))*(rhs_igr(j,k-1,l,2) - rhs_igr(j,k,l,2)) + (1d0 /
-dz(l))*(rhs_igr(j,k,l-1,3) - rhs_igr(j,k,l,3)) 
-                                jac_rhs_igr(j, k, l, 2) = (1d0 /
-dx(j))*(rhs_igr(j-1,k,l,4) - rhs_igr(j,k,l,4))  + (1d0 /
-dy(k))*(rhs_igr(j,k-1,l,5) - rhs_igr(j,k,l,5)) + (1d0 /
-dz(l))*(rhs_igr(j,k,l-1,6) - rhs_igr(j,k,l,6))
-                                jac_rhs_igr(j, k, l, 3) = (1d0 /
-dx(j))*(rhs_igr(j-1,k,l,7) - rhs_igr(j,k,l,7))  + (1d0 /
-dy(k))*(rhs_igr(j,k-1,l,8) - rhs_igr(j,k,l,8)) + (1d0 /
-dz(l))*(rhs_igr(j,k,l-1,9) - rhs_igr(j,k,l,9))
+                                jac_rhs_igr(j, k, l, 1) = (1d0 / dx(j))*(rhs_igr(j-1,k,l,1) - rhs_igr(j,k,l,1))  + (1d0 / dy(k))*(rhs_igr(j,k-1,l,2) - rhs_igr(j,k,l,2)) + (1d0 / dz(l))*(rhs_igr(j,k,l-1,3) - rhs_igr(j,k,l,3)) 
+                                jac_rhs_igr(j, k, l, 2) = (1d0 / dx(j))*(rhs_igr(j-1,k,l,4) - rhs_igr(j,k,l,4))  + (1d0 / dy(k))*(rhs_igr(j,k-1,l,5) - rhs_igr(j,k,l,5)) + (1d0 / dz(l))*(rhs_igr(j,k,l-1,6) - rhs_igr(j,k,l,6))
+                                jac_rhs_igr(j, k, l, 3) = (1d0 / dx(j))*(rhs_igr(j-1,k,l,7) - rhs_igr(j,k,l,7))  + (1d0 / dy(k))*(rhs_igr(j,k-1,l,8) - rhs_igr(j,k,l,8)) + (1d0 / dz(l))*(rhs_igr(j,k,l-1,9) - rhs_igr(j,k,l,9))
                            end do
                         end do
                     end do
 
-                    !$acc parallel loop collapse(3) gang vector default(present)
-                    !private(rho_lx, rho_rx, rho_ly, rho_ry)
+                    !$acc parallel loop collapse(3) gang vector default(present) private(rho_lx, rho_rx, rho_ly, rho_ry)
                     do l = 0, p
                         do k = 0, n
                             do j = 0, m
-                                rho_lx = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j-1,k,l)) / 2d0
-                                rho_ly = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k-1,l)) / 2d0
-                                rho_lz = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k,l-1)) / 2d0
+                                rho_lx = 1d0 * (rho_igr(j,k,l) + rho_igr(j-1,k,l)) / 2d0
+                                rho_ly = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k-1,l)) / 2d0
+                                rho_lz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l-1)) / 2d0
 
-                                rho_rx = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j+1,k,l)) / 2d0
-                                rho_ry = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k+1,l)) / 2d0
-                                rho_rz = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k,l+1)) / 2d0
+                                rho_rx = 1d0 * (rho_igr(j,k,l) + rho_igr(j+1,k,l)) / 2d0
+                                rho_ry = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k+1,l)) / 2d0
+                                rho_rz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l+1)) / 2d0
                                 
                                 rho_lx = rho_igr(j-1,k,l)
                                 rho_ly = rho_igr(j,k-1,l)
@@ -1201,9 +1089,7 @@ rho_igr(j,k,l+1)) / 2d0
                                     rho_rz = 0d0
                                 end if
 
-                                fd_coeff(j,k,l) = fd_coeff(j,k,l) + (1d0 /
-dx(j)**2d0) * (rho_lx + rho_rx) +  (1d0 / dy(k)**2d0) *(rho_ly + rho_ry) +  (1d0
-/ dz(l)**2d0) *(rho_lz + rho_rz)
+                                fd_coeff(j,k,l) = fd_coeff(j,k,l) + (1d0 / dx(j)**2d0) * (rho_lx + rho_rx) +  (1d0 / dy(k)**2d0) *(rho_ly + rho_ry) +  (1d0 / dz(l)**2d0) *(rho_lz + rho_rz)
 
                             end do
                         end do
@@ -1214,27 +1100,19 @@ dx(j)**2d0) * (rho_lx + rho_rx) +  (1d0 / dy(k)**2d0) *(rho_ly + rho_ry) +  (1d0
 
                     do i = 1, 10
 
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present) private(rho_lx, rho_ly, rho_rx,
-                        !rho_ry)                   
+                        !$acc parallel loop gang vector collapse(4) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
                         do q = 1, 3
                             do l = 0, p
                                 do k = 0, n
                                     do j = 0, m
 
-                                        rho_lx = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j-1,k,l)) / 2d0
-                                        rho_ly = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k-1,l)) / 2d0
-                                        rho_lz = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k,l-1)) / 2d0
+                                        rho_lx = 1d0 * (rho_igr(j,k,l) + rho_igr(j-1,k,l)) / 2d0
+                                        rho_ly = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k-1,l)) / 2d0
+                                        rho_lz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l-1)) / 2d0
 
-                                        rho_rx = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j+1,k,l)) / 2d0
-                                        rho_ry = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k+1,l)) / 2d0
-                                        rho_rz = 1d0 * (rho_igr(j,k,l) +
-rho_igr(j,k,l+1)) / 2d0
+                                        rho_rx = 1d0 * (rho_igr(j,k,l) + rho_igr(j+1,k,l)) / 2d0
+                                        rho_ry = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k+1,l)) / 2d0
+                                        rho_rz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l+1)) / 2d0
                                         
                                         rho_lx = rho_igr(j-1,k,l)
                                         rho_ly = rho_igr(j,k-1,l)
@@ -1244,8 +1122,7 @@ rho_igr(j,k,l+1)) / 2d0
                                         rho_ry = rho_igr(j,k,l)
                                         rho_rz = rho_igr(j,k,l)
 
-                                        jac_igr(j, k, l, q) = jac_rhs_igr(j, k,
-l, q)
+                                        jac_igr(j, k, l, q) = jac_rhs_igr(j, k, l, q)
 
                                         if(bcxb < -1 .and. j == 0) then
                                             rho_lx = 0d0
@@ -1271,15 +1148,10 @@ l, q)
                                             rho_rz = 0d0
                                         end if
 
-                                        jac_igr(j,k,l,q) = jac_igr(j,k,l,q)+
-(1d0 / dx(j)**2d0) * (rho_lx* jac_old_igr(j-1,k,l,q) +
-rho_rx*jac_old_igr(j+1,k,l,q)) &
-                                                + (1d0 / dy(k)**2d0) * (rho_ly*
-jac_old_igr(j,k-1,l,q) + rho_ry* jac_old_igr(j,k+1,l,q)) + (1 /
-dz(l)**2d0)*(rho_lz* jac_old_igr(j,k,l-1,q) + rho_rz* jac_old_igr(j,k,l+1,q))
+                                        jac_igr(j,k,l,q) = jac_igr(j,k,l,q)+ (1d0 / dx(j)**2d0) * (rho_lx* jac_old_igr(j-1,k,l,q) + rho_rx*jac_old_igr(j+1,k,l,q)) &
+                                                + (1d0 / dy(k)**2d0) * (rho_ly* jac_old_igr(j,k-1,l,q) + rho_ry* jac_old_igr(j,k+1,l,q)) + (1 / dz(l)**2d0)*(rho_lz* jac_old_igr(j,k,l-1,q) + rho_rz* jac_old_igr(j,k,l+1,q))
 
-                                        jac_igr(j, k, l,q) = omega * (1 /
-fd_coeff(j,k,l))*jac_igr(j,k,l,q) + (1 - omega)*jac_old_igr(j, k, l,q)
+                                        jac_igr(j, k, l,q) = omega * (1 / fd_coeff(j,k,l))*jac_igr(j,k,l,q) + (1 - omega)*jac_old_igr(j, k, l,q)
 
 
                                     end do
@@ -1291,14 +1163,12 @@ fd_coeff(j,k,l))*jac_igr(j,k,l,q) + (1 - omega)*jac_old_igr(j, k, l,q)
                             if(bcxb >= 0) then
                                 call s_mpi_sendrecv_F_igr(jac_igr, 1, -1)
                             else
-                                !$acc parallel loop gang vector collapse(4)
-                                !default(present) 
+                                !$acc parallel loop gang vector collapse(4) default(present) 
                                 do q = 1, 3
                                     do l = 0, p
                                         do k = 0, n
                                             do j = 1, buff_size
-                                                jac_igr(-j, k, l, q) =
-jac_igr(m-j+1,k,l, q)
+                                                jac_igr(-j, k, l, q) = jac_igr(m-j+1,k,l, q)
                                             end do
                                         end do
                                     end do
@@ -1310,14 +1180,12 @@ jac_igr(m-j+1,k,l, q)
                             if(bcxe >= 0) then
                                 call s_mpi_sendrecv_F_igr(jac_igr, 1, 1)
                             else
-                                !$acc parallel loop gang vector collapse(4)
-                                !default(present)
+                                !$acc parallel loop gang vector collapse(4) default(present)
                                 do q = 1, 3
                                     do l = 0, p
                                         do k = 0, n
                                             do j = 1, buff_size
-                                                jac_igr(m+j, k, l, q) =
-jac_igr(j-1,k,l, q)
+                                                jac_igr(m+j, k, l, q) = jac_igr(j-1,k,l, q)
                                             end do
                                         end do
                                     end do
@@ -1329,14 +1197,12 @@ jac_igr(j-1,k,l, q)
                             if(bcyb >= 0) then
                                 call s_mpi_sendrecv_F_igr(jac_igr, 2, -1)
                             else
-                                !$acc parallel loop gang vector collapse(4)
-                                !default(present)
+                                !$acc parallel loop gang vector collapse(4) default(present)
                                 do q = 1, 3
                                     do l = 0, p
                                         do k = 1, buff_size
                                             do j = ix%beg, ix%end
-                                                jac_igr(j,-k,l, q) =
-jac_igr(j,n-k+1,l, q)
+                                                jac_igr(j,-k,l, q) = jac_igr(j,n-k+1,l, q)
                                             end do
                                         end do
                                     end do
@@ -1348,14 +1214,12 @@ jac_igr(j,n-k+1,l, q)
                             if(bcye >= 0) then
                                 call s_mpi_sendrecv_F_igr(jac_igr, 2, 1)
                             else
-                                !$acc parallel loop gang vector collapse(4)
-                                !default(present)
+                                !$acc parallel loop gang vector collapse(4) default(present)
                                 do q = 1, 3
                                     do l = 0, p
                                         do k = 1, buff_size
                                             do j = ix%beg, ix%end
-                                                jac_igr(j,n+k,l, q) =
-jac_igr(j,k-1,l, q)
+                                                jac_igr(j,n+k,l, q) = jac_igr(j,k-1,l, q)
                                             end do
                                         end do
                                     end do
@@ -1367,14 +1231,12 @@ jac_igr(j,k-1,l, q)
                             if(bczb >= 0) then
                                 call s_mpi_sendrecv_F_igr(jac_igr, 3, -1)
                             else
-                                !$acc parallel loop gang vector collapse(4)
-                                !default(present)
+                                !$acc parallel loop gang vector collapse(4) default(present)
                                 do q = 1, 3
                                     do l = 1, buff_size
                                         do k = iy%beg, iy%end
                                             do j = ix%beg, ix%end
-                                                jac_igr(j,k,-l, q) =
-jac_igr(j,k,p-l+1, q)
+                                                jac_igr(j,k,-l, q) = jac_igr(j,k,p-l+1, q)
                                             end do
                                         end do
                                     end do
@@ -1386,14 +1248,12 @@ jac_igr(j,k,p-l+1, q)
                             if(bcze >= 0) then
                                 call s_mpi_sendrecv_F_igr(jac_igr, 3, 1)
                             else
-                                !$acc parallel loop gang vector collapse(4)
-                                !default(present)
+                                !$acc parallel loop gang vector collapse(4) default(present)
                                 do q = 1, 3
                                     do l = 1, buff_size
                                         do k = iy%beg, iy%end
                                             do j = ix%beg, ix%end
-                                                jac_igr(j,k,p+l, q) =
-jac_igr(j,k,l-1, q)
+                                                jac_igr(j,k,p+l, q) = jac_igr(j,k,l-1, q)
                                             end do
                                         end do
                                     end do
@@ -1401,14 +1261,12 @@ jac_igr(j,k,l-1, q)
                             end if
                         end if
 
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = iz%beg, iz%end
                                 do k = iy%beg, iy%end
                                     do j = ix%beg, ix%end
-                                        jac_old_igr( j, k, l, q) = jac_igr( j,
-k, l, q)
+                                        jac_old_igr( j, k, l, q) = jac_igr( j, k, l, q)
                                     end do
                                 end do 
                             end do
@@ -1417,8 +1275,7 @@ k, l, q)
 
 
                     if(bcxb < -1) then
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = 0, p
                                 do k = 0, n
@@ -1431,8 +1288,7 @@ k, l, q)
                     end if
 
                     if(bcxe < -1) then
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = 0, p
                                 do k = 0, n
@@ -1445,8 +1301,7 @@ k, l, q)
                     end if
 
                     if(bcyb < -1) then
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = 0, p
                                 do k = 1, buff_size
@@ -1459,8 +1314,7 @@ k, l, q)
                     end if
 
                     if(bcye < -1) then
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = 0, p
                                 do k = 1, buff_size
@@ -1474,8 +1328,7 @@ k, l, q)
 
 
                     if(bczb < -1) then
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = 1, buff_size
                                 do k = iy%beg, iy%end
@@ -1488,8 +1341,7 @@ k, l, q)
                     end if
 
                     if(bcze < -1) then
-                        !$acc parallel loop gang vector collapse(4)
-                        !default(present)
+                        !$acc parallel loop gang vector collapse(4) default(present)
                         do q = 1, 3
                             do l = 1, buff_size
                                 do k = iy%beg, iy%end
@@ -1505,26 +1357,17 @@ k, l, q)
                     do l = iz%beg, iz%end - 1
                         do k = iy%beg , iy%end - 1
                             do j = ix%beg , ix%end - 1                        
-                                F_igr(j, k, l, 1) = 1d0* (rhs_igr(j, k, l, 1) -
-rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,1) - jac_igr(j,k,l,1)))
-                                F_igr(j, k, l, 2) = 1d0* (rhs_igr(j, k, l, 2) -
-rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,1) - jac_igr(j,k,l,1)))
-                                F_igr(j, k, l, 3) = 1d0* (rhs_igr(j, k, l, 3) -
-rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,1) - jac_igr(j,k,l,1)))
+                                F_igr(j, k, l, 1) = 1d0* (rhs_igr(j, k, l, 1) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,1) - jac_igr(j,k,l,1)))
+                                F_igr(j, k, l, 2) = 1d0* (rhs_igr(j, k, l, 2) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,1) - jac_igr(j,k,l,1)))
+                                F_igr(j, k, l, 3) = 1d0* (rhs_igr(j, k, l, 3) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,1) - jac_igr(j,k,l,1)))
 
-                                F_igr(j, k, l, 4) = 1d0* (rhs_igr(j, k, l, 4) -
-rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,2) - jac_igr(j,k,l,2)))
-                                F_igr(j, k, l, 5) = 1d0* (rhs_igr(j, k, l, 5) -
-rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,2) - jac_igr(j,k,l,2)))
-                                F_igr(j, k, l, 6) = 1d0* (rhs_igr(j, k, l, 6) -
-rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,2) - jac_igr(j,k,l,2)))                            
+                                F_igr(j, k, l, 4) = 1d0* (rhs_igr(j, k, l, 4) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,2) - jac_igr(j,k,l,2)))
+                                F_igr(j, k, l, 5) = 1d0* (rhs_igr(j, k, l, 5) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,2) - jac_igr(j,k,l,2)))
+                                F_igr(j, k, l, 6) = 1d0* (rhs_igr(j, k, l, 6) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,2) - jac_igr(j,k,l,2)))                            
 
-                                F_igr(j, k, l, 7) = 1d0* (rhs_igr(j, k, l, 7) -
-rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,3) - jac_igr(j,k,l,3)))
-                                F_igr(j, k, l, 8) = 1d0* (rhs_igr(j, k, l, 8) -
-rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,3) - jac_igr(j,k,l,3)))
-                                F_igr(j, k, l, 9) = 1d0* (rhs_igr(j, k, l, 9) -
-rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,3) - jac_igr(j,k,l,3)))
+                                F_igr(j, k, l, 7) = 1d0* (rhs_igr(j, k, l, 7) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,3) - jac_igr(j,k,l,3)))
+                                F_igr(j, k, l, 8) = 1d0* (rhs_igr(j, k, l, 8) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,3) - jac_igr(j,k,l,3)))
+                                F_igr(j, k, l, 9) = 1d0* (rhs_igr(j, k, l, 9) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,3) - jac_igr(j,k,l,3)))
 
                             end do
                         end do 
@@ -1539,23 +1382,17 @@ rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,3) - jac_igr(j,k,l,3)))
                                     q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                     q_prim_qp%vf( momxb)%sf(j,k,l)
 
-                                flux_n(id)%vf(2)%sf(j,k,l) =
-q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf(
-momxb)%sf(j,k,l) + &
+                                flux_n(id)%vf(2)%sf(j,k,l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
+                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb)%sf(j,k,l) + &
                                     q_prim_qp%vf( e_idx)%sf(j,k,l) + &
                                     F_igr(j, k, l, 1)
 
-                                flux_n(id)%vf(3)%sf(j, k, l) =
-q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf(
-momxb + 1)%sf(j,k,l) + &
+                                flux_n(id)%vf(3)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
+                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
                                     F_igr(j, k, l, 4)
 
-                                flux_n(id)%vf(4)%sf(j, k, l) =
-q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf(
-momxb + 2)%sf(j,k,l) + &
+                                flux_n(id)%vf(4)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
+                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
                                     F_igr(j, k, l, 7)
                             end do
                         end do
@@ -1607,10 +1444,8 @@ momxb + 2)%sf(j,k,l) + &
                            do l = 0, n
                                do k = 0, m
                                    rhs_vf(j)%sf(k, l, q) = 1d0/dx(k)* &
-                                                           (flux_n(1)%vf(j)%sf(k
-- 1, l, q) &
-                                                            -
-flux_n(1)%vf(j)%sf(k, l, q))
+                                                           (flux_n(1)%vf(j)%sf(k - 1, l, q) &
+                                                            - flux_n(1)%vf(j)%sf(k, l, q))
                                end do
                            end do
                        end do
@@ -1618,8 +1453,7 @@ flux_n(1)%vf(j)%sf(k, l, q))
                 end if
 
             elseif (id == 2) then
-                ! RHS Contribution in y-direction
-                ! ===============================
+                ! RHS Contribution in y-direction ===============================
                 ! Applying the Riemann fluxes
 
                 if (bcyb <= -5 .and. bcyb >= -13) then
@@ -1645,21 +1479,16 @@ flux_n(1)%vf(j)%sf(k, l, q))
                                 ! Momentum -> rho*u^2 + p + [[F_igr]]
                                 flux_n(id)%vf(2)%sf(j,k,l) = &
                                      q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb +
-1)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) + &   
+                                    q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) + &   
                                     F_igr(j, k, l, 2)
 
-                                flux_n(id)%vf(3)%sf(j, k, l) =
-q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb +
-1)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
+                                flux_n(id)%vf(3)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
+                                    q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
                                     q_prim_qp%vf( e_idx)%sf(j,k,l) + &
                                     F_igr(j, k, l, 5)
 
-                                flux_n(id)%vf(4)%sf(j, k, l) =
-q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb +
-1)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
+                                flux_n(id)%vf(4)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
+                                    q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
                                     F_igr(j, k, l, 8)
                             end do
                         end do
@@ -1672,8 +1501,7 @@ q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                 do j = 0, m
 
                                     rhs_vf(i)%sf(j,k,l) = &
-                                        rhs_vf(i)%sf(j,k,l) + 1d0/(2d0*dy(k)) *
-&
+                                        rhs_vf(i)%sf(j,k,l) + 1d0/(2d0*dy(k)) * &
                                         ( flux_n(id)%vf(i)%sf(j,k-1,l) - &
                                           flux_n(id)%vf(i)%sf(j,k+1,l) )
 
@@ -1723,8 +1551,7 @@ q_prim_qp%vf(contxb)%sf(j,k,l) * &
                 end if
 
             elseif (id == 3) then
-                ! RHS Contribution in z-direction
-                ! ===============================
+                ! RHS Contribution in z-direction ===============================
 
                 ! Applying the Riemann fluxes
 
@@ -1751,20 +1578,15 @@ q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                 ! Momentum -> rho*u^2 + p + [[F_igr]]
                                 flux_n(id)%vf(2)%sf(j,k,l) = &
                                      q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb +
-2)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) + &   
+                                    q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) + &   
                                     F_igr(j, k, l, 3)
 
-                                flux_n(id)%vf(3)%sf(j, k, l) =
-q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb +
-2)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
+                                flux_n(id)%vf(3)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
+                                    q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
                                     F_igr(j, k, l, 6)
 
-                                flux_n(id)%vf(4)%sf(j, k, l) =
-q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb +
-2)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
+                                flux_n(id)%vf(4)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
+                                    q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
                                     q_prim_qp%vf( e_idx)%sf(j,k,l) + &
                                     F_igr(j, k, l, 9)
                             end do
@@ -1778,8 +1600,7 @@ q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                 do j = 0, m
 
                                     rhs_vf(i)%sf(j,k,l) = &
-                                        rhs_vf(i)%sf(j,k,l) + 1d0/(2d0*dz(l)) *
-&
+                                        rhs_vf(i)%sf(j,k,l) + 1d0/(2d0*dz(l)) * &
                                         ( flux_n(id)%vf(i)%sf(j,k,l-1) - &
                                           flux_n(id)%vf(i)%sf(j,k,l+1) )
 
@@ -1856,8 +1677,7 @@ q_prim_qp%vf(contxb)%sf(j,k,l) * &
                 do l = iz%beg, iz%end
                     do k = iy%beg, iy%end
                         do j = ix%beg, ix%end
-                            q_prim_vf(i)%sf(j, k, l) = q_prim_qp%vf(i)%sf(j, k,
-l)
+                            q_prim_vf(i)%sf(j, k, l) = q_prim_qp%vf(i)%sf(j, k, l)
                         end do
                     end do
                 end do
@@ -1881,14 +1701,10 @@ l)
 
         type(scalar_field), dimension(sys_size), intent(INOUT) :: q_cons_vf
 
-        !> @name Relaxed pressure, initial partial pressures, function f(p) and
-        !its partial
-            !! derivative df(p), isentropic partial density, sum of volume
-            !fractions,
-            !! mixture density, dynamic pressure, surface energy, specific heat
-            !ratio
-            !! function, liquid stiffness function (two variations of the last
-            !two
+        !> @name Relaxed pressure, initial partial pressures, function f(p) and its partial
+            !! derivative df(p), isentropic partial density, sum of volume fractions,
+            !! mixture density, dynamic pressure, surface energy, specific heat ratio
+            !! function, liquid stiffness function (two variations of the last two
             !! ones), shear and volume Reynolds numbers and the Weber numbers
         !> @{
         real(kind(0d0)) :: pres_relax
@@ -1908,8 +1724,7 @@ l)
         integer :: i, j, k, l, q, iter !< Generic loop iterators
         integer :: relax !< Relaxation procedure determination variable
 
-        !$acc parallel loop collapse(3) gang vector private(pres_K_init,
-        !rho_K_s, alpha_rho, alpha, Re, pres_relax)
+        !$acc parallel loop collapse(3) gang vector private(pres_K_init, rho_K_s, alpha_rho, alpha, Re, pres_relax)
         do l = 0, p
             do k = 0, n
                 do j = 0, m
@@ -1920,10 +1735,8 @@ l)
 
                         !$acc loop seq
                         do i = 1, num_fluids
-                            if ((q_cons_vf(i + contxb - 1)%sf(j, k, l) < 0d0)
-.or. &
-                                (q_cons_vf(i + advxb - 1)%sf(j, k, l) < 0d0))
-then
+                            if ((q_cons_vf(i + contxb - 1)%sf(j, k, l) < 0d0) .or. &
+                                (q_cons_vf(i + advxb - 1)%sf(j, k, l) < 0d0)) then
                                 q_cons_vf(i + contxb - 1)%sf(j, k, l) = 0d0
                                 q_cons_vf(i + advxb - 1)%sf(j, k, l) = 0d0
                                 q_cons_vf(i + intxb - 1)%sf(j, k, l) = 0d0
@@ -1931,27 +1744,23 @@ then
 
                             if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > 1d0) &
                                 q_cons_vf(i + advxb - 1)%sf(j, k, l) = 1d0
-                            sum_alpha = sum_alpha + q_cons_vf(i + advxb -
-1)%sf(j, k, l)
+                            sum_alpha = sum_alpha + q_cons_vf(i + advxb - 1)%sf(j, k, l)
                         end do
 
                         !$acc loop seq
                         do i = 1, num_fluids
-                            q_cons_vf(i + advxb - 1)%sf(j, k, l) = q_cons_vf(i +
-advxb - 1)%sf(j, k, l)/sum_alpha
+                            q_cons_vf(i + advxb - 1)%sf(j, k, l) = q_cons_vf(i + advxb - 1)%sf(j, k, l)/sum_alpha
                         end do
                     end if
 
-                    ! Pressures relaxation procedure
-                    ! ===================================
+                    ! Pressures relaxation procedure ===================================
 
                     ! Is the pressure relaxation procedure necessary?
                     relax = 1
 
                     !$acc loop seq
                     do i = 1, num_fluids
-                        if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > (1d0 -
-sgm_eps)) relax = 0
+                        if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > (1d0 - sgm_eps)) relax = 0
                     end do
 
                     if (relax == 1) then
@@ -1960,22 +1769,18 @@ sgm_eps)) relax = 0
 
                         !$acc loop seq
                         do i = 1, num_fluids
-                            if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > sgm_eps)
-then
+                            if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > sgm_eps) then
                                 pres_K_init(i) = &
                                     (q_cons_vf(i + intxb - 1)%sf(j, k, l)/ &
                                      q_cons_vf(i + advxb - 1)%sf(j, k, l) &
                                      - pi_infs(i))/gammas(i)
 
-                                if (pres_K_init(i) <= -(1d0 - 1d-8)*pres_inf(i)
-+ 1d-8) &
-                                    pres_K_init(i) = -(1d0 - 1d-8)*pres_inf(i) +
-1d-8
+                                if (pres_K_init(i) <= -(1d0 - 1d-8)*pres_inf(i) + 1d-8) &
+                                    pres_K_init(i) = -(1d0 - 1d-8)*pres_inf(i) + 1d-8
                             else
                                 pres_K_init(i) = 0d0
                             end if
-                            pres_relax = pres_relax + q_cons_vf(i + advxb -
-1)%sf(j, k, l)*pres_K_init(i)
+                            pres_relax = pres_relax + q_cons_vf(i + advxb - 1)%sf(j, k, l)*pres_K_init(i)
                         end do
 
                         ! Iterative process for relaxed pressure determination
@@ -1995,10 +1800,8 @@ then
 
                                 ! Physical pressure
                                 do i = 1, num_fluids
-                                    if (pres_relax <= -(1d0 - 1d-8)*pres_inf(i)
-+ 1d-8) &
-                                        pres_relax = -(1d0 - 1d-8)*pres_inf(i) +
-1d0
+                                    if (pres_relax <= -(1d0 - 1d-8)*pres_inf(i) + 1d-8) &
+                                        pres_relax = -(1d0 - 1d-8)*pres_inf(i) + 1d0
                                 end do
 
                                 ! Newton-Raphson method
@@ -2007,24 +1810,17 @@ then
 
                                 !$acc loop seq
                                 do i = 1, num_fluids
-                                    if (q_cons_vf(i + advxb - 1)%sf(j, k, l) >
-sgm_eps) then
-                                        rho_K_s(i) = q_cons_vf(i + contxb -
-1)%sf(j, k, l)/ &
-                                                     max(q_cons_vf(i + advxb -
-1)%sf(j, k, l), sgm_eps) &
-                                                     *((pres_relax +
-pres_inf(i))/(pres_K_init(i) + &
+                                    if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > sgm_eps) then
+                                        rho_K_s(i) = q_cons_vf(i + contxb - 1)%sf(j, k, l)/ &
+                                                     max(q_cons_vf(i + advxb - 1)%sf(j, k, l), sgm_eps) &
+                                                     *((pres_relax + pres_inf(i))/(pres_K_init(i) + &
                                                                                    pres_inf(i)))**(1d0/gamma_min(i))
 
-                                        f_pres = f_pres + q_cons_vf(i + contxb -
-1)%sf(j, k, l) &
+                                        f_pres = f_pres + q_cons_vf(i + contxb - 1)%sf(j, k, l) &
                                                  /rho_K_s(i)
 
-                                        df_pres = df_pres - q_cons_vf(i + contxb
-- 1)%sf(j, k, l) &
-                                                  /(gamma_min(i)*rho_K_s(i)*(pres_relax
-+ pres_inf(i)))
+                                        df_pres = df_pres - q_cons_vf(i + contxb - 1)%sf(j, k, l) &
+                                                  /(gamma_min(i)*rho_K_s(i)*(pres_relax + pres_inf(i)))
                                     end if
                                 end do
                             end if
@@ -2034,30 +1830,21 @@ pres_inf(i))/(pres_K_init(i) + &
                         ! Cell update of the volume fraction
                         !$acc loop seq
                         do i = 1, num_fluids
-                            if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > sgm_eps)
-&
-                                q_cons_vf(i + advxb - 1)%sf(j, k, l) =
-q_cons_vf(i + contxb - 1)%sf(j, k, l) &
+                            if (q_cons_vf(i + advxb - 1)%sf(j, k, l) > sgm_eps) &
+                                q_cons_vf(i + advxb - 1)%sf(j, k, l) = q_cons_vf(i + contxb - 1)%sf(j, k, l) &
                                                                        /rho_K_s(i)
                         end do
                     end if
 
                     ! ==================================================================
 
-                    ! Mixture-total-energy correction
-                    ! ==================================
+                    ! Mixture-total-energy correction ==================================
 
-                    ! The mixture-total-energy correction of the mixture
-                    ! pressure P is not necessary here
-                    ! because the primitive variables are directly recovered
-                    ! later on by the conservative
-                    ! variables (see
-                    ! s_convert_conservative_to_primitive_variables called in
-                    ! s_compute_rhs).
-                    ! However, the internal-energy equations should be reset
-                    ! with the corresponding mixture
-                    ! pressure from the correction. This step is carried out
-                    ! below.
+                    ! The mixture-total-energy correction of the mixture pressure P is not necessary here
+                    ! because the primitive variables are directly recovered later on by the conservative
+                    ! variables (see s_convert_conservative_to_primitive_variables called in s_compute_rhs).
+                    ! However, the internal-energy equations should be reset with the corresponding mixture
+                    ! pressure from the correction. This step is carried out below.
 
                     !$acc loop seq
                     do i = 1, num_fluids
@@ -2070,8 +1857,7 @@ q_cons_vf(i + contxb - 1)%sf(j, k, l) &
                         gamma = 0d0
                         pi_inf = 0d0
 
-                        if (mpp_lim .and. (model_eqns == 2) .and. (num_fluids >
-2)) then
+                        if (mpp_lim .and. (model_eqns == 2) .and. (num_fluids > 2)) then
                             !$acc loop seq
                             do i = 1, num_fluids
                                 rho = rho + alpha_rho(i)
@@ -2142,8 +1928,7 @@ q_cons_vf(i + contxb - 1)%sf(j, k, l) &
                                    q_cons_vf(i)%sf(j, k, l)/max(rho, sgm_eps)
                     end do
 
-                    pres_relax = (q_cons_vf(E_idx)%sf(j, k, l) - dyn_pres -
-pi_inf)/gamma
+                    pres_relax = (q_cons_vf(E_idx)%sf(j, k, l) - dyn_pres - pi_inf)/gamma
 
                     !$acc loop seq
                     do i = 1, num_fluids
@@ -2164,21 +1949,16 @@ pi_inf)/gamma
         !!      variables.
         !!  @param v_vf Cell-average variables
         !!  @param vL_qp Left WENO-reconstructed, cell-boundary values including
-        !!          the values at the quadrature points, of the cell-average
-        !variables
-        !!  @param vR_qp Right WENO-reconstructed, cell-boundary values
-        !including
-        !!          the values at the quadrature points, of the cell-average
-        !variables
+        !!          the values at the quadrature points, of the cell-average variables
+        !!  @param vR_qp Right WENO-reconstructed, cell-boundary values including
+        !!          the values at the quadrature points, of the cell-average variables
         !!  @param norm_dir Splitting coordinate direction
-    subroutine s_reconstruct_cell_boundary_values(v_vf, vL_x, vL_y, vL_z, vR_x,
-vR_y, vR_z, & ! -
+    subroutine s_reconstruct_cell_boundary_values(v_vf, vL_x, vL_y, vL_z, vR_x, vR_y, vR_z, & ! -
                                                       norm_dir)
 
         type(scalar_field), dimension(iv%beg:iv%end), intent(IN) :: v_vf
 
-        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:), intent(INOUT)
-:: vL_x, vL_y, vL_z, vR_x, vR_y, vR_z
+        real(kind(0d0)), dimension(startx:, starty:, startz:, 1:), intent(INOUT) :: vL_x, vL_y, vL_z, vR_x, vR_y, vR_z
 
         integer, intent(IN) :: norm_dir
 
@@ -2208,24 +1988,19 @@ vR_y, vR_z, & ! -
             if (p > 0) then
 
                 call s_weno(v_vf(iv%beg:iv%end), &
-                    vL_x(:, :, :, iv%beg:iv%end), vL_y(:, :, :, iv%beg:iv%end),
-vL_z(:, :, :, iv%beg:iv%end), vR_x(:, :, :, iv%beg:iv%end), vR_y(:, :, :,
-iv%beg:iv%end), vR_z(:, :, :, iv%beg:iv%end), &
+                    vL_x(:, :, :, iv%beg:iv%end), vL_y(:, :, :, iv%beg:iv%end), vL_z(:, :, :, iv%beg:iv%end), vR_x(:, :, :, iv%beg:iv%end), vR_y(:, :, :, iv%beg:iv%end), vR_z(:, :, :, iv%beg:iv%end), &
                                 norm_dir, weno_dir, &
                                 is1, is2, is3)
             else
                 call s_weno(v_vf(iv%beg:iv%end), &
-                    vL_x(:, :, :, iv%beg:iv%end), vL_y(:, :, :, iv%beg:iv%end),
-vL_z(:, :, :, :), vR_x(:, :, :, iv%beg:iv%end), vR_y(:, :, :, iv%beg:iv%end),
-vR_z(:, :, :, :), &
+                    vL_x(:, :, :, iv%beg:iv%end), vL_y(:, :, :, iv%beg:iv%end), vL_z(:, :, :, :), vR_x(:, :, :, iv%beg:iv%end), vR_y(:, :, :, iv%beg:iv%end), vR_z(:, :, :, :), &
                                 norm_dir, weno_dir, &
                                 is1, is2, is3)
             end if
         else
 
             call s_weno(v_vf(iv%beg:iv%end), &
-                        vL_x(:, :, :, iv%beg:iv%end), vL_y(:, :, :, :), vL_z(:,
-:, :, :), vR_x(:, :, :, iv%beg:iv%end), vR_y(:, :, :, :), vR_z(:, :, :, :), &
+                        vL_x(:, :, :, iv%beg:iv%end), vL_y(:, :, :, :), vL_z(:, :, :, :), vR_x(:, :, :, iv%beg:iv%end), vR_y(:, :, :, :), vR_z(:, :, :, :), &
                             norm_dir, weno_dir, &
                             is1, is2, is3)
         end if
@@ -2278,8 +2053,7 @@ vR_z(:, :, :, :), &
 
         if (mpp_lim .and. bubbles) then
             !deallocate(alf_sum%sf(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
-            !$acc exit data delete(alf_sum%sf(ix%beg:ix%end, iy%beg:iy%end,
-            !iz%beg:iz%end))
+            !$acc exit data delete(alf_sum%sf(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
         end if
 
         if (any(Re_size > 0)) then
@@ -2394,4 +2168,3 @@ vR_z(:, :, :, :), &
     end subroutine s_finalize_rhs_module ! ---------------------------------
 
 end module m_rhs
-
