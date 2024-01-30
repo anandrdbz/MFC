@@ -1098,7 +1098,7 @@ contains
                     omega = 0.67
                     !$acc update device(omega)
 
-                    do i = 1, 10
+                    do i = 1, 2
 
                         !$acc parallel loop gang vector collapse(4) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
                         do q = 1, 3
