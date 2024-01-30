@@ -231,10 +231,20 @@ contains
         q_prim_vf(E_idx)%sf(j, k, l) = 0.2 * (q_prim_vf(1)%sf(j, k, l))**1.4d0
 
         if(x_cc(j) <= 0.25d0) then
-            q_prim_vf(momxb)%sf(j,k,l) = 0.1d0
+            q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + 0.2*sin(2*3.14156*4*x_cc(j) /0.25d0)
+            q_prim_vf(momxb)%sf(j, k, l) = 0.1d0 * sqrt(1.4* 0.2* (q_prim_vf(1)%sf(j, k, l))**0.4d0)
         else if(x_cc(j) >= 0.75d0) then
-            q_prim_vf(momxb)%sf(j,k,l) = -0.1d0
-        end if
+            q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + 0.2*sin(-2*3.14156*4*(1 - x_cc(j)) /0.25d0) 
+            q_prim_vf(momxb)%sf(j, k, l) = -0.1d0 * sqrt(1.4* 0.2* (q_prim_vf(1)%sf(j, k, l))**0.4d0) 
+        end if          
+
+        q_prim_vf(E_idx)%sf(j, k, l) = 0.2 * (q_prim_vf(1)%sf(j, k, l))**1.4d0
+
+        !if(x_cc(j) <= 0.25d0) then
+        !    q_prim_vf(momxb)%sf(j,k,l) = 0.1d0
+        !else if(x_cc(j) >= 0.75d0) then
+        !    q_prim_vf(momxb)%sf(j,k,l) = -0.1d0
+        !end if
 
         ! x = x_cc(j) - 0.5
         ! y = y_cc(k) - 0.5
