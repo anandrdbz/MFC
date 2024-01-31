@@ -1033,7 +1033,7 @@ contains
 
     subroutine s_initialize_mpi_domain()
         integer :: ierr
-#ifdef MFC_OpenACC
+#if defined(__PGI)
         real(kind(0d0)) :: starttime, endtime
         integer :: num_devices, local_size, num_nodes, ppn, my_device_num
         integer :: dev, devNum, local_rank
@@ -1048,7 +1048,7 @@ contains
         call s_mpi_initialize()
 
     ! Bind GPUs if OpenACC is enabled
-#ifdef MFC_OpenACC
+#if defined(__PGI)
 #ifndef MFC_MPI
         local_size = 1
         local_rank = 0
