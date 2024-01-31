@@ -4,12 +4,12 @@ import math
 import json
 
 # Numerical setup
-Nx = 30
+Nx = 500
 dx = 1./(1.*(Nx+1))
 
 Tend = 0.2
-maxwavespeed = 1.
-lam = 0.2
+maxwavespeed = 0.1
+lam = 0.1
 
 mydt = lam*dx/maxwavespeed
 Nt = int(Tend/mydt)
@@ -37,8 +37,8 @@ print(json.dumps({
     'p'                            : 0,
     'dt'                           : mydt,
     't_step_start'                 : 0,
-    't_step_stop'                  : 3000,
-    't_step_save'                  : 60,
+    't_step_stop'                  : 1000,
+    't_step_save'                  : 10,
     # ==========================================================================
 
     # Simulation Algorithm Parameters ==========================================

@@ -159,6 +159,8 @@ contains
         integer, intent(INOUT) :: t_step 
         character(LEN=name_len), intent(INOUT) :: varname
         real(kind(0d0)), intent(INOUT) :: pres, c, H
+        real(kind(0d0)) :: En_tot, rho_tot
+        logical :: file_exists
         
         integer :: i, j, k, l
 
@@ -285,6 +287,32 @@ contains
             q_sf = q_cons_vf(E_idx)%sf(-offset_x%beg:m + offset_x%end, &
                                        -offset_y%beg:n + offset_y%end, &
                                        -offset_z%beg:p + offset_z%end)
+
+            q_sf = 2.5d0*q_prim_vf(E_idx)%sf + 0.5d0*q_prim_vf(1)%sf(j,k,l)*&
+		(q_prim_vf(mom_idx%beg)%sf**2d0 + q_prim_vf(mom_idx%beg + 1)%sf**2d0)
+	    
+	    En_tot = 0d0
+	    rho_tot = 0d0
+	    do k = 0, n
+		do j = 0, m
+			En_tot = En_tot + q_sf(j,k,0)
+			rho_tot = rho_tot + q_cons_vf(1)%sf(j,k,0)
+		end do
+	    end do
+	    En_tot = En_tot/(m+1)**2d0
+	    rho_tot = 0.5d0*(rho_tot/(m+1)**2d0)**1.4
+	    print *, "POT AVG", rho_tot
+	    print *, "En_tot", En_tot
+            inquire (FILE='En_tot.dat', EXIST=file_exists)
+            if (file_exists) then
+                open (1, file='En_tot.dat', position='append', status='old')
+                write (1, *) En_tot
+                close (1)
+            else
+                open (1, file='En_tot.dat', status='new')
+                write (1, *) En_tot
+                close (1)
+            end if
 
             write (varname, '(A)') 'E'
             call s_write_variable_to_formatted_database_file(varname, t_step)
