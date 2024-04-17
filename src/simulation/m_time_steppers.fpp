@@ -346,10 +346,11 @@ contains
                 do k = 0, n
                     do j = 0, m
                         q_cons_ts(2)%vf(i)%sf(j, k, l) = &
-                            0.125d0*(q_cons_ts(1)%vf(i)%sf(j - 1, k, l) + q_cons_ts(1)%vf(i)%sf(j + 1, k, l) + &
-                            q_cons_ts(1)%vf(i)%sf(j , k + 1, l) + q_cons_ts(1)%vf(i)%sf(j ,k - 1, l) + &
-                            + q_cons_ts(1)%vf(i)%sf(j, k, l + 1) + q_cons_ts(1)%vf(i)%sf(j, k, l - 1)) &
-                            + dt*rhs_vf(i)%sf(j, k, l)
+                            0.125d0*(q_cons_ts(1)%vf(i)%sf(j, k, l) + q_cons_ts(1)%vf(i)%sf(j + 1, k, l) + &
+                            q_cons_ts(1)%vf(i)%sf(j , k + 1, l) + q_cons_ts(1)%vf(i)%sf(j + 1 ,k + 1, l) + &
+                            q_cons_ts(1)%vf(i)%sf(j, k, l + 1) + q_cons_ts(1)%vf(i)%sf(j, k + 1, l + 1)  + & 
+                            q_cons_ts(1)%vf(i)%sf(j + 1, k, l + 1) + q_cons_ts(1)%vf(i)%sf(j + 1, k + 1, l + 1) ) &
+                            + 0.5d0*dt*rhs_vf(i)%sf(j, k, l)
                     end do
                 end do
             end do

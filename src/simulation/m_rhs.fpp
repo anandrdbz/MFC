@@ -162,7 +162,7 @@ module m_rhs
     !$acc declare create(Res)
 
     real(kind(0d0)), allocatable, dimension(:, :, :) :: rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, fd_coeff, duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr
-    real(kind(0d0)), allocatable, dimension(:, :, :, :) :: jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr
+    real(kind(0d0)), allocatable, dimension(:, :, :) :: rhs_igr, F_igr, F_old_igr
     real(kind(0d0)) :: alf_igr, omega
 
     integer :: bcxb, bcxe, bcyb, bcye, bczb, bcze
@@ -175,7 +175,7 @@ module m_rhs
 !$acc   bub_mom_src,alf_sum, &
 !$acc   blkmod1, blkmod2, alpha1, alpha2, Kterm, divu, qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
 !$acc   dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
-!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, bczb, bcze, omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff, &
+!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, bczb, bcze, omega,alf_igr, rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, rhs_igr, F_igr, F_old_igr, fd_coeff, &
 !$acc   duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr)
 
     real(kind(0d0)), allocatable, dimension(:, :, :) :: nbub !< Bubble number density
@@ -574,21 +574,17 @@ contains
 
         if (barotropic) then
             @:ALLOCATE(rho_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dux_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvx_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
-            @:ALLOCATE(F_igr( ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:9), rhs_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:9)) 
-            @:ALLOCATE(jac_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end, 1:3), jac_old_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end,1:3), jac_rhs_igr( ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end,1:3))
+            @:ALLOCATE(F_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), F_old_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),  rhs_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end)) 
             @:ALLOCATE(fd_coeff(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), duy_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvy_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
             @:ALLOCATE(duz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dvz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end), dwx_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),dwy_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end),dwz_igr(ix%beg:ix%end, iy%beg:iy%end, iz%beg:iz%end))
             
-            !$acc parallel loop collapse(4) gang vector default(present)
-            do i = 1, 3
-                do l = iz%beg, iz%end
-                    do k = iy%beg, iy%end
-                        do j = ix%beg, ix%end                       
-                            jac_igr(j, k, l, i) = 0d0
-                            jac_old_igr(j, k, l, i) = 0d0
-                            jac_rhs_igr(j, k, l, i) = 0d0
-                       end do
-                    end do
+            !$acc parallel loop collapse(3) gang vector default(present)
+            do l = iz%beg, iz%end
+                do k = iy%beg, iy%end
+                    do j = ix%beg, ix%end                       
+                        F_igr(j, k, l) = 0d0
+                        F_old_igr(j, k, l) = 0d0
+                   end do
                 end do
             end do
                          
@@ -767,7 +763,7 @@ contains
         !                                     dqL_prim_dx_n, dqL_prim_dy_n, dqL_prim_dz_n, &
         !                                     qL_prim, &
         !                                     qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
-        !   x                                 dqR_prim_dx_n, dqR_prim_dy_n, dqR_prim_dz_n, &
+        !                                     dqR_prim_dx_n, dqR_prim_dy_n, dqR_prim_dz_n, &
         !                                     qR_prim, &
         !                                     q_prim_qp, &
         !                                     dq_prim_dx_qp, dq_prim_dy_qp, dq_prim_dz_qp, &
@@ -935,7 +931,7 @@ contains
                                flux_src_n(id)%vf, id, 1, ix, iy, iz)
                 end if
 
-                if(barotropic ) then
+                if(barotropic) then
 
                     ! Get F_igr
                     alf_igr = 2d0*(dx(1)**2)
@@ -943,11 +939,11 @@ contains
                     !$acc update device(alf_igr)
 
                     !$acc parallel loop collapse(3) gang vector default(present)
-                    do l = iz%beg, iz%end
-                        do k = iy%beg, iy%end
+                    do l = iz%beg, iz%end 
+                        do k = iy%beg, iy%end 
                             do j = ix%beg, ix%end
-                                rho_igr(j,k,l) = q_prim_qp%vf(contxb)%sf(j,k,l)
-                           end do
+                                rho_igr(j,k,l) = q_prim_qp%vf(1)%sf(j,k,l)
+                            end do
                         end do
                     end do
 
@@ -1012,33 +1008,10 @@ contains
                     do l = iz%beg + 1, iz%end - 1
                         do k = iy%beg + 1, iy%end - 1
                             do j = ix%beg + 1, ix%end - 1
-                                rhs_igr(j, k, l, 1) = rho_igr(j,k,l) *alf_igr  *2d0 * (dux_igr(j,k,l)*dux_igr(j,k,l) + dvx_igr(j,k,l) * duy_igr(j,k,l) + dwx_igr(j,k,l) * duz_igr(j,k,l))
-                                rhs_igr(j, k, l, 2) = rho_igr(j,k,l) *alf_igr  *2d0 * (duy_igr(j,k,l)*dux_igr(j,k,l) + dvy_igr(j,k,l) * duy_igr(j,k,l) + dwy_igr(j,k,l) * duz_igr(j,k,l))                        
-                                rhs_igr(j, k, l, 3) = rho_igr(j,k,l) *alf_igr  *2d0 * (duz_igr(j,k,l)*dux_igr(j,k,l) + dvz_igr(j,k,l) * duy_igr(j,k,l) + dwz_igr(j,k,l) * duz_igr(j,k,l))
-
-                                rhs_igr(j, k, l, 4) = rho_igr(j,k,l) *alf_igr  *2d0 * (dux_igr(j,k,l)*dvx_igr(j,k,l) + dvx_igr(j,k,l) * dvy_igr(j,k,l) + dwx_igr(j,k,l) * dvz_igr(j,k,l))
-                                rhs_igr(j, k, l, 5) = rho_igr(j,k,l) *alf_igr  *2d0 * (duy_igr(j,k,l)*dvx_igr(j,k,l) + dvy_igr(j,k,l) * dvy_igr(j,k,l) + dwy_igr(j,k,l) * dvz_igr(j,k,l))                        
-                                rhs_igr(j, k, l, 6) = rho_igr(j,k,l) *alf_igr  *2d0 * (duz_igr(j,k,l)*dvx_igr(j,k,l) + dvz_igr(j,k,l) * dvy_igr(j,k,l) + dwz_igr(j,k,l) * dvz_igr(j,k,l))
-
-                                rhs_igr(j, k, l, 7) = rho_igr(j,k,l) *alf_igr  *2d0 * (dux_igr(j,k,l)*dwx_igr(j,k,l) + dvx_igr(j,k,l) * dwy_igr(j,k,l) + dwx_igr(j,k,l) * dwz_igr(j,k,l))
-                                rhs_igr(j, k, l, 8) = rho_igr(j,k,l) *alf_igr  *2d0 * (duy_igr(j,k,l)*dwx_igr(j,k,l) + dvy_igr(j,k,l) * dwy_igr(j,k,l) + dwy_igr(j,k,l) * dwz_igr(j,k,l))                        
-                                rhs_igr(j, k, l, 9) = rho_igr(j,k,l) *alf_igr  *2d0 * (duz_igr(j,k,l)*dwx_igr(j,k,l) + dvz_igr(j,k,l) * dwy_igr(j,k,l) + dwz_igr(j,k,l) * dwz_igr(j,k,l))
-                                
-                           end do
-                        end do
-                    end do
-
-                    !$acc parallel loop collapse(3) gang vector default(present)
-                    do l = iz%beg + 2, iz%end - 1
-                        do k = iy%beg + 2, iy%end - 1
-                            do j = ix%beg + 2, ix%end - 1
-                                rho_lx = 1d0 * (rho_igr(j,k,l) + rho_igr(j-1,k,l)) / 2d0
-                                rho_ly = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k-1,l)) / 2d0
-                                rho_lz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l-1)) / 2d0
-
-                                jac_rhs_igr(j, k, l, 1) = (1d0 / dx(j))*(rhs_igr(j-1,k,l,1) - rhs_igr(j,k,l,1))  + (1d0 / dy(k))*(rhs_igr(j,k-1,l,2) - rhs_igr(j,k,l,2)) + (1d0 / dz(l))*(rhs_igr(j,k,l-1,3) - rhs_igr(j,k,l,3)) 
-                                jac_rhs_igr(j, k, l, 2) = (1d0 / dx(j))*(rhs_igr(j-1,k,l,4) - rhs_igr(j,k,l,4))  + (1d0 / dy(k))*(rhs_igr(j,k-1,l,5) - rhs_igr(j,k,l,5)) + (1d0 / dz(l))*(rhs_igr(j,k,l-1,6) - rhs_igr(j,k,l,6))
-                                jac_rhs_igr(j, k, l, 3) = (1d0 / dx(j))*(rhs_igr(j-1,k,l,7) - rhs_igr(j,k,l,7))  + (1d0 / dy(k))*(rhs_igr(j,k-1,l,8) - rhs_igr(j,k,l,8)) + (1d0 / dz(l))*(rhs_igr(j,k,l-1,9) - rhs_igr(j,k,l,9))
+                                rhs_igr(j, k, l) = alf_igr*((dux_igr(j,k,l)*dux_igr(j,k,l) + dvx_igr(j,k,l) * duy_igr(j,k,l) + dwx_igr(j,k,l) * duz_igr(j,k,l)) + &
+                                                      (duy_igr(j,k,l)*dvx_igr(j,k,l) + dvy_igr(j,k,l) * dvy_igr(j,k,l) + dwy_igr(j,k,l) * dvz_igr(j,k,l)) + & 
+                                                      (duz_igr(j,k,l)*dwx_igr(j,k,l) + dvz_igr(j,k,l) * dwy_igr(j,k,l) + dwz_igr(j,k,l) * dwz_igr(j,k,l)) + &
+                                                      (dux_igr(j,k,l)**2d0 + dvy_igr(j,k,l)**2d0 + dwz_igr(j,k,l)**2d0))
                            end do
                         end do
                     end do
@@ -1047,129 +1020,120 @@ contains
                     do l = 0, p
                         do k = 0, n
                             do j = 0, m
-                                rho_lx = 1d0 * (rho_igr(j,k,l) + rho_igr(j-1,k,l)) / 2d0
-                                rho_ly = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k-1,l)) / 2d0
-                                rho_lz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l-1)) / 2d0
+                                rho_lx = 2d0 * rho_igr(j,k,l) * rho_igr(j-1,k,l) / (rho_igr(j,k,l) + rho_igr(j-1,k,l))
+                                rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k-1,l) / (rho_igr(j,k,l) + rho_igr(j,k-1,l))
+                                rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l-1) / (rho_igr(j,k,l) + rho_igr(j,k,l-1))
 
-                                rho_rx = 1d0 * (rho_igr(j,k,l) + rho_igr(j+1,k,l)) / 2d0
-                                rho_ry = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k+1,l)) / 2d0
-                                rho_rz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l+1)) / 2d0
+                                rho_lx = 2d0 * rho_igr(j,k,l) * rho_igr(j+1,k,l) / (rho_igr(j,k,l) + rho_igr(j+1,k,l))
+                                rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k+1,l) / (rho_igr(j,k,l) + rho_igr(j,k+1,l))
+                                rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l+1) / (rho_igr(j,k,l) + rho_igr(j,k,l+1))
                                 
-                                rho_lx = rho_igr(j-1,k,l)
-                                rho_ly = rho_igr(j,k-1,l)
-                                rho_lz = rho_igr(j,k,l-1)
+                                !rho_lx = rho_igr(j-1,k,l)
+                                !rho_ly = rho_igr(j,k-1,l)
+                                !rho_lz = rho_igr(j,k,l-1)
 
-                                rho_rx = rho_igr(j,k,l)
-                                rho_ry = rho_igr(j,k,l)
-                                rho_rz = rho_igr(j,k,l)
+                                !rho_rx = rho_igr(j,k,l)
+                                !rho_ry = rho_igr(j,k,l)
+                                !rho_rz = rho_igr(j,k,l)
 
-                                fd_coeff(j,k,l) = rho_igr(j,k,l) / alf_igr
+                                fd_coeff(j,k,l) = 1d0 / rho_igr(j,k,l)
 
-                                if(bcxb < -1 .and. j == 0) then
-                                    rho_lx = 0d0
+                                if(bcxb  >= -1 .or. j /= 0) then
+                                    fd_coeff(j, k, l) = fd_coeff(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_lx)
                                 end if
 
-                                if(bcxe < -1 .and. j == m) then
-                                    rho_rx = 0d0
+                                if(bcxe  >= -1 .or. j /= m) then
+                                    fd_coeff(j, k, l) = fd_coeff(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_rx)
                                 end if
 
-                                if(bcyb < -1 .and. k == 0) then
-                                    rho_ly = 0d0
+                                if(bcyb  >= -1 .or. k /= 0) then
+                                    fd_coeff(j, k, l) = fd_coeff(j, k, l) + alf_igr *(1d0 / dy(k)**2d0) * (1d0  / rho_ly)
                                 end if
 
-                                if(bcye < -1 .and. k == n) then
-                                    rho_ry = 0d0
+                                if(bcye  >= -1 .or. k /= n) then
+                                    fd_coeff(j, k, l) = fd_coeff(j, k, l) + alf_igr *(1d0 / dy(k)**2d0) * (1d0  / rho_ry)
                                 end if
 
-                                if(bczb < -1 .and. l == 0) then
-                                    rho_lz = 0d0
+                                if(bczb  >= -1 .or. l /= 0) then
+                                    fd_coeff(j, k, l) = fd_coeff(j, k, l) + alf_igr *(1d0 / dz(l)**2d0) * (1d0  / rho_lz)
                                 end if
 
-                                if(bcze < -1 .and. l == p) then
-                                    rho_rz = 0d0
+                                if(bcze  >= -1 .or. l /= p) then
+                                    fd_coeff(j, k, l) = fd_coeff(j, k, l) + alf_igr *(1d0 / dz(l)**2d0) * (1d0  / rho_rz)
                                 end if
-
-                                fd_coeff(j,k,l) = fd_coeff(j,k,l) + (1d0 / dx(j)**2d0) * (rho_lx + rho_rx) +  (1d0 / dy(k)**2d0) *(rho_ly + rho_ry) +  (1d0 / dz(l)**2d0) *(rho_lz + rho_rz)
 
                             end do
                         end do
                     end do
      
-                    omega = 0.67
+                    omega = 1d0
                     !$acc update device(omega)
 
-                    do i = 1, 2
+                    do i = 1, 10
 
-                        !$acc parallel loop gang vector collapse(4) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
-                        do q = 1, 3
-                            do l = 0, p
-                                do k = 0, n
-                                    do j = 0, m
+                        !$acc parallel loop gang vector collapse(3) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
+                        do l = 0, p
+                            do k = 0, n
+                                do j = 0, m
 
-                                        rho_lx = 1d0 * (rho_igr(j,k,l) + rho_igr(j-1,k,l)) / 2d0
-                                        rho_ly = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k-1,l)) / 2d0
-                                        rho_lz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l-1)) / 2d0
+                                    rho_lx = 2d0 * rho_igr(j,k,l) * rho_igr(j-1,k,l) / (rho_igr(j,k,l) + rho_igr(j-1,k,l))
+                                    rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k-1,l) / (rho_igr(j,k,l) + rho_igr(j,k-1,l))
+                                    rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l-1) / (rho_igr(j,k,l) + rho_igr(j,k,l-1))
 
-                                        rho_rx = 1d0 * (rho_igr(j,k,l) + rho_igr(j+1,k,l)) / 2d0
-                                        rho_ry = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k+1,l)) / 2d0
-                                        rho_rz = 1d0 * (rho_igr(j,k,l) + rho_igr(j,k,l+1)) / 2d0
-                                        
-                                        rho_lx = rho_igr(j-1,k,l)
-                                        rho_ly = rho_igr(j,k-1,l)
-                                        rho_lz = rho_igr(j,k,l-1)
+                                    rho_lx = 2d0 * rho_igr(j,k,l) * rho_igr(j+1,k,l) / (rho_igr(j,k,l) + rho_igr(j+1,k,l))
+                                    rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k+1,l) / (rho_igr(j,k,l) + rho_igr(j,k+1,l))
+                                    rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l+1) / (rho_igr(j,k,l) + rho_igr(j,k,l+1))
+                                    
+                                    !rho_lx = rho_igr(j-1,k,l)
+                                    !rho_ly = rho_igr(j,k-1,l)
+                                    !rho_lz = rho_igr(j,k,l-1)
 
-                                        rho_rx = rho_igr(j,k,l)
-                                        rho_ry = rho_igr(j,k,l)
-                                        rho_rz = rho_igr(j,k,l)
+                                    !rho_rx = rho_igr(j,k,l)
+                                    !rho_ry = rho_igr(j,k,l)
+                                    !rho_rz = rho_igr(j,k,l)
 
-                                        jac_igr(j, k, l, q) = jac_rhs_igr(j, k, l, q)
+                                    F_igr(j, k, l) = rhs_igr(j, k, l)
 
-                                        if(bcxb < -1 .and. j == 0) then
-                                            rho_lx = 0d0
-                                        end if
+                                    if(bcxb  >= -1 .or. j /= 0) then
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_lx) * F_old_igr(j+1, k, l)
+                                    end if
 
-                                        if(bcxe < -1 .and. j == m) then
-                                            rho_rx = 0d0
-                                        end if
+                                    if(bcxe  >= -1 .or. j /= m) then
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_rx) * F_old_igr(j-1, k, l)
+                                    end if
 
-                                        if(bcyb < -1 .and. k == 0) then
-                                            rho_ly = 0d0
-                                        end if
+                                    if(bcyb  >= -1 .or. k /= 0) then
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dy(k)**2d0) * (1d0  / rho_ly) * F_old_igr(j, k-1, l)
+                                    end if
 
-                                        if(bcye < -1 .and. k == n) then
-                                            rho_ry = 0d0
-                                        end if
+                                    if(bcye  >= -1 .or. k /= n) then
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dy(k)**2d0) * (1d0  / rho_ry) * F_old_igr(j, k+1, l)
+                                     end if
 
-                                        if(bczb < -1 .and. l == 0) then
-                                            rho_lz = 0d0
-                                        end if
+                                    if(bczb  >= -1 .or. l /= 0) then
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dz(l)**2d0) * (1d0  / rho_lz) * F_old_igr(j, k, l-1)
+                                    end if
 
-                                        if(bcze < -1 .and. l == p) then
-                                            rho_rz = 0d0
-                                        end if
+                                    if(bcze  >= -1 .or. l /= p) then
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dz(l)**2d0) * (1d0  / rho_rz) * F_old_igr(j, k, l+1)
+                                    end if
 
-                                        jac_igr(j,k,l,q) = jac_igr(j,k,l,q)+ (1d0 / dx(j)**2d0) * (rho_lx* jac_old_igr(j-1,k,l,q) + rho_rx*jac_old_igr(j+1,k,l,q)) &
-                                                + (1d0 / dy(k)**2d0) * (rho_ly* jac_old_igr(j,k-1,l,q) + rho_ry* jac_old_igr(j,k+1,l,q)) + (1 / dz(l)**2d0)*(rho_lz* jac_old_igr(j,k,l-1,q) + rho_rz* jac_old_igr(j,k,l+1,q))
-
-                                        jac_igr(j, k, l,q) = omega * (1 / fd_coeff(j,k,l))*jac_igr(j,k,l,q) + (1 - omega)*jac_old_igr(j, k, l,q)
+                                    F_igr(j, k, l) = omega * (1 / fd_coeff(j,k,l))*F_igr(j,k,l) + (1 - omega)*F_old_igr(j, k, l)
 
 
-                                    end do
                                 end do
                             end do
                         end do
 
                         if(bcxb >= -1) then
                             if(bcxb >= 0) then
-                                call s_mpi_sendrecv_F_igr(jac_igr, 1, -1)
+                                call s_mpi_sendrecv_F_igr(F_igr, 1, -1)
                             else
-                                !$acc parallel loop gang vector collapse(4) default(present) 
-                                do q = 1, 3
-                                    do l = 0, p
-                                        do k = 0, n
-                                            do j = 1, buff_size
-                                                jac_igr(-j, k, l, q) = jac_igr(m-j+1,k,l, q)
-                                            end do
+                                !$acc parallel loop gang vector collapse(3) default(present) 
+                                do l = 0, p
+                                    do k = 0, n
+                                        do j = 1, buff_size
+                                            F_igr(-j, k, l) = F_igr(m-j+1,k,l)
                                         end do
                                     end do
                                 end do
@@ -1178,15 +1142,13 @@ contains
 
                         if(bcxe >= -1) then
                             if(bcxe >= 0) then
-                                call s_mpi_sendrecv_F_igr(jac_igr, 1, 1)
+                                call s_mpi_sendrecv_F_igr(F_igr, 1, 1)
                             else
-                                !$acc parallel loop gang vector collapse(4) default(present)
-                                do q = 1, 3
-                                    do l = 0, p
-                                        do k = 0, n
-                                            do j = 1, buff_size
-                                                jac_igr(m+j, k, l, q) = jac_igr(j-1,k,l, q)
-                                            end do
+                                !$acc parallel loop gang vector collapse(3) default(present)
+                                do l = 0, p
+                                    do k = 0, n
+                                        do j = 1, buff_size
+                                            F_igr(m+j, k, l) = F_igr(j-1,k,l)
                                         end do
                                     end do
                                 end do
@@ -1195,15 +1157,13 @@ contains
 
                         if(bcyb >= -1) then
                             if(bcyb >= 0) then
-                                call s_mpi_sendrecv_F_igr(jac_igr, 2, -1)
+                                call s_mpi_sendrecv_F_igr(F_igr, 2, -1)
                             else
-                                !$acc parallel loop gang vector collapse(4) default(present)
-                                do q = 1, 3
-                                    do l = 0, p
-                                        do k = 1, buff_size
-                                            do j = ix%beg, ix%end
-                                                jac_igr(j,-k,l, q) = jac_igr(j,n-k+1,l, q)
-                                            end do
+                                !$acc parallel loop gang vector collapse(3) default(present)
+                                do l = 0, p
+                                    do k = 1, buff_size
+                                        do j = ix%beg, ix%end
+                                            F_igr(j,-k,l) = F_igr(j,n-k+1,l)
                                         end do
                                     end do
                                 end do
@@ -1212,15 +1172,13 @@ contains
 
                         if(bcye >= -1) then
                             if(bcye >= 0) then
-                                call s_mpi_sendrecv_F_igr(jac_igr, 2, 1)
+                                call s_mpi_sendrecv_F_igr(F_igr, 2, 1)
                             else
-                                !$acc parallel loop gang vector collapse(4) default(present)
-                                do q = 1, 3
-                                    do l = 0, p
-                                        do k = 1, buff_size
-                                            do j = ix%beg, ix%end
-                                                jac_igr(j,n+k,l, q) = jac_igr(j,k-1,l, q)
-                                            end do
+                                !$acc parallel loop gang vector collapse(3) default(present)
+                                do l = 0, p
+                                    do k = 1, buff_size
+                                        do j = ix%beg, ix%end
+                                            F_igr(j,n+k,l) = F_igr(j,k-1,l)
                                         end do
                                     end do
                                 end do
@@ -1229,15 +1187,13 @@ contains
 
                         if(bczb >= -1) then
                             if(bczb >= 0) then
-                                call s_mpi_sendrecv_F_igr(jac_igr, 3, -1)
+                                call s_mpi_sendrecv_F_igr(F_igr, 3, -1)
                             else
-                                !$acc parallel loop gang vector collapse(4) default(present)
-                                do q = 1, 3
-                                    do l = 1, buff_size
-                                        do k = iy%beg, iy%end
-                                            do j = ix%beg, ix%end
-                                                jac_igr(j,k,-l, q) = jac_igr(j,k,p-l+1, q)
-                                            end do
+                                !$acc parallel loop gang vector collapse(3) default(present)
+                                do l = 1, buff_size
+                                    do k = iy%beg, iy%end
+                                        do j = ix%beg, ix%end
+                                            F_igr(j,k,-l) = F_igr(j,k,p-l+1)
                                         end do
                                     end do
                                 end do
@@ -1246,81 +1202,69 @@ contains
 
                         if(bcze >= -1) then
                             if(bcze >= 0) then
-                                call s_mpi_sendrecv_F_igr(jac_igr, 3, 1)
+                                call s_mpi_sendrecv_F_igr(F_igr, 3, 1)
                             else
-                                !$acc parallel loop gang vector collapse(4) default(present)
-                                do q = 1, 3
-                                    do l = 1, buff_size
-                                        do k = iy%beg, iy%end
-                                            do j = ix%beg, ix%end
-                                                jac_igr(j,k,p+l, q) = jac_igr(j,k,l-1, q)
-                                            end do
+                            !$acc parallel loop gang vector collapse(3) default(present)
+                                do l = 1, buff_size
+                                    do k = iy%beg, iy%end
+                                        do j = ix%beg, ix%end
+                                            F_igr(j,k,p+l) = F_igr(j,k,l-1)
                                         end do
                                     end do
                                 end do
                             end if
                         end if
 
-                        !$acc parallel loop gang vector collapse(4) default(present)
-                        do q = 1, 3
-                            do l = iz%beg, iz%end
-                                do k = iy%beg, iy%end
-                                    do j = ix%beg, ix%end
-                                        jac_old_igr( j, k, l, q) = jac_igr( j, k, l, q)
-                                    end do
-                                end do 
-                            end do
-                        end do              
+                        !$acc parallel loop gang vector collapse(3) default(present)
+                        do l = iz%beg, iz%end
+                            do k = iy%beg, iy%end
+                                do j = ix%beg, ix%end
+                                    F_old_igr( j, k, l) = F_igr( j, k, l)
+                                end do
+                            end do 
+                        end do          
                     end do
 
 
                     if(bcxb < -1) then
-                        !$acc parallel loop gang vector collapse(4) default(present)
-                        do q = 1, 3
-                            do l = 0, p
-                                do k = 0, n
-                                    do j = 1, buff_size
-                                        jac_igr(-j,k,l, q) = jac_igr(0,k,l, q)
-                                    end do
+                        !$acc parallel loop gang vector collapse(3) default(present)
+                        do l = 0, p
+                            do k = 0, n
+                                do j = 1, buff_size
+                                    F_igr(-j,k,l) = F_igr(0,k,l)
                                 end do
                             end do
                         end do
                     end if
 
                     if(bcxe < -1) then
-                        !$acc parallel loop gang vector collapse(4) default(present)
-                        do q = 1, 3
-                            do l = 0, p
-                                do k = 0, n
-                                    do j = 1, buff_size
-                                        jac_igr(m+j,k,l, q) = jac_igr(m,k,l, q)
-                                    end do
+                        !$acc parallel loop gang vector collapse(3) default(present)
+                        do l = 0, p
+                            do k = 0, n
+                                do j = 1, buff_size
+                                    F_igr(m+j,k,l) = F_igr(m,k,l)
                                 end do
                             end do
                         end do
                     end if
 
                     if(bcyb < -1) then
-                        !$acc parallel loop gang vector collapse(4) default(present)
-                        do q = 1, 3
-                            do l = 0, p
-                                do k = 1, buff_size
-                                    do j = ix%beg, ix%end
-                                        jac_igr(j,-k,l, q) = jac_igr(j,0,l, q)
-                                    end do
+                        !$acc parallel loop gang vector collapse(3) default(present)
+                        do l = 0, p
+                            do k = 1, buff_size
+                                do j = ix%beg, ix%end
+                                    F_igr(j,-k,l) = F_igr(j,0,l)
                                 end do
                             end do
                         end do
                     end if
 
                     if(bcye < -1) then
-                        !$acc parallel loop gang vector collapse(4) default(present)
-                        do q = 1, 3
-                            do l = 0, p
-                                do k = 1, buff_size
-                                    do j = ix%beg, ix%end
-                                        jac_igr(j,n+k,l, q) = jac_igr(j,n,l, q)
-                                    end do
+                        !$acc parallel loop gang vector collapse(3) default(present)
+                        do l = 0, p
+                            do k = 1, buff_size
+                                do j = ix%beg, ix%end
+                                    F_igr(j,n+k,l) = F_igr(j,n,l)
                                 end do
                             end do
                         end do
@@ -1328,54 +1272,30 @@ contains
 
 
                     if(bczb < -1) then
-                        !$acc parallel loop gang vector collapse(4) default(present)
-                        do q = 1, 3
-                            do l = 1, buff_size
-                                do k = iy%beg, iy%end
-                                    do j = ix%beg, ix%end
-                                        jac_igr(j,k,-l, q) = jac_igr(j,k,0, q)
-                                    end do
+                        !$acc parallel loop gang vector collapse(3) default(present)
+                        do l = 1, buff_size
+                            do k = iy%beg, iy%end
+                                do j = ix%beg, ix%end
+                                    F_igr(j,k,-l) = F_igr(j,k,0)
                                 end do
                             end do
                         end do
                     end if
 
                     if(bcze < -1) then
-                        !$acc parallel loop gang vector collapse(4) default(present)
-                        do q = 1, 3
-                            do l = 1, buff_size
-                                do k = iy%beg, iy%end
-                                    do j = ix%beg, ix%end
-                                        jac_igr(j,k,p+l, q) = jac_igr(j,k,p, q)
-                                    end do
+                        !$acc parallel loop gang vector collapse(3) default(present)
+                        do l = 1, buff_size
+                            do k = iy%beg, iy%end
+                                do j = ix%beg, ix%end
+                                    F_igr(j,k,p+l) = F_igr(j,k,p)
                                 end do
                             end do
                         end do
                     end if
 
                     !$acc parallel loop gang vector collapse(3) default(present)
-                    do l = iz%beg, iz%end - 1
-                        do k = iy%beg , iy%end - 1
-                            do j = ix%beg , ix%end - 1                        
-                                F_igr(j, k, l, 1) = 1d0* (rhs_igr(j, k, l, 1) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,1) - jac_igr(j,k,l,1)))
-                                F_igr(j, k, l, 2) = 1d0* (rhs_igr(j, k, l, 2) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,1) - jac_igr(j,k,l,1)))
-                                F_igr(j, k, l, 3) = 1d0* (rhs_igr(j, k, l, 3) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,1) - jac_igr(j,k,l,1)))
-
-                                F_igr(j, k, l, 4) = 1d0* (rhs_igr(j, k, l, 4) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,2) - jac_igr(j,k,l,2)))
-                                F_igr(j, k, l, 5) = 1d0* (rhs_igr(j, k, l, 5) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,2) - jac_igr(j,k,l,2)))
-                                F_igr(j, k, l, 6) = 1d0* (rhs_igr(j, k, l, 6) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,2) - jac_igr(j,k,l,2)))                            
-
-                                F_igr(j, k, l, 7) = 1d0* (rhs_igr(j, k, l, 7) - rho_igr(j,k,l)*(1d0 / dx(j))*(jac_igr(j+1,k,l,3) - jac_igr(j,k,l,3)))
-                                F_igr(j, k, l, 8) = 1d0* (rhs_igr(j, k, l, 8) - rho_igr(j,k,l)*(1d0 / dy(k))*(jac_igr(j,k+1,l,3) - jac_igr(j,k,l,3)))
-                                F_igr(j, k, l, 9) = 1d0* (rhs_igr(j, k, l, 9) - rho_igr(j,k,l)*(1d0 / dz(l))*(jac_igr(j,k,l+1,3) - jac_igr(j,k,l,3)))
-
-                            end do
-                        end do 
-                    end do
-
-                    !$acc parallel loop gang vector collapse(3) default(present)
-                    do l = 0, p
-                        do k = 0, n
+                    do l = -1, p+1
+                        do k = -1, n+1
                             do j = -1, m+1
 
                                 flux_n(id)%vf(1)%sf(j,k,l) = &
@@ -1385,15 +1305,13 @@ contains
                                 flux_n(id)%vf(2)%sf(j,k,l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                     q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb)%sf(j,k,l) + &
                                     q_prim_qp%vf( e_idx)%sf(j,k,l) + &
-                                    F_igr(j, k, l, 1)
+                                    F_igr(j, k, l)
 
                                 flux_n(id)%vf(3)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
-                                    F_igr(j, k, l, 4)
+                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) 
 
                                 flux_n(id)%vf(4)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
-                                    F_igr(j, k, l, 7)
+                                    q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) 
                             end do
                         end do
                     end do
@@ -1403,10 +1321,31 @@ contains
                         do l = 0, p
                             do k = 0, n
                                 do j = 0, m
-                                    rhs_vf(i)%sf(j,k,l) = &
-                                        1d0/(2d0*dx(j)) * &
-                                        ( flux_n(id)%vf(i)%sf(j-1,k,l) - &
-                                          flux_n(id)%vf(i)%sf(j+1,k,l) )
+                                    if(lw == 1) then
+                                        rhs_vf(i)%sf(j,k,l) = &
+                                            1d0/(4d0*dx(j)) * &
+                                            ( flux_n(id)%vf(i)%sf(j,k,l) - &
+                                              flux_n(id)%vf(i)%sf(j+1,k,l) + &
+                                              flux_n(id)%vf(i)%sf(j,k+1,l) - & 
+                                              flux_n(id)%vf(i)%sf(j+1,k+1,l)) + &
+                                            ( flux_n(id)%vf(i)%sf(j,k,l+1) - &
+                                              flux_n(id)%vf(i)%sf(j+1,k,l+1) + &
+                                              flux_n(id)%vf(i)%sf(j,k+1, l+1) - & 
+                                              flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
+
+                                    else if(lw == 2) then
+                                        rhs_vf(i)%sf(j,k,l) = &
+                                            1d0/(4d0*dx(j)) * &
+                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
+                                              flux_n(id)%vf(i)%sf(j,k-1,l) + &
+                                              flux_n(id)%vf(i)%sf(j-1,k,l) - & 
+                                              flux_n(id)%vf(i)%sf(j,k,l))  + &
+                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                              flux_n(id)%vf(i)%sf(j,k-1,l-1) + &
+                                              flux_n(id)%vf(i)%sf(j-1,k,l-1) - & 
+                                              flux_n(id)%vf(i)%sf(j,k,l-1))
+
+                                    end if
 
                                     if(bcxb < -1) then
                                         rhs_vf(i)%sf(0,k,l) = 0d0
@@ -1468,9 +1407,9 @@ contains
 
                 if(barotropic) then
                     !$acc parallel loop gang vector collapse(3) default(present)
-                    do l = 0, p
+                    do l = -1, p+1
                         do k = -1, n+1
-                            do j = 0, m
+                            do j = -1, m+1
 
                                 flux_n(id)%vf(1)%sf(j,k,l) = &
                                     q_prim_qp%vf(contxb)%sf(j,k,l) * &
@@ -1479,17 +1418,15 @@ contains
                                 ! Momentum -> rho*u^2 + p + [[F_igr]]
                                 flux_n(id)%vf(2)%sf(j,k,l) = &
                                      q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) + &   
-                                    F_igr(j, k, l, 2)
+                                    q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) 
 
                                 flux_n(id)%vf(3)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                     q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
                                     q_prim_qp%vf( e_idx)%sf(j,k,l) + &
-                                    F_igr(j, k, l, 5)
+                                    F_igr(j, k, l)
 
                                 flux_n(id)%vf(4)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
-                                    F_igr(j, k, l, 8)
+                                    q_prim_qp%vf( momxb + 1)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) 
                             end do
                         end do
                     end do   
@@ -1500,35 +1437,56 @@ contains
                             do k = 0, n
                                 do j = 0, m
 
-                                    rhs_vf(i)%sf(j,k,l) = &
-                                        rhs_vf(i)%sf(j,k,l) + 1d0/(2d0*dy(k)) * &
-                                        ( flux_n(id)%vf(i)%sf(j,k-1,l) - &
-                                          flux_n(id)%vf(i)%sf(j,k+1,l) )
+                                    if(lw == 1) then
+                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                            1d0/(4d0*dy(k)) * &
+                                            ( flux_n(id)%vf(i)%sf(j,k,l) - &
+                                              flux_n(id)%vf(i)%sf(j,k+1,l) + &
+                                              flux_n(id)%vf(i)%sf(j+1,k,l) - & 
+                                              flux_n(id)%vf(i)%sf(j+1,k+1,l)) + &
+                                            ( flux_n(id)%vf(i)%sf(j,k,l+1) - &
+                                              flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
+                                              flux_n(id)%vf(i)%sf(j+1,k, l+1) - & 
+                                              flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
+
+                                    else if(lw == 2) then
+                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                            1d0/(4d0*dy(k)) * &
+                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
+                                              flux_n(id)%vf(i)%sf(j-1,k,l) + &
+                                              flux_n(id)%vf(i)%sf(j,k-1,l) - & 
+                                              flux_n(id)%vf(i)%sf(j,k,l))  + &
+                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                              flux_n(id)%vf(i)%sf(j-1,k,l-1) + &
+                                              flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
+                                              flux_n(id)%vf(i)%sf(j,k,l-1))
+
+                                    end if                                        
 
 
-                                        if(bcxb < -1) then
-                                            rhs_vf(i)%sf(0,k,l) = 0d0
-                                        end if
+                                    if(bcxb < -1) then
+                                        rhs_vf(i)%sf(0,k,l) = 0d0
+                                    end if
 
-                                        if(bcxe < -1) then
-                                            rhs_vf(i)%sf(m,k,l) = 0d0
-                                        end if
+                                    if(bcxe < -1) then
+                                        rhs_vf(i)%sf(m,k,l) = 0d0
+                                    end if
 
-                                        if(bcyb < -1) then
-                                            rhs_vf(i)%sf(j,0,l) = 0d0
-                                        end if
+                                    if(bcyb < -1) then
+                                        rhs_vf(i)%sf(j,0,l) = 0d0
+                                    end if
 
-                                        if(bcye < -1) then
-                                            rhs_vf(i)%sf(j,n,l) = 0d0
-                                        end if
+                                    if(bcye < -1) then
+                                        rhs_vf(i)%sf(j,n,l) = 0d0
+                                    end if
 
-                                        if(bczb < -1) then
-                                            rhs_vf(i)%sf(j,k,0) = 0d0
-                                        end if
+                                    if(bczb < -1) then
+                                        rhs_vf(i)%sf(j,k,0) = 0d0
+                                    end if
 
-                                        if(bcze < -1) then
-                                            rhs_vf(i)%sf(j,k,p) = 0d0
-                                        end if
+                                    if(bcze < -1) then
+                                        rhs_vf(i)%sf(j,k,p) = 0d0
+                                    end if
 
                                 end do
                             end do
@@ -1568,8 +1526,8 @@ contains
                 if(barotropic) then
                     !$acc parallel loop gang vector collapse(3) default(present)
                     do l = -1, p+1
-                        do k = 0, n
-                            do j = 0, m
+                        do k = -1, n+1
+                            do j = -1, m+1
 
                                 flux_n(id)%vf(1)%sf(j,k,l) = &
                                     q_prim_qp%vf(contxb)%sf(j,k,l) * &
@@ -1578,17 +1536,15 @@ contains
                                 ! Momentum -> rho*u^2 + p + [[F_igr]]
                                 flux_n(id)%vf(2)%sf(j,k,l) = &
                                      q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) + &   
-                                    F_igr(j, k, l, 3)
+                                    q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf(momxb )%sf(j, k,l) 
 
                                 flux_n(id)%vf(3)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) + &
-                                    F_igr(j, k, l, 6)
+                                    q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l) 
 
                                 flux_n(id)%vf(4)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                     q_prim_qp%vf( momxb + 2)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l) + &
                                     q_prim_qp%vf( e_idx)%sf(j,k,l) + &
-                                    F_igr(j, k, l, 9)
+                                    F_igr(j, k, l)
                             end do
                         end do
                     end do
@@ -1598,36 +1554,55 @@ contains
                         do l = 0, p
                             do k = 0, n
                                 do j = 0, m
+                                    if(lw == 1) then
+                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                            1d0/(4d0*dz(l)) * &
+                                            ( flux_n(id)%vf(i)%sf(j,k,l) - &
+                                              flux_n(id)%vf(i)%sf(j,k,l+1) + &
+                                              flux_n(id)%vf(i)%sf(j+1,k,l) - & 
+                                              flux_n(id)%vf(i)%sf(j+1,k,l+1)) + &
+                                            ( flux_n(id)%vf(i)%sf(j,k+1,l) - &
+                                              flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
+                                              flux_n(id)%vf(i)%sf(j+1,k+1, l) - & 
+                                              flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
 
-                                    rhs_vf(i)%sf(j,k,l) = &
-                                        rhs_vf(i)%sf(j,k,l) + 1d0/(2d0*dz(l)) * &
-                                        ( flux_n(id)%vf(i)%sf(j,k,l-1) - &
-                                          flux_n(id)%vf(i)%sf(j,k,l+1) )
+                                    else if(lw == 2) then
+                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                            1d0/(4d0*dz(l)) * &
+                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                              flux_n(id)%vf(i)%sf(j-1,k-1,l) + &
+                                              flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
+                                              flux_n(id)%vf(i)%sf(j,k-1,l))  + &
+                                            ( flux_n(id)%vf(i)%sf(j-1,k,l-1) - &
+                                              flux_n(id)%vf(i)%sf(j-1,k,l) + &
+                                              flux_n(id)%vf(i)%sf(j,k,l-1) - & 
+                                              flux_n(id)%vf(i)%sf(j,k,l))
 
+                                    end if 
 
-                                        if(bcxb < -1) then
-                                            rhs_vf(i)%sf(0,k,l) = 0d0
-                                        end if
+                                    if(bcxb < -1) then
+                                        rhs_vf(i)%sf(0,k,l) = 0d0
+                                    end if
 
-                                        if(bcxe < -1) then
-                                            rhs_vf(i)%sf(m,k,l) = 0d0
-                                        end if
+                                    if(bcxe < -1) then
+                                        rhs_vf(i)%sf(m,k,l) = 0d0
+                                    end if
 
-                                        if(bcyb < -1) then
-                                            rhs_vf(i)%sf(j,0,l) = 0d0
-                                        end if
+                                    if(bcyb < -1) then
+                                        rhs_vf(i)%sf(j,0,l) = 0d0
+                                    end if
 
-                                        if(bcye < -1) then
-                                            rhs_vf(i)%sf(j,n,l) = 0d0
-                                        end if
+                                    if(bcye < -1) then
+                                        rhs_vf(i)%sf(j,n,l) = 0d0
+                                    end if
 
-                                        if(bczb < -1) then
-                                            rhs_vf(i)%sf(j,k,0) = 0d0
-                                        end if
+                                    if(bczb < -1) then
+                                        rhs_vf(i)%sf(j,k,0) = 0d0
+                                    end if
 
-                                        if(bcze < -1) then
-                                            rhs_vf(i)%sf(j,k,p) = 0d0
-                                        end if
+                                    if(bcze < -1) then
+                                        rhs_vf(i)%sf(j,k,p) = 0d0
+                                    end if
 
                                 end do
                             end do
