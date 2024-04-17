@@ -783,7 +783,7 @@ contains
 
             bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end; bczb = bc_z%beg; bcze = bc_z%end;
 
-            !bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1; bczb = -1; bcze = -1;
+            bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1; bczb = -1; bcze = -1;
 
             !$acc update device(ix, iy, iz, bcxb, bcxe, bcyb, bcye, bczb, bcze)
 
@@ -942,7 +942,7 @@ contains
                     do l = iz%beg, iz%end 
                         do k = iy%beg, iy%end 
                             do j = ix%beg, ix%end
-                                rho_igr(j,k,l) = q_prim_qp%vf(1)%sf(j,k,l)
+                                rho_igr(j,k,l) = q_prim_qp%vf(contxb)%sf(j,k,l)
                             end do
                         end do
                     end do
@@ -1011,7 +1011,7 @@ contains
                                 rhs_igr(j, k, l) = alf_igr*((dux_igr(j,k,l)*dux_igr(j,k,l) + dvx_igr(j,k,l) * duy_igr(j,k,l) + dwx_igr(j,k,l) * duz_igr(j,k,l)) + &
                                                       (duy_igr(j,k,l)*dvx_igr(j,k,l) + dvy_igr(j,k,l) * dvy_igr(j,k,l) + dwy_igr(j,k,l) * dvz_igr(j,k,l)) + & 
                                                       (duz_igr(j,k,l)*dwx_igr(j,k,l) + dvz_igr(j,k,l) * dwy_igr(j,k,l) + dwz_igr(j,k,l) * dwz_igr(j,k,l)) + &
-                                                      (dux_igr(j,k,l)**2d0 + dvy_igr(j,k,l)**2d0 + dwz_igr(j,k,l)**2d0))
+                                                      (dux_igr(j,k,l) + dvy_igr(j,k,l) + dwz_igr(j,k,l))**2d0 )
                            end do
                         end do
                     end do
@@ -1024,9 +1024,9 @@ contains
                                 rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k-1,l) / (rho_igr(j,k,l) + rho_igr(j,k-1,l))
                                 rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l-1) / (rho_igr(j,k,l) + rho_igr(j,k,l-1))
 
-                                rho_lx = 2d0 * rho_igr(j,k,l) * rho_igr(j+1,k,l) / (rho_igr(j,k,l) + rho_igr(j+1,k,l))
-                                rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k+1,l) / (rho_igr(j,k,l) + rho_igr(j,k+1,l))
-                                rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l+1) / (rho_igr(j,k,l) + rho_igr(j,k,l+1))
+                                rho_rx = 2d0 * rho_igr(j,k,l) * rho_igr(j+1,k,l) / (rho_igr(j,k,l) + rho_igr(j+1,k,l))
+                                rho_ry = 2d0 * rho_igr(j,k,l) * rho_igr(j,k+1,l) / (rho_igr(j,k,l) + rho_igr(j,k+1,l))
+                                rho_rz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l+1) / (rho_igr(j,k,l) + rho_igr(j,k,l+1))
                                 
                                 !rho_lx = rho_igr(j-1,k,l)
                                 !rho_ly = rho_igr(j,k-1,l)
@@ -1080,9 +1080,9 @@ contains
                                     rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k-1,l) / (rho_igr(j,k,l) + rho_igr(j,k-1,l))
                                     rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l-1) / (rho_igr(j,k,l) + rho_igr(j,k,l-1))
 
-                                    rho_lx = 2d0 * rho_igr(j,k,l) * rho_igr(j+1,k,l) / (rho_igr(j,k,l) + rho_igr(j+1,k,l))
-                                    rho_ly = 2d0 * rho_igr(j,k,l) * rho_igr(j,k+1,l) / (rho_igr(j,k,l) + rho_igr(j,k+1,l))
-                                    rho_lz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l+1) / (rho_igr(j,k,l) + rho_igr(j,k,l+1))
+                                    rho_rx = 2d0 * rho_igr(j,k,l) * rho_igr(j+1,k,l) / (rho_igr(j,k,l) + rho_igr(j+1,k,l))
+                                    rho_ry = 2d0 * rho_igr(j,k,l) * rho_igr(j,k+1,l) / (rho_igr(j,k,l) + rho_igr(j,k+1,l))
+                                    rho_rz = 2d0 * rho_igr(j,k,l) * rho_igr(j,k,l+1) / (rho_igr(j,k,l) + rho_igr(j,k,l+1))
                                     
                                     !rho_lx = rho_igr(j-1,k,l)
                                     !rho_ly = rho_igr(j,k-1,l)

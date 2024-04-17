@@ -4,7 +4,7 @@ import math
 import json
 
 # Numerical setup
-Nx = 499
+Nx = 49
 dx = 1./(1.*(Nx+1))
 
 Tend = 0.2
@@ -40,7 +40,7 @@ print(json.dumps({
     'dt'                           : mydt,
     't_step_start'                 : 0,
     't_step_stop'                  : 4000,
-    't_step_save'                  : 50,
+    't_step_save'                  : 10,
     # ==========================================================================
 
     # Simulation Algorithm Parameters ==========================================
@@ -76,6 +76,7 @@ print(json.dumps({
     'format'                       : 1,
     'precision'                    : 2,
     'prim_vars_wrt'                :'T',
+    'E_wrt'                        :'T',
     'parallel_io'                  :'T',
     # ==========================================================================
 
