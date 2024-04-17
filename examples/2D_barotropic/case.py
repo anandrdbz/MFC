@@ -4,7 +4,7 @@ import math
 import json
 
 # Numerical setup
-Nx = 500
+Nx = 200
 dx = 1./(1.*(Nx+1))
 
 Tend = 0.2
@@ -37,7 +37,7 @@ print(json.dumps({
     'p'                            : 0,
     'dt'                           : mydt,
     't_step_start'                 : 0,
-    't_step_stop'                  : 1000,
+    't_step_stop'                  : 5000,
     't_step_save'                  : 10,
     # ==========================================================================
 
@@ -49,7 +49,7 @@ print(json.dumps({
     'adv_alphan'                   : 'T',
     'mpp_lim'                      : 'F',
     'mixture_err'                  : 'F',
-    'time_stepper'                 : 4,
+    'time_stepper'                 : 3,
     'weno_order'                   : 5,
     'weno_eps'                     : 1.E-16,
     'weno_Re_flux'                 : 'F',  
@@ -64,7 +64,7 @@ print(json.dumps({
     'bc_x%end'                     : -1,
     'bc_y%beg'                     : -1,
     'bc_y%end'                     : -1,
-    'barotropic'                   : 'T',
+    'barotropic'                   : 'F',
     'cu_mpi'                   : 'F',
     # ==========================================================================
 
@@ -72,7 +72,8 @@ print(json.dumps({
     'format'                       : 1,
     'precision'                    : 2,
     'prim_vars_wrt'                :'T',
-    'parallel_io'                  :'F',
+    'E_wrt'                :'T',
+    'parallel_io'                  :'T',
     # ==========================================================================
 
 
