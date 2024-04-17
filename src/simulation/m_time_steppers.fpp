@@ -346,9 +346,9 @@ contains
                 do k = 0, n
                     do j = 0, m
                         q_cons_ts(2)%vf(i)%sf(j, k, l) = &
-                            0.25d0*(q_cons_ts(1)%vf(i)%sf(j - 1, k, l) + q_cons_ts(1)%vf(i)%sf(j + 1, k, l) + &
-                            q_cons_ts(1)%vf(i)%sf(j , k + 1, l) + q_cons_ts(1)%vf(i)%sf(j ,k - 1, l)) &
-                            + dt*rhs_vf(i)%sf(j, k, l)
+                            0.25d0*(q_cons_ts(1)%vf(i)%sf(j, k, l) + q_cons_ts(1)%vf(i)%sf(j + 1, k, l) + &
+                            q_cons_ts(1)%vf(i)%sf(j , k + 1, l) + q_cons_ts(1)%vf(i)%sf(j + 1 ,k + 1, l)) &
+                            + dt*0.5d0*rhs_vf(i)%sf(j, k, l)
                     end do
                 end do
             end do

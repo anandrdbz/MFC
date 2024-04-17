@@ -412,7 +412,9 @@ contains
             call MPI_FILE_DELETE(file_loc, mpi_info_int, ierr)
         end if
         call MPI_FILE_OPEN(MPI_COMM_WORLD, file_loc, ior(MPI_MODE_WRONLY, MPI_MODE_CREATE), &
-                           mpi_info_int, ifile, ierr)
+                               mpi_info_int, ifile, ierr)
+
+
 
         ! Size of local arrays
         data_size = (m + 1)*(n + 1)*(p + 1)

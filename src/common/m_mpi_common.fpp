@@ -110,6 +110,7 @@ contains
             end if
         end if
 
+
         ! Define the view for each variable
         do i = 1, sys_size
             call MPI_TYPE_CREATE_SUBARRAY(num_dims, sizes_glb, sizes_loc, start_idx, &
@@ -127,6 +128,7 @@ contains
             end do
         end if
 #endif
+
 
 #endif
 
