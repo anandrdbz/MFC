@@ -783,7 +783,7 @@ contains
 
             bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end; bczb = bc_z%beg; bcze = bc_z%end;
 
-            bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1; bczb = -1; bcze = -1;
+            !bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1; bczb = -1; bcze = -1;
 
             !$acc update device(ix, iy, iz, bcxb, bcxe, bcyb, bcye, bczb, bcze)
 
@@ -1095,11 +1095,11 @@ contains
                                     F_igr(j, k, l) = rhs_igr(j, k, l)
 
                                     if(bcxb  >= -1 .or. j /= 0) then
-                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_lx) * F_old_igr(j+1, k, l)
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_lx) * F_old_igr(j-1, k, l)
                                     end if
 
                                     if(bcxe  >= -1 .or. j /= m) then
-                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_rx) * F_old_igr(j-1, k, l)
+                                        F_igr(j, k, l) = F_igr(j, k, l) + alf_igr *(1d0 / dx(j)**2d0) * (1d0  / rho_rx) * F_old_igr(j+1, k, l)
                                     end if
 
                                     if(bcyb  >= -1 .or. k /= 0) then
@@ -1327,8 +1327,8 @@ contains
                                             ( flux_n(id)%vf(i)%sf(j,k,l) - &
                                               flux_n(id)%vf(i)%sf(j+1,k,l) + &
                                               flux_n(id)%vf(i)%sf(j,k+1,l) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k+1,l)) + &
-                                            ( flux_n(id)%vf(i)%sf(j,k,l+1) - &
+                                              flux_n(id)%vf(i)%sf(j+1,k+1,l) + &
+                                              flux_n(id)%vf(i)%sf(j,k,l+1) - &
                                               flux_n(id)%vf(i)%sf(j+1,k,l+1) + &
                                               flux_n(id)%vf(i)%sf(j,k+1, l+1) - & 
                                               flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
@@ -1339,8 +1339,8 @@ contains
                                             ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
                                               flux_n(id)%vf(i)%sf(j,k-1,l) + &
                                               flux_n(id)%vf(i)%sf(j-1,k,l) - & 
-                                              flux_n(id)%vf(i)%sf(j,k,l))  + &
-                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                              flux_n(id)%vf(i)%sf(j,k,l)  + &
+                                              flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
                                               flux_n(id)%vf(i)%sf(j,k-1,l-1) + &
                                               flux_n(id)%vf(i)%sf(j-1,k,l-1) - & 
                                               flux_n(id)%vf(i)%sf(j,k,l-1))
@@ -1443,8 +1443,8 @@ contains
                                             ( flux_n(id)%vf(i)%sf(j,k,l) - &
                                               flux_n(id)%vf(i)%sf(j,k+1,l) + &
                                               flux_n(id)%vf(i)%sf(j+1,k,l) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k+1,l)) + &
-                                            ( flux_n(id)%vf(i)%sf(j,k,l+1) - &
+                                              flux_n(id)%vf(i)%sf(j+1,k+1,l) + &
+                                              flux_n(id)%vf(i)%sf(j,k,l+1) - &
                                               flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
                                               flux_n(id)%vf(i)%sf(j+1,k, l+1) - & 
                                               flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
@@ -1455,8 +1455,8 @@ contains
                                             ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
                                               flux_n(id)%vf(i)%sf(j-1,k,l) + &
                                               flux_n(id)%vf(i)%sf(j,k-1,l) - & 
-                                              flux_n(id)%vf(i)%sf(j,k,l))  + &
-                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                              flux_n(id)%vf(i)%sf(j,k,l)  + &
+                                              flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
                                               flux_n(id)%vf(i)%sf(j-1,k,l-1) + &
                                               flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
                                               flux_n(id)%vf(i)%sf(j,k,l-1))
@@ -1560,8 +1560,8 @@ contains
                                             ( flux_n(id)%vf(i)%sf(j,k,l) - &
                                               flux_n(id)%vf(i)%sf(j,k,l+1) + &
                                               flux_n(id)%vf(i)%sf(j+1,k,l) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k,l+1)) + &
-                                            ( flux_n(id)%vf(i)%sf(j,k+1,l) - &
+                                              flux_n(id)%vf(i)%sf(j+1,k,l+1) + &
+                                              flux_n(id)%vf(i)%sf(j,k+1,l) - &
                                               flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
                                               flux_n(id)%vf(i)%sf(j+1,k+1, l) - & 
                                               flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
@@ -1572,8 +1572,8 @@ contains
                                             ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
                                               flux_n(id)%vf(i)%sf(j-1,k-1,l) + &
                                               flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
-                                              flux_n(id)%vf(i)%sf(j,k-1,l))  + &
-                                            ( flux_n(id)%vf(i)%sf(j-1,k,l-1) - &
+                                              flux_n(id)%vf(i)%sf(j,k-1,l)  + &
+                                              flux_n(id)%vf(i)%sf(j-1,k,l-1) - &
                                               flux_n(id)%vf(i)%sf(j-1,k,l) + &
                                               flux_n(id)%vf(i)%sf(j,k,l-1) - & 
                                               flux_n(id)%vf(i)%sf(j,k,l))
