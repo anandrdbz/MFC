@@ -290,7 +290,7 @@ contains
 
             
             q_sf = 2.5d0*q_prim_vf(E_idx)%sf + 0.5d0*q_prim_vf(1)%sf*&
-            (q_prim_vf(mom_idx%beg)%sf**2d0 + q_prim_vf(mom_idx%beg + 1)%sf**2d0)
+            (q_prim_vf(mom_idx%beg)%sf**2d0 + q_prim_vf(mom_idx%beg + 1)%sf**2d0 + q_prim_vf(mom_idx%beg + 2)%sf**2d0)
 
             En_tot = 0d0
             rho_tot = 0d0
@@ -303,7 +303,7 @@ contains
                 end do
             end do
             En_tot = En_tot/((m+1)*(n+1)*(p+1))
-            !En_tot = En_tot - 0.59012242316857255
+            En_tot = En_tot - 0.5177280154773052
             rho_tot = 0.5d0*(rho_tot/((m+1)*(n+1)*(p+1)))**1.4
             print *, "POT AVG", rho_tot
             print *, "En_tot", En_tot 
