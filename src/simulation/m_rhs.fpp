@@ -164,6 +164,7 @@ module m_rhs
     real(kind(0d0)), allocatable, dimension(:, :, :) :: rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, fd_coeff, duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr
     real(kind(0d0)), allocatable, dimension(:, :, :) :: rhs_igr, F_igr, F_old_igr
     real(kind(0d0)) :: alf_igr, omega
+    integer :: lw
 
     integer :: bcxb, bcxe, bcyb, bcye, bczb, bcze
 
@@ -176,7 +177,7 @@ module m_rhs
 !$acc   blkmod1, blkmod2, alpha1, alpha2, Kterm, divu, qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
 !$acc   dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
 !$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, bczb, bcze, omega,alf_igr, rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, rhs_igr, F_igr, F_old_igr, fd_coeff, &
-!$acc   duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr)
+!$acc   duz_igr, dvz_igr, dwx_igr, dwy_igr, dwz_igr, lw)
 
     real(kind(0d0)), allocatable, dimension(:, :, :) :: nbub !< Bubble number density
 !$acc declare create(nbub)
@@ -659,7 +660,7 @@ contains
 
     end subroutine s_initialize_rhs_module ! -------------------------------
 
-    subroutine s_compute_rhs(q_cons_vf, q_prim_vf, rhs_vf, pb, rhs_pb, mv, rhs_mv, t_step, lw) ! -------
+    subroutine s_compute_rhs(q_cons_vf, q_prim_vf, rhs_vf, pb, rhs_pb, mv, rhs_mv, t_step, lw_in) ! -------
 
         type(scalar_field), dimension(sys_size), intent(INOUT) :: q_cons_vf
         type(scalar_field), dimension(sys_size), intent(INOUT) :: q_prim_vf
@@ -667,7 +668,7 @@ contains
         real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent (INOUT) :: pb, mv
         real(kind(0d0)), dimension(startx:, starty:, startz:, 1:, 1:), intent (INOUT) :: rhs_pb, rhs_mv
         integer, intent(IN) :: t_step
-        integer, intent(IN), optional :: lw
+        integer, intent(IN), optional :: lw_in
         real(kind(0d0)), dimension(0:m) :: res
         
         real(kind(0d0)) :: top, bottom  !< Numerator and denominator when evaluating flux limiter function
@@ -700,6 +701,11 @@ contains
         ix%end = m - ix%beg; iy%end = n - iy%beg; iz%end = p - iz%beg
         ! ==================================================================
         !$acc update device(ix, iy, iz)
+
+        if(present(lw_in)) then
+            lw = lw_in
+            !$acc update device(lw)
+        end if
 
         call nvtxStartRange("RHS-MPI")
         call s_populate_conservative_variables_buffers(q_cons_vf, pb, mv)
@@ -1316,7 +1322,7 @@ contains
                         end do
                     end do
 
-                    !$acc parallel loop collapse(4) gang vector default(present)
+                    !$acc parallel loop collapse(4) gang vector default(present)                    
                     do i = 1, 4
                         do l = 0, p
                             do k = 0, n
@@ -1431,7 +1437,7 @@ contains
                         end do
                     end do   
 
-                    !$acc parallel loop gang vector collapse(4) default(present)
+                    !$acc parallel loop collapse(4) gang vector default(present)                     
                     do i = 1, 4
                         do l = 0, p
                             do k = 0, n
@@ -1549,7 +1555,7 @@ contains
                         end do
                     end do
 
-                    !$acc parallel loop gang vector collapse(4) default(present)
+                    !$acc parallel loop collapse(4) gang vector default(present)                    
                     do i = 1, 4
                         do l = 0, p
                             do k = 0, n
