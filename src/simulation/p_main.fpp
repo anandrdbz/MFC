@@ -39,7 +39,7 @@ program p_main
 
     !Initialize Modules
     call s_initialize_modules()
-
+    
     allocate (proc_time(0:num_procs - 1))
     allocate (io_proc_time(0:num_procs - 1))
 
@@ -72,9 +72,9 @@ program p_main
         call system_clock(cpu_end)
     end do
     ! ==========================================================================
+    print *, "REACHED"
+    !deallocate(proc_time, io_proc_time)
 
-    deallocate(proc_time, io_proc_time)
-
-    call s_finalize_modules()
+    !call s_finalize_modules()
 
 end program p_main

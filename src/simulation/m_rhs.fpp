@@ -168,6 +168,10 @@ module m_rhs
 
     integer :: bcxb, bcxe, bcyb, bcye
 
+    integer :: lw_in
+
+
+
 !$acc declare create(q_cons_qp,q_prim_qp,  &
 !$acc   dq_prim_dx_qp,dq_prim_dy_qp,dq_prim_dz_qp,dqL_prim_dx_n,dqL_prim_dy_n, &
 !$acc   dqL_prim_dz_n,dqR_prim_dx_n,dqR_prim_dy_n,dqR_prim_dz_n,gm_alpha_qp,       &
@@ -176,7 +180,7 @@ module m_rhs
 !$acc   bub_mom_src,alf_sum, &
 !$acc   blkmod1, blkmod2, alpha1, alpha2, Kterm, divu, qL_rsx_vf, qL_rsy_vf, qL_rsz_vf, qR_rsx_vf, qR_rsy_vf, qR_rsz_vf, &
 !$acc   dqL_rsx_vf, dqL_rsy_vf, dqL_rsz_vf, dqR_rsx_vf, dqR_rsy_vf, dqR_rsz_vf, &
-!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff)
+!$acc   ixt, iyt, izt, bcxb, bcxe, bcyb, bcye, omega,alf_igr,rho_igr, dux_igr, duy_igr, dvx_igr, dvy_igr, jac_igr, jac_old_igr, rhs_igr, jac_rhs_igr, F_igr, fd_coeff, lw_in)
 
     real(kind(0d0)), allocatable, dimension(:, :, :) :: nbub !< Bubble number density
 !$acc declare create(nbub)
@@ -701,6 +705,9 @@ contains
         call s_populate_conservative_variables_buffers(q_cons_vf, pb, mv)
         call nvtxEndRange
 
+        lw_in = lw 
+        !$acc update device(lw_in)
+
         ! Association/Population of Working Variables ======================
         !$acc parallel loop collapse(4) gang vector default(present)
         do i = 1, sys_size
@@ -1026,7 +1033,7 @@ contains
 
                     omega = 1d0
                     !$acc update device(omega)
-                    do i = 1, 10
+                    do i = 1, 3
 
                         !$acc parallel loop gang vector collapse(3) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
                         do q = 1, 1
@@ -1221,14 +1228,14 @@ contains
                         do k = 0, n
                             do j = 0, m
 
-                                if(lw == 1) then
+                                if(lw_in == 1) then
                                     rhs_vf(i)%sf(j,k,0) = &
                                         1d0/(2d0*dx(j)) * &
                                         ( flux_n(id)%vf(i)%sf(j,k,0) - &
                                           flux_n(id)%vf(i)%sf(j+1,k,0) + &
                                           flux_n(id)%vf(i)%sf(j,k+1, 0) - & 
                                           flux_n(id)%vf(i)%sf(j+1,k+1, 0))
-                                else if(lw == 2) then
+                                else if(lw_in == 2) then
                                     rhs_vf(i)%sf(j,k,0) = &
                                         1d0/(2d0*dx(j)) * &
                                         ( flux_n(id)%vf(i)%sf(j-1,k-1,0) - &
@@ -1309,14 +1316,14 @@ contains
                         do k = 0, n
                             do j = 0, m
 
-                                if(lw == 1) then
+                                if(lw_in == 1) then
                                     rhs_vf(i)%sf(j,k,0) = rhs_vf(i)%sf(j,k,0) + &
                                         1d0/(2d0*dy(k)) * &
                                         ( flux_n(id)%vf(i)%sf(j,k,0) - &
                                           flux_n(id)%vf(i)%sf(j,k+1,0) + &
                                           flux_n(id)%vf(i)%sf(j+1,k, 0) - & 
                                           flux_n(id)%vf(i)%sf(j+1,k+1, 0))
-                                else if(lw == 2) then
+                                else if(lw_in == 2) then
                                     rhs_vf(i)%sf(j,k,0) = rhs_vf(i)%sf(j,k,0) + &
                                         1d0/(2d0*dy(k)) * &
                                         ( flux_n(id)%vf(i)%sf(j-1,k-1,0) - &

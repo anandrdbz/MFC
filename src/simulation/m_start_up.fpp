@@ -55,9 +55,7 @@ module m_start_up
 
     use ieee_arithmetic
 
-#ifdef MFC_OpenACC
     use openacc
-#endif
 
     use m_nvtx
 
@@ -838,6 +836,10 @@ contains
             call s_3rd_order_tvd_rk(t_step, time_avg)
         elseif (time_stepper == 4) then
             call s_rlw(t_step, time_avg)
+        elseif (time_stepper == 5) then
+            call s_rlw_rk2(t_step, time_avg)
+        elseif (time_stepper == 6) then
+            call s_rlw_rk3(t_step, time_avg)        
         end if
 
         ! Time-stepping loop controls

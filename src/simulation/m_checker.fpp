@@ -155,7 +155,7 @@ contains
         elseif (num_fluids == 1 .and. mpp_lim) then
             call s_mpi_abort('Unsupported combination of values of '// &
                 'num_fluids and mpp_lim. Exiting ...')
-        elseif (time_stepper < 1 .or. time_stepper > 5) then
+        elseif (time_stepper < 1 .or. time_stepper > 7) then
             if (time_stepper /= 23) then 
                 call s_mpi_abort('Unsupported value of time_stepper. Exiting ...')
             end if
