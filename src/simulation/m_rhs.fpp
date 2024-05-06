@@ -1075,7 +1075,7 @@ contains
                     omega = 1d0
                     !$acc update device(omega)
 
-                    do i = 1, 10
+                    do i = 1, 3
 
                         !$acc parallel loop gang vector collapse(3) default(present) private(rho_lx, rho_ly, rho_rx, rho_ry)                   
                         do l = 0, p
@@ -1322,65 +1322,80 @@ contains
                         end do
                     end do
 
-                    !$acc parallel loop collapse(4) gang vector default(present)                    
-                    do i = 1, 4
-                        do l = 0, p
-                            do k = 0, n
-                                do j = 0, m
-                                    if(lw == 1) then
-                                        rhs_vf(i)%sf(j,k,l) = &
-                                            1d0/(4d0*dx(j)) * &
-                                            ( flux_n(id)%vf(i)%sf(j,k,l) - &
-                                              flux_n(id)%vf(i)%sf(j+1,k,l) + &
-                                              flux_n(id)%vf(i)%sf(j,k+1,l) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k+1,l) + &
-                                              flux_n(id)%vf(i)%sf(j,k,l+1) - &
-                                              flux_n(id)%vf(i)%sf(j+1,k,l+1) + &
-                                              flux_n(id)%vf(i)%sf(j,k+1, l+1) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
-
-                                    else if(lw == 2) then
-                                        rhs_vf(i)%sf(j,k,l) = &
-                                            1d0/(4d0*dx(j)) * &
-                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
-                                              flux_n(id)%vf(i)%sf(j,k-1,l) + &
-                                              flux_n(id)%vf(i)%sf(j-1,k,l) - & 
-                                              flux_n(id)%vf(i)%sf(j,k,l)  + &
-                                              flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
-                                              flux_n(id)%vf(i)%sf(j,k-1,l-1) + &
-                                              flux_n(id)%vf(i)%sf(j-1,k,l-1) - & 
-                                              flux_n(id)%vf(i)%sf(j,k,l-1))
-
-                                    end if
-
-                                    if(bcxb < -1) then
-                                        rhs_vf(i)%sf(0,k,l) = 0d0
-                                    end if
-
-                                    if(bcxe < -1) then
-                                        rhs_vf(i)%sf(m,k,l) = 0d0
-                                    end if
-
-                                    if(bcyb < -1) then
-                                        rhs_vf(i)%sf(j,0,l) = 0d0
-                                    end if
-
-                                    if(bcye < -1) then
-                                        rhs_vf(i)%sf(j,n,l) = 0d0
-                                    end if
-
-                                    if(bczb < -1) then
-                                        rhs_vf(i)%sf(j,k,0) = 0d0
-                                    end if
-
-                                    if(bcze < -1) then
-                                        rhs_vf(i)%sf(j,k,p) = 0d0
-                                    end if
-
+                    if(.not. present(lw_in)) then 
+                        !$acc parallel loop collapse(4) gang vector default(present)                     
+                        do i = 1, 4
+                            do l = 0, p
+                                do k = 0, n
+                                    do j = 0, m
+                                        rhs_vf(i)%sf(j,k,l) = 0.5d0/dx(j)*&
+                                        (flux_n(id)%vf(i)%sf(j-1, k, l) - flux_n(id)%vf(i)%sf(j+1, k, l))
+                                    end do
                                 end do
                             end do
                         end do
-                    end do
+                    else
+
+                        !$acc parallel loop collapse(4) gang vector default(present)                    
+                        do i = 1, 4
+                            do l = 0, p
+                                do k = 0, n
+                                    do j = 0, m
+                                        if(lw == 1) then
+                                            rhs_vf(i)%sf(j,k,l) = &
+                                                1d0/(4d0*dx(j)) * &
+                                                ( flux_n(id)%vf(i)%sf(j,k,l) - &
+                                                  flux_n(id)%vf(i)%sf(j+1,k,l) + &
+                                                  flux_n(id)%vf(i)%sf(j,k+1,l) - & 
+                                                  flux_n(id)%vf(i)%sf(j+1,k+1,l) + &
+                                                  flux_n(id)%vf(i)%sf(j,k,l+1) - &
+                                                  flux_n(id)%vf(i)%sf(j+1,k,l+1) + &
+                                                  flux_n(id)%vf(i)%sf(j,k+1, l+1) - & 
+                                                  flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
+
+                                        else if(lw == 2) then
+                                            rhs_vf(i)%sf(j,k,l) = &
+                                                1d0/(4d0*dx(j)) * &
+                                                ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
+                                                  flux_n(id)%vf(i)%sf(j,k-1,l) + &
+                                                  flux_n(id)%vf(i)%sf(j-1,k,l) - & 
+                                                  flux_n(id)%vf(i)%sf(j,k,l)  + &
+                                                  flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                                  flux_n(id)%vf(i)%sf(j,k-1,l-1) + &
+                                                  flux_n(id)%vf(i)%sf(j-1,k,l-1) - & 
+                                                  flux_n(id)%vf(i)%sf(j,k,l-1))
+
+                                        end if
+
+                                        if(bcxb < -1) then
+                                            rhs_vf(i)%sf(0,k,l) = 0d0
+                                        end if
+
+                                        if(bcxe < -1) then
+                                            rhs_vf(i)%sf(m,k,l) = 0d0
+                                        end if
+
+                                        if(bcyb < -1) then
+                                            rhs_vf(i)%sf(j,0,l) = 0d0
+                                        end if
+
+                                        if(bcye < -1) then
+                                            rhs_vf(i)%sf(j,n,l) = 0d0
+                                        end if
+
+                                        if(bczb < -1) then
+                                            rhs_vf(i)%sf(j,k,0) = 0d0
+                                        end if
+
+                                        if(bcze < -1) then
+                                            rhs_vf(i)%sf(j,k,p) = 0d0
+                                        end if
+
+                                    end do
+                                end do
+                            end do
+                        end do
+                    end if
                 else
 
                     !$acc parallel loop collapse(4) gang vector default(present)
@@ -1437,67 +1452,83 @@ contains
                         end do
                     end do   
 
-                    !$acc parallel loop collapse(4) gang vector default(present)                     
-                    do i = 1, 4
-                        do l = 0, p
-                            do k = 0, n
-                                do j = 0, m
-
-                                    if(lw == 1) then
-                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
-                                            1d0/(4d0*dy(k)) * &
-                                            ( flux_n(id)%vf(i)%sf(j,k,l) - &
-                                              flux_n(id)%vf(i)%sf(j,k+1,l) + &
-                                              flux_n(id)%vf(i)%sf(j+1,k,l) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k+1,l) + &
-                                              flux_n(id)%vf(i)%sf(j,k,l+1) - &
-                                              flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
-                                              flux_n(id)%vf(i)%sf(j+1,k, l+1) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
-
-                                    else if(lw == 2) then
-                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
-                                            1d0/(4d0*dy(k)) * &
-                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
-                                              flux_n(id)%vf(i)%sf(j-1,k,l) + &
-                                              flux_n(id)%vf(i)%sf(j,k-1,l) - & 
-                                              flux_n(id)%vf(i)%sf(j,k,l)  + &
-                                              flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
-                                              flux_n(id)%vf(i)%sf(j-1,k,l-1) + &
-                                              flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
-                                              flux_n(id)%vf(i)%sf(j,k,l-1))
-
-                                    end if                                        
-
-
-                                    if(bcxb < -1) then
-                                        rhs_vf(i)%sf(0,k,l) = 0d0
-                                    end if
-
-                                    if(bcxe < -1) then
-                                        rhs_vf(i)%sf(m,k,l) = 0d0
-                                    end if
-
-                                    if(bcyb < -1) then
-                                        rhs_vf(i)%sf(j,0,l) = 0d0
-                                    end if
-
-                                    if(bcye < -1) then
-                                        rhs_vf(i)%sf(j,n,l) = 0d0
-                                    end if
-
-                                    if(bczb < -1) then
-                                        rhs_vf(i)%sf(j,k,0) = 0d0
-                                    end if
-
-                                    if(bcze < -1) then
-                                        rhs_vf(i)%sf(j,k,p) = 0d0
-                                    end if
-
+                    if(.not. present(lw_in)) then 
+                        !$acc parallel loop collapse(4) gang vector default(present)                     
+                        do i = 1, 4
+                            do l = 0, p
+                                do k = 0, n
+                                    do j = 0, m
+                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + 0.5d0/dy(k)*&
+                                        (flux_n(id)%vf(i)%sf(j, k-1, l) - flux_n(id)%vf(i)%sf(j, k+1, l))
+                                    end do
                                 end do
                             end do
                         end do
-                    end do    
+                    else
+                        !$acc parallel loop collapse(4) gang vector default(present)                     
+                        do i = 1, 4
+                            do l = 0, p
+                                do k = 0, n
+                                    do j = 0, m
+
+                                        if(lw == 1) then
+                                            rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                                1d0/(4d0*dy(k)) * &
+                                                ( flux_n(id)%vf(i)%sf(j,k,l) - &
+                                                  flux_n(id)%vf(i)%sf(j,k+1,l) + &
+                                                  flux_n(id)%vf(i)%sf(j+1,k,l) - & 
+                                                  flux_n(id)%vf(i)%sf(j+1,k+1,l) + &
+                                                  flux_n(id)%vf(i)%sf(j,k,l+1) - &
+                                                  flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
+                                                  flux_n(id)%vf(i)%sf(j+1,k, l+1) - & 
+                                                  flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
+
+                                        else if(lw == 2) then
+                                            rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                                1d0/(4d0*dy(k)) * &
+                                                ( flux_n(id)%vf(i)%sf(j-1,k-1,l) - &
+                                                  flux_n(id)%vf(i)%sf(j-1,k,l) + &
+                                                  flux_n(id)%vf(i)%sf(j,k-1,l) - & 
+                                                  flux_n(id)%vf(i)%sf(j,k,l)  + &
+                                                  flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                                  flux_n(id)%vf(i)%sf(j-1,k,l-1) + &
+                                                  flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
+                                                  flux_n(id)%vf(i)%sf(j,k,l-1))
+
+                                        end if                                        
+
+
+                                        if(bcxb < -1) then
+                                            rhs_vf(i)%sf(0,k,l) = 0d0
+                                        end if
+
+                                        if(bcxe < -1) then
+                                            rhs_vf(i)%sf(m,k,l) = 0d0
+                                        end if
+
+                                        if(bcyb < -1) then
+                                            rhs_vf(i)%sf(j,0,l) = 0d0
+                                        end if
+
+                                        if(bcye < -1) then
+                                            rhs_vf(i)%sf(j,n,l) = 0d0
+                                        end if
+
+                                        if(bczb < -1) then
+                                            rhs_vf(i)%sf(j,k,0) = 0d0
+                                        end if
+
+                                        if(bcze < -1) then
+                                            rhs_vf(i)%sf(j,k,p) = 0d0
+                                        end if
+
+                                    end do
+                                end do
+                            end do
+                        end do 
+
+                    end if
+
                 else         
                     !$acc parallel loop collapse(4) gang vector default(present)
                     do j = 1, sys_size
@@ -1555,65 +1586,79 @@ contains
                         end do
                     end do
 
-                    !$acc parallel loop collapse(4) gang vector default(present)                    
-                    do i = 1, 4
-                        do l = 0, p
-                            do k = 0, n
-                                do j = 0, m
-                                    if(lw == 1) then
-                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
-                                            1d0/(4d0*dz(l)) * &
-                                            ( flux_n(id)%vf(i)%sf(j,k,l) - &
-                                              flux_n(id)%vf(i)%sf(j,k,l+1) + &
-                                              flux_n(id)%vf(i)%sf(j+1,k,l) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k,l+1) + &
-                                              flux_n(id)%vf(i)%sf(j,k+1,l) - &
-                                              flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
-                                              flux_n(id)%vf(i)%sf(j+1,k+1, l) - & 
-                                              flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
-
-                                    else if(lw == 2) then
-                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
-                                            1d0/(4d0*dz(l)) * &
-                                            ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
-                                              flux_n(id)%vf(i)%sf(j-1,k-1,l) + &
-                                              flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
-                                              flux_n(id)%vf(i)%sf(j,k-1,l)  + &
-                                              flux_n(id)%vf(i)%sf(j-1,k,l-1) - &
-                                              flux_n(id)%vf(i)%sf(j-1,k,l) + &
-                                              flux_n(id)%vf(i)%sf(j,k,l-1) - & 
-                                              flux_n(id)%vf(i)%sf(j,k,l))
-
-                                    end if 
-
-                                    if(bcxb < -1) then
-                                        rhs_vf(i)%sf(0,k,l) = 0d0
-                                    end if
-
-                                    if(bcxe < -1) then
-                                        rhs_vf(i)%sf(m,k,l) = 0d0
-                                    end if
-
-                                    if(bcyb < -1) then
-                                        rhs_vf(i)%sf(j,0,l) = 0d0
-                                    end if
-
-                                    if(bcye < -1) then
-                                        rhs_vf(i)%sf(j,n,l) = 0d0
-                                    end if
-
-                                    if(bczb < -1) then
-                                        rhs_vf(i)%sf(j,k,0) = 0d0
-                                    end if
-
-                                    if(bcze < -1) then
-                                        rhs_vf(i)%sf(j,k,p) = 0d0
-                                    end if
-
+                    if(.not. present(lw_in)) then 
+                        !$acc parallel loop collapse(4) gang vector default(present)                     
+                        do i = 1, 4
+                            do l = 0, p
+                                do k = 0, n
+                                    do j = 0, m
+                                        rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + 0.5d0/dz(l)*&
+                                        (flux_n(id)%vf(i)%sf(j, k, l-1) - flux_n(id)%vf(i)%sf(j, k, l+1))
+                                    end do
                                 end do
                             end do
                         end do
-                    end do
+                    else
+                        !$acc parallel loop collapse(4) gang vector default(present)                    
+                        do i = 1, 4
+                            do l = 0, p
+                                do k = 0, n
+                                    do j = 0, m
+                                        if(lw == 1) then
+                                            rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                                1d0/(4d0*dz(l)) * &
+                                                ( flux_n(id)%vf(i)%sf(j,k,l) - &
+                                                  flux_n(id)%vf(i)%sf(j,k,l+1) + &
+                                                  flux_n(id)%vf(i)%sf(j+1,k,l) - & 
+                                                  flux_n(id)%vf(i)%sf(j+1,k,l+1) + &
+                                                  flux_n(id)%vf(i)%sf(j,k+1,l) - &
+                                                  flux_n(id)%vf(i)%sf(j,k+1,l+1) + &
+                                                  flux_n(id)%vf(i)%sf(j+1,k+1, l) - & 
+                                                  flux_n(id)%vf(i)%sf(j+1,k+1, l+1))
+
+                                        else if(lw == 2) then
+                                            rhs_vf(i)%sf(j,k,l) = rhs_vf(i)%sf(j,k,l) + &
+                                                1d0/(4d0*dz(l)) * &
+                                                ( flux_n(id)%vf(i)%sf(j-1,k-1,l-1) - &
+                                                  flux_n(id)%vf(i)%sf(j-1,k-1,l) + &
+                                                  flux_n(id)%vf(i)%sf(j,k-1,l-1) - & 
+                                                  flux_n(id)%vf(i)%sf(j,k-1,l)  + &
+                                                  flux_n(id)%vf(i)%sf(j-1,k,l-1) - &
+                                                  flux_n(id)%vf(i)%sf(j-1,k,l) + &
+                                                  flux_n(id)%vf(i)%sf(j,k,l-1) - & 
+                                                  flux_n(id)%vf(i)%sf(j,k,l))
+
+                                        end if 
+
+                                        if(bcxb < -1) then
+                                            rhs_vf(i)%sf(0,k,l) = 0d0
+                                        end if
+
+                                        if(bcxe < -1) then
+                                            rhs_vf(i)%sf(m,k,l) = 0d0
+                                        end if
+
+                                        if(bcyb < -1) then
+                                            rhs_vf(i)%sf(j,0,l) = 0d0
+                                        end if
+
+                                        if(bcye < -1) then
+                                            rhs_vf(i)%sf(j,n,l) = 0d0
+                                        end if
+
+                                        if(bczb < -1) then
+                                            rhs_vf(i)%sf(j,k,0) = 0d0
+                                        end if
+
+                                        if(bcze < -1) then
+                                            rhs_vf(i)%sf(j,k,p) = 0d0
+                                        end if
+
+                                    end do
+                                end do
+                            end do
+                        end do
+                    end if
                 else
                     !$acc parallel loop collapse(4) gang vector default(present)
                     do j = 1, sys_size
