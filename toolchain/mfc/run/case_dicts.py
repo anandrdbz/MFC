@@ -23,6 +23,7 @@ COMMON = {
     'pref': ParamType.REAL,
     'p': ParamType.INT,
     'parallel_io': ParamType.LOG,
+    'igr': ParamType.LOG,
     'Web': ParamType.REAL,
     'poly_sigma': ParamType.REAL,
     'case_dir': ParamType.STR,

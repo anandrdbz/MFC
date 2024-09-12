@@ -265,6 +265,8 @@ module m_global_parameters
     integer :: intxb, intxe
     integer :: bubxb, bubxe
     integer :: strxb, strxe
+
+    logical :: igr
     !> @}
 
 contains
@@ -374,6 +376,8 @@ contains
         sigR = dflt_real
         sigma = dflt_real
         adv_n = .false.
+
+        igr = .false.
 
     end subroutine s_assign_default_values_to_user_inputs
 

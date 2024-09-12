@@ -162,7 +162,7 @@ contains
             pi_fac, adv_n, adap_dt, bf_x, bf_y, bf_z, &
             k_x, k_y, k_z, w_x, w_y, w_z, p_x, p_y, p_z, &
             g_x, g_y, g_z, n_start, t_save, t_stop, &
-            cfl_adap_dt, cfl_const_dt, cfl_target
+            cfl_adap_dt, cfl_const_dt, cfl_target, igr
 
         ! Checking that an input file has been provided by the user. If it
         ! has, then the input file is read in, otherwise, simulation exits.
@@ -1160,6 +1160,8 @@ contains
             call s_3rd_order_tvd_rk(t_step, time_avg)
         elseif (time_stepper == 3 .and. adap_dt) then
             call s_strang_splitting(t_step, time_avg)
+        else if(time_stepper == 6) then
+            call s_rlw_rk3(t_step, time_avg) 
         end if
 
         if (relax) call s_infinite_relaxation_k(q_cons_ts(1)%vf)

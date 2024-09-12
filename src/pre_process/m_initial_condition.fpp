@@ -119,6 +119,8 @@ contains
         integer :: i  !< Generic loop operator
 
         character(len=10) :: iStr
+        real(kind(0d0)), dimension(0:m, 0:n, 0:p) :: temp
+        integer :: j, k, l
 
         ! Converting the conservative variables to the primitive ones given
         ! preexisting initial condition data files were read in on start-up
@@ -304,6 +306,59 @@ contains
 
         end if
         ! ==================================================================
+
+        do l = 0, p 
+            do k = 0, n 
+                do j = 0, m 
+                    call s_perturb_primitive(j, k, l, q_prim_vf)
+                end do 
+            end do 
+        end do
+
+
+                ! do q = 1, 60
+        !     do i = 1, sys_size
+        !         do l = 0, p
+        !             do k = 0, n
+        !                 do j = 0, m
+        !                     if(j > 0 .and. j < m) then
+        !                         if(k > 0 .and. k < n) then
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j-1, k, l) + q_prim_vf(i)%sf(j+1, k, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j, k+1, l) + q_prim_vf(i)%sf(j, k-1, l)) / 5d0
+        !                         else if( k == 0) then
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j-1, k, l) + q_prim_vf(i)%sf(j+1, k, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j, k+1, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         else if(k == n) then 
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j-1, k, l) + q_prim_vf(i)%sf(j+1, k, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j, k-1, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         end if
+        !                     else if(j == 0) then 
+        !                         if(k > 0 .and. k < n) then
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j, k-1, l) + q_prim_vf(i)%sf(j, k+1, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j+1, k, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         else if(k == 0) then  
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j, k+1, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j+1, k, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         else if(k == n) then 
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j, k-1, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j+1, k, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         end if
+        !                     else if(j == m) then
+        !                         if(k > 0 .and. k < n) then
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j, k-1, l) + q_prim_vf(i)%sf(j, k+1, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j-1, k, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         else if(k == 0) then  
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j, k+1, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j-1, k, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         else if(k == n) then 
+        !                             temp(j, k, l) = (q_prim_vf(i)%sf(j, k-1, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j, k, l) + q_prim_vf(i)%sf(j-1, k, l) + q_prim_vf(i)%sf(j, k, l)) / 5d0
+        !                         end if
+        !                     end if
+        !                 end do
+        !             end do
+        !         end do
+
+        !         do l = 0, p
+        !             do k = 0, n
+        !                 do j = 0, m
+        !                         q_prim_vf(i)%sf(j, k, l) = temp(j, k, l)
+        !                 end do
+        !             end do
+        !         end do
+        !     end do
+        ! end do
 
         if (perturb_flow) call s_perturb_surrounding_flow(q_prim_vf)
         if (perturb_sph) call s_perturb_sphere(q_prim_vf)

@@ -176,69 +176,92 @@ contains
         integer :: i
         real(kind(0d0)) :: pres_mag, loc, n_tait, B_tait, p0
         real(kind(0d0)) :: R3bar, n0, ratio, nH, vfH, velH, rhoH, deno
+        real(kind(0d0)) :: P_in, V_in, R_in, beta
 
         p0 = 101325
         pres_mag = 1d-1
-        loc = x_cc(177)
         n_tait = fluid_pp(1)%gamma
         B_tait = fluid_pp(1)%pi_inf
 
         n_tait = 1.d0/n_tait + 1.d0
         B_tait = B_tait*(n_tait - 1d0)/n_tait
 
-        if (j < 177) then
-            q_prim_vf(E_idx)%sf(j, k, l) = 0.5*q_prim_vf(E_idx)%sf(j, k, l)
+
+        P_in = 101325d0
+        V_in = 0.1*sqrt(1.4*P_in)
+        beta = 0.01d0
+
+        if(p == 0) then 
+            q_prim_vf(momxb)%sf(j, k, l) = V_in*sin(x_cc(j))* cos(y_cc(k))
+            q_prim_vf(momxb+1)%sf(j, k, l) = -V_in*cos(x_cc(j))* sin(y_cc(k))        
+            q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2/4d0)*(cos(2d0*x_cc(j)) + cos(2d0*y_cc(k)))
+
+            R_in = sqrt((x_cc(j) - pi)**2d0 + (y_cc(k) - pi)**2d0)
+          
+            !q_prim_vf(momxb)%sf(j, k, l) = q_prim_vf(momxb)%sf(j, k, l) - V_in*beta*(y_cc(k) - pi)*exp(-0.5d0*R_in**2d0) / R_in
+            !q_prim_vf(momxb+1)%sf(j, k, l) = q_prim_vf(momxb+1)%sf(j, k, l) + V_in*beta*(x_cc(j) - pi)*exp(-0.5d0*R_in**2d0) / R_in
+            !q_prim_vf(E_idx)%sf(j, k, l) = q_prim_vf(E_idx)%sf(j, k, l)+ 0.5d0*V_in**2d0*beta**2d0*(1.4d0/0.4d0)*exp(-R_in**2d0)
+        else 
+            q_prim_vf(momxb)%sf(j, k, l) = V_in*sin(x_cc(j))*cos(y_cc(k))*sin(z_cc(l))
+            q_prim_vf(momxb + 1)%sf(j, k, l) = -V_in*cos(x_cc(j))*sin(y_cc(k))*cos(z_cc(l))
+            q_prim_vf(momxb + 2)%sf(j, k, l) = 0d0
+            q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2d0/16d0)*(cos(2*x_cc(j)) + cos(2*y_cc(k)))*(cos(2*z_cc(l)) + 2)
         end if
 
-        if (qbmm) then
-            do i = 1, nb
-                q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l) = q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l)*((p0 - fluid_pp(1)%pv)/(q_prim_vf(E_idx)%sf(j, k, l)*p0 - fluid_pp(1)%pv))**(1/3d0)
-            end do
-        end if
 
-        R3bar = 0d0
+        ! if (j < 177) then
+        !     q_prim_vf(E_idx)%sf(j, k, l) = 0.5*q_prim_vf(E_idx)%sf(j, k, l)
+        ! end if
 
-        if (qbmm) then
-            do i = 1, nb
-                R3bar = R3bar + weight(i)*0.5d0*(q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l))**3d0
-                R3bar = R3bar + weight(i)*0.5d0*(q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l))**3d0
-            end do
-        else
-            do i = 1, nb
-                if (polytropic) then
-                    R3bar = R3bar + weight(i)*(q_prim_vf(bubxb + (i - 1)*2)%sf(j, k, l))**3d0
-                else
-                    R3bar = R3bar + weight(i)*(q_prim_vf(bubxb + (i - 1)*4)%sf(j, k, l))**3d0
-                end if
-            end do
-        end if
+        ! if (qbmm) then
+        !     do i = 1, nb
+        !         q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l) = q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l)*((p0 - fluid_pp(1)%pv)/(q_prim_vf(E_idx)%sf(j, k, l)*p0 - fluid_pp(1)%pv))**(1/3d0)
+        !     end do
+        ! end if
 
-        n0 = 3d0*q_prim_vf(alf_idx)%sf(j, k, l)/(4d0*pi*R3bar)
+        ! R3bar = 0d0
 
-        ratio = ((1d0 + B_tait)/(q_prim_vf(E_idx)%sf(j, k, l) + B_tait))**(1d0/n_tait)
+        ! if (qbmm) then
+        !     do i = 1, nb
+        !         R3bar = R3bar + weight(i)*0.5d0*(q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l))**3d0
+        !         R3bar = R3bar + weight(i)*0.5d0*(q_prim_vf(bubxb + 1 + (i - 1)*nmom)%sf(j, k, l))**3d0
+        !     end do
+        ! else
+        !     do i = 1, nb
+        !         if (polytropic) then
+        !             R3bar = R3bar + weight(i)*(q_prim_vf(bubxb + (i - 1)*2)%sf(j, k, l))**3d0
+        !         else
+        !             R3bar = R3bar + weight(i)*(q_prim_vf(bubxb + (i - 1)*4)%sf(j, k, l))**3d0
+        !         end if
+        !     end do
+        ! end if
 
-        nH = n0/((1d0 - q_prim_vf(alf_idx)%sf(j, k, l))*ratio + (4d0*pi/3d0)*n0*R3bar)
-        vfH = (4d0*pi/3d0)*nH*R3bar
-        rhoH = (1d0 - vfH)/ratio
-        deno = 1d0 - (1d0 - q_prim_vf(alf_idx)%sf(j, k, l))/rhoH
+        ! n0 = 3d0*q_prim_vf(alf_idx)%sf(j, k, l)/(4d0*pi*R3bar)
 
-        if (deno == 0d0) then
-            velH = 0d0
-        else
-            velH = (q_prim_vf(E_idx)%sf(j, k, l) - 1d0)/(1d0 - q_prim_vf(alf_idx)%sf(j, k, l))/deno
-            velH = dsqrt(velH)
-            velH = velH*deno
-        end if
+        ! ratio = ((1d0 + B_tait)/(q_prim_vf(E_idx)%sf(j, k, l) + B_tait))**(1d0/n_tait)
 
-        do i = cont_idx%beg, cont_idx%end
-            q_prim_vf(i)%sf(j, k, l) = rhoH
-        end do
+        ! nH = n0/((1d0 - q_prim_vf(alf_idx)%sf(j, k, l))*ratio + (4d0*pi/3d0)*n0*R3bar)
+        ! vfH = (4d0*pi/3d0)*nH*R3bar
+        ! rhoH = (1d0 - vfH)/ratio
+        ! deno = 1d0 - (1d0 - q_prim_vf(alf_idx)%sf(j, k, l))/rhoH
 
-        do i = mom_idx%beg, mom_idx%end
-            q_prim_vf(i)%sf(j, k, l) = velH
-        end do
+        ! if (deno == 0d0) then
+        !     velH = 0d0
+        ! else
+        !     velH = (q_prim_vf(E_idx)%sf(j, k, l) - 1d0)/(1d0 - q_prim_vf(alf_idx)%sf(j, k, l))/deno
+        !     velH = dsqrt(velH)
+        !     velH = velH*deno
+        ! end if
 
-        q_prim_vf(alf_idx)%sf(j, k, l) = vfH
+        ! do i = cont_idx%beg, cont_idx%end
+        !     q_prim_vf(i)%sf(j, k, l) = rhoH
+        ! end do
+
+        ! do i = mom_idx%beg, mom_idx%end
+        !     q_prim_vf(i)%sf(j, k, l) = velH
+        ! end do
+
+        ! q_prim_vf(alf_idx)%sf(j, k, l) = vfH
 
     end subroutine s_perturb_primitive
 

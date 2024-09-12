@@ -473,6 +473,9 @@ module m_global_parameters
 
     !$acc declare create(pb_ts, mv_ts)
 #endif
+
+    logical :: igr 
+    !$acc declare create(igr)
     ! ======================================================================
 
 contains
@@ -679,6 +682,8 @@ contains
             integral(i)%ymin = dflt_real
             integral(i)%ymax = dflt_real
         end do
+
+        igr = .false.
 
     end subroutine s_assign_default_values_to_user_inputs
 
@@ -1012,6 +1017,10 @@ contains
 !            buff_size = 2*weno_polyn + 2
         else
             buff_size = weno_polyn + 2
+        end if
+
+        if(igr) then 
+            buff_size = 4
         end if
 
         ! Configuring Coordinate Direction Indexes =========================
