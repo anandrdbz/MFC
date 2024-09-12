@@ -1674,7 +1674,7 @@ contains
                                         q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 1)%sf(j,k,l)
 
                                     if(any(Re_size>0)) then
-                                        flux_n(id)%vf(momxb)%sf(j, k, l) = flux_n(id)%vf(2)%sf(j, k, l) - & 
+                                        flux_n(id)%vf(momxb)%sf(j, k, l) = flux_n(id)%vf(momxb)%sf(j, k, l) - & 
                                                     mu*(duy_igr(j, k, l) + dvx_igr(j, k, l))                                                              
                                     end if
 
@@ -1785,13 +1785,13 @@ contains
 
                                 flux_n(id)%vf(contxb)%sf(j,k,l) = &
                                     q_prim_qp%vf(contxb)%sf(j,k,l) * &
-                                    q_prim_qp%vf( momxb+1)%sf(j,k,l)
+                                    q_prim_qp%vf( momxb+2)%sf(j,k,l)
 
                                 flux_n(id)%vf(momxb)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
                                     q_prim_qp%vf( momxb)%sf(j,k,l)*q_prim_qp%vf( momxb + 2)%sf(j,k,l)
 
                                 if(any(Re_size>0)) then
-                                    flux_n(id)%vf(momxb)%sf(j, k, l) = flux_n(id)%vf(2)%sf(j, k, l) - & 
+                                    flux_n(id)%vf(momxb)%sf(j, k, l) = flux_n(id)%vf(momxb)%sf(j, k, l) - & 
                                                 mu*(duz_igr(j, k, l) + dwx_igr(j, k, l))                                                              
                                 end if
 
