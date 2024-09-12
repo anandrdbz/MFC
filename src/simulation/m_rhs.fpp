@@ -1493,7 +1493,7 @@ contains
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(E_idx)%sf(j, k, l) = flux_n(id)%vf(E_idx)%sf(j, k, l) - & 
                                         mu*q_prim_qp%vf(momxb)%sf(j, k, l)*((4d0/3d0)*dux_igr(j, k, l) - (2d0/3d0)*dvy_igr(j, k, l)) - &
-                                        mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l))                                                               
+                                        mu*q_prim_qp%vf(momxb)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l))                                                               
                                     end if
 
                                 end do
@@ -1542,8 +1542,8 @@ contains
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(E_idx)%sf(j, k, l) = flux_n(id)%vf(E_idx)%sf(j, k, l) - & 
                                         mu*q_prim_qp%vf(momxb)%sf(j, k, l)*((4d0/3d0)*dux_igr(j, k, l) - (2d0/3d0)*dvy_igr(j, k, l) - (2d0/3d0)*dwz_igr(j, k, l)) - &
-                                        mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l))  - &
-                                        mu*q_prim_qp%vf(momxb+2)%sf(j, k, l)*(duz_igr(j, k, l) + dwx_igr(j, k, l)) 
+                                        mu*q_prim_qp%vf(momxb)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l))  - &
+                                        mu*q_prim_qp%vf(momxb)%sf(j, k, l)*(duz_igr(j, k, l) + dwx_igr(j, k, l)) 
                                     end if                                                                                               
 
                                 end do
@@ -1653,7 +1653,7 @@ contains
 
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(E_idx)%sf(j, k, l) = flux_n(id)%vf(E_idx)%sf(j, k, l) - & 
-                                        mu*q_prim_qp%vf(momxb)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l)) - &
+                                        mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l)) - &
                                         mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*((4d0/3d0)*dvy_igr(j, k, l) - (2d0/3d0)*dux_igr(j, k, l))                                                               
                                     end if
 
@@ -1701,9 +1701,9 @@ contains
 
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(E_idx)%sf(j, k, l) = flux_n(id)%vf(E_idx)%sf(j, k, l) - & 
-                                        mu*q_prim_qp%vf(momxb)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l)) - &
+                                        mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*(duy_igr(j, k, l) + dvx_igr(j, k, l)) - &
                                         mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*((4d0/3d0)*dvy_igr(j, k, l) - (2d0/3d0)*dux_igr(j, k, l) - (2d0/3d0)*dwz_igr(j, k, l)) - & 
-                                        mu*q_prim_qp%vf(momxb+2)%sf(j, k, l)*(dvz_igr(j, k, l) + dwy_igr(j, k, l))                                                                                                 
+                                        mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*(dvz_igr(j, k, l) + dwy_igr(j, k, l))                                                                                                 
                                     end if
                                 end do
                             end do
@@ -1819,8 +1819,8 @@ contains
 
                                 if(any(Re_size>0)) then
                                     flux_n(id)%vf(E_idx)%sf(j, k, l) = flux_n(id)%vf(E_idx)%sf(j, k, l) - & 
-                                    mu*q_prim_qp%vf(momxb)%sf(j, k, l)*(duz_igr(j, k, l) + dwx_igr(j, k, l)) - &
-                                    mu*q_prim_qp%vf(momxb+1)%sf(j, k, l)*(dvz_igr(j, k, l) + dwy_igr(j, k, l)) - &  
+                                    mu*q_prim_qp%vf(momxb+2)%sf(j, k, l)*(duz_igr(j, k, l) + dwx_igr(j, k, l)) - &
+                                    mu*q_prim_qp%vf(momxb+2)%sf(j, k, l)*(dvz_igr(j, k, l) + dwy_igr(j, k, l)) - &  
                                     mu*q_prim_qp%vf(momxb+2)%sf(j, k, l)*((4d0/3d0)*dwz_igr(j, k, l) - (2d0/3d0)*dux_igr(j, k, l) - (2d0/3d0)*dvy_igr(j, k, l))                                                                                                 
                                 end if
                             end do
