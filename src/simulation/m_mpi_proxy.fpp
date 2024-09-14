@@ -1506,7 +1506,7 @@ contains
         else if(mpi_dir == 3) then
             if(pbc_loc == -1) then
 
-                if(bc_y%end >= 0) then
+                if(bc_z%end >= 0) then
                     !$acc parallel loop gang vector collapse(3) default(present) private(r)
                     do l = p - (buff_size - 1), p
                         do k = -buff_size, n + buff_size
@@ -1563,7 +1563,7 @@ contains
                 end do
             else
 
-                if(bc_y%beg >= 0) then
+                if(bc_z%beg >= 0) then
                     !$acc parallel loop gang vector collapse(3) default(present) private(r)
                     do l = 0, buff_size - 1
                         do k = -buff_size, n + buff_size

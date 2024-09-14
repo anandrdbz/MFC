@@ -785,8 +785,8 @@ contains
         !$acc update device(ix, iy, iz)
 
         bcxb = bc_x%beg; bcxe = bc_x%end; bcyb = bc_y%beg; bcye = bc_y%end; bczb = bc_z%beg; bcze = bc_z%end
-        !bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1
-        !$acc update device(bcxb, bcxe, bcyb, bcye)
+        !bcxb = -1; bcxe = -1; bcyb = -1; bcye = -1; bczb = -1; bcze = -1
+        !$acc update device(bcxb, bcxe, bcyb, bcye, bczb, bcze)
 
 
         if(igr) then
@@ -1148,7 +1148,7 @@ contains
                                         q_prim_qp%vf(momxb)%sf(j,k+1,l) - &
                                         q_prim_qp%vf(momxb)%sf(j,k-1,l) ) 
 
-                                    duz_igr(j,k,k) = (1/(2d0 *dz(l))) * (&
+                                    duz_igr(j,k,l) = (1/(2d0 *dz(l))) * (&
                                         q_prim_qp%vf(momxb)%sf(j,k,l+1) - &
                                         q_prim_qp%vf(momxb)%sf(j,k,l-1) )
                                 end do
@@ -1167,7 +1167,7 @@ contains
                                         q_prim_qp%vf(momxb + 1)%sf(j,k+1,l) - &
                                         q_prim_qp%vf(momxb + 1)%sf(j,k-1,l) )
 
-                                    dvz_igr(j,k,k) = (1/(2d0 *dz(l))) * (&
+                                    dvz_igr(j,k,l) = (1/(2d0 *dz(l))) * (&
                                         q_prim_qp%vf(momxb + 1)%sf(j,k,l+1) - &
                                         q_prim_qp%vf(momxb + 1)%sf(j,k,l-1))
                                 end do
@@ -1186,7 +1186,7 @@ contains
                                         q_prim_qp%vf(momxb + 2)%sf(j,k+1,l) - &
                                         q_prim_qp%vf(momxb + 2)%sf(j,k-1,l) )
 
-                                    dwz_igr(j,k,k) = (1/(2d0 *dz(l))) * (&
+                                    dwz_igr(j,k,l) = (1/(2d0 *dz(l))) * (&
                                         q_prim_qp%vf(momxb + 2)%sf(j,k,l+1) - &
                                         q_prim_qp%vf(momxb +  2)%sf(j,k,l-1))
                                 end do
@@ -1205,7 +1205,7 @@ contains
                             end do
                         end do
 
-                        !$acc parallel loop collapse(3) gang vector default(present) private(rho_lx, rho_rx, rho_ly, rho_ry)
+                        !$acc parallel loop collapse(3) gang vector default(present) private(rho_lx, rho_rx, rho_ly, rho_ry, rho_lz, rho_rz)
                         do l = iz%beg + 1, iz%end - 1
                             do k = iy%beg + 1, iy%end - 1
                                 do j = ix%beg + 1, ix%end - 1
@@ -1229,7 +1229,7 @@ contains
 
                     do q = 1, num_its 
 
-                        !$acc parallel loop collapse(3) gang vector default(present) 
+                        !$acc parallel loop collapse(3) gang vector default(present) private(rho_lx, rho_rx, rho_ly, rho_ry, rho_lz, rho_rz) 
                         do l = 0, p 
                             do k = 0, n 
                                 do j = 0, m 
@@ -1373,13 +1373,13 @@ contains
                         do l = 0, p 
                             do k = iy%beg + 1, iy%end - 1
                                 do j = ix%beg+1, ix%end-1
-                                    dux_igr(j,k,l) = (1/(dx(j))) * ( &
-                                        q_prim_qp%vf(momxb)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb)%sf(j-1,k,l) ) 
+                                    !dux_igr(j,k,l) = (1/(dx(j))) * ( &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb)%sf(j-1,k,l) ) 
 
-                                    duy_igr(j,k,l) = (1/(dy(k))) * ( &
-                                        q_prim_qp%vf(momxb)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb)%sf(j,k-1,l) ) 
+                                    !duy_igr(j,k,l) = (1/(dy(k))) * ( &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k-1,l) ) 
                                 end do
                             end do
                         end do
@@ -1388,13 +1388,13 @@ contains
                         do l = 0, p 
                             do k = iy%beg + 1, iy%end - 1
                                 do j = ix%beg+1, ix%end-1
-                                    dvx_igr(j,k,l) = (1/(dx(j))) * ( &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+1)%sf(j-1,k,l) ) 
+                                    !dvx_igr(j,k,l) = (1/(dx(j))) * ( &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j-1,k,l) ) 
 
-                                    dvy_igr(j,k,l) = (1/(dy(k))) * ( &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k-1,l) ) 
+                                    !dvy_igr(j,k,l) = (1/(dy(k))) * ( &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k-1,l) ) 
                                 end do
                             end do
                         end do
@@ -1403,17 +1403,17 @@ contains
                         do l = iz%beg + 1, iz%end - 1
                             do k = iy%beg + 1, iy%end - 1
                                 do j = ix%beg+1, ix%end-1
-                                    dux_igr(j,k,l) = (1/(dx(j))) * ( &
-                                        q_prim_qp%vf(momxb)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb)%sf(j-1,k,l) ) 
+                                    !dux_igr(j,k,l) = (1/(dx(j))) * ( &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb)%sf(j-1,k,l) ) 
 
-                                    duy_igr(j,k,l) = (1/(dy(k))) * ( &
-                                        q_prim_qp%vf(momxb)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb)%sf(j,k-1,l) )
+                                    !duy_igr(j,k,l) = (1/(dy(k))) * ( &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k-1,l) )
 
-                                    duz_igr(j, k, l) = (1/dz(l)) * ( &
-                                        q_prim_qp%vf(momxb)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb)%sf(j,k,l-1) )
+                                    !duz_igr(j, k, l) = (1/dz(l)) * ( &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb)%sf(j,k,l-1) )
                                 end do
                             end do
                         end do
@@ -1422,17 +1422,17 @@ contains
                         do l = iz%beg + 1, iz%end - 1 
                             do k = iy%beg + 1, iy%end - 1
                                 do j = ix%beg+1, ix%end-1
-                                    dvx_igr(j,k,l) = (1/(dx(j))) * ( &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+1)%sf(j-1,k,l) ) 
+                                    !dvx_igr(j,k,l) = (1/(dx(j))) * ( &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j-1,k,l) ) 
 
-                                    dvy_igr(j,k,l) = (1/(dy(k))) * ( &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k-1,l) ) 
+                                    !dvy_igr(j,k,l) = (1/(dy(k))) * ( &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k-1,l) ) 
 
-                                    dvz_igr(j, k, l) = (1/dz(l)) * ( &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+1)%sf(j,k,l-1) )
+                                    !dvz_igr(j, k, l) = (1/dz(l)) * ( &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+1)%sf(j,k,l-1) )
                                 end do
                             end do
                         end do
@@ -1441,17 +1441,17 @@ contains
                         do l = iz%beg + 1, iz%end - 1
                             do k = iy%beg + 1, iy%end - 1
                                 do j = ix%beg+1, ix%end-1
-                                    dwx_igr(j,k,l) = (1/(dx(j))) * ( &
-                                        q_prim_qp%vf(momxb+2)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+2)%sf(j-1,k,l) ) 
+                                    !dwx_igr(j,k,l) = (1/(dx(j))) * ( &
+                                    !    q_prim_qp%vf(momxb+2)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+2)%sf(j-1,k,l) ) 
 
-                                    dwy_igr(j,k,l) = (1/(dy(k))) * ( &
-                                        q_prim_qp%vf(momxb+2)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+2)%sf(j,k-1,l) )
+                                    !dwy_igr(j,k,l) = (1/(dy(k))) * ( &
+                                    !    q_prim_qp%vf(momxb+2)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+2)%sf(j,k-1,l) )
 
-                                    dwz_igr(j, k, l) = (1/dz(l)) * ( &
-                                        q_prim_qp%vf(momxb+2)%sf(j,k,l) - &
-                                        q_prim_qp%vf(momxb+2)%sf(j,k,l-1) )
+                                    !dwz_igr(j, k, l) = (1/dz(l)) * ( &
+                                    !    q_prim_qp%vf(momxb+2)%sf(j,k,l) - &
+                                    !    q_prim_qp%vf(momxb+2)%sf(j,k,l-1) )
                                 end do
                             end do
                         end do
@@ -1485,7 +1485,7 @@ contains
 
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(momxb+1)%sf(j, k, l) = flux_n(id)%vf(momxb+1)%sf(j, k, l) - & 
-                                                                       mu*(duy_igr(j, k, l) + dvx_igr(j, k, l))                                                               
+                                                   mu*(duy_igr(j, k, l) + dvx_igr(j, k, l))                                                               
                                     end if
 
                                     flux_n(id)%vf(E_idx)%sf(j, k, l) = q_prim_qp%vf(momxb)%sf(j,k,l) * (q_cons_qp%vf(e_idx)%sf(j,k,l) + q_prim_qp%vf(e_idx)%sf(j,k,l) + F_igr(j, k, l)) 
@@ -1526,7 +1526,7 @@ contains
 
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(momxb+1)%sf(j, k, l) = flux_n(id)%vf(momxb+1)%sf(j, k, l) - & 
-                                                                       mu*(duy_igr(j, k, l) + dvx_igr(j, k, l))                                                               
+                                                   mu*(duy_igr(j, k, l) + dvx_igr(j, k, l))                                                               
                                     end if
 
                                     flux_n(id)%vf(momxb+2)%sf(j, k, l) = q_prim_qp%vf(contxb)%sf(j,k,l) * &
@@ -1534,7 +1534,7 @@ contains
 
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(momxb+2)%sf(j, k, l) = flux_n(id)%vf(momxb+2)%sf(j, k, l) - & 
-                                                                       mu*(duz_igr(j, k, l) + dwx_igr(j, k, l))                                                               
+                                                   mu*(duz_igr(j, k, l) + dwx_igr(j, k, l))                                                               
                                     end if
 
                                     flux_n(id)%vf(E_idx)%sf(j, k, l) = q_prim_qp%vf(momxb)%sf(j,k,l) * (q_cons_qp%vf(e_idx)%sf(j,k,l) + q_prim_qp%vf(e_idx)%sf(j,k,l) + F_igr(j, k, l)) 
@@ -1615,7 +1615,8 @@ contains
                                     end do
                                 end do
                             end do
-                        end do 
+                        end do
+
                     end if
                 else if(id == 2) then 
                     if(p == 0) then 
@@ -1694,7 +1695,7 @@ contains
 
                                     if(any(Re_size>0)) then
                                         flux_n(id)%vf(momxb+2)%sf(j, k, l) = flux_n(id)%vf(momxb+2)%sf(j, k, l) - & 
-                                                                       mu*(dvz_igr(j, k, l) + dwy_igr(j, k, l))                                                               
+                                                   mu*(dvz_igr(j, k, l) + dwy_igr(j, k, l))                                                               
                                     end if
 
                                     flux_n(id)%vf(E_idx)%sf(j, k, l) = q_prim_qp%vf(momxb+1)%sf(j,k,l) * (q_cons_qp%vf(e_idx)%sf(j,k,l) + q_prim_qp%vf(e_idx)%sf(j,k,l) + F_igr(j, k, l)) 

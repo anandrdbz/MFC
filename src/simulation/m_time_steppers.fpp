@@ -1003,8 +1003,6 @@ contains
             end do
         end do
 
-
-
         call s_compute_rhs(q_cons_ts(2)%vf, q_prim_vf, rhs_vf, pb_ts(2)%sf, rhs_pb, mv_ts(2)%sf, rhs_mv, t_step, time_avg, 2)
               
         !$acc parallel loop collapse(4) gang vector default(present)
@@ -1071,7 +1069,6 @@ contains
             end do
         end do
 
-
 !!!!! STEP 3 of RK3
 
         call s_compute_rhs(q_cons_ts(1)%vf, q_prim_vf, rhs_vf, pb_ts(1)%sf, rhs_pb, mv_ts(1)%sf, rhs_mv, t_step, time_avg, 1)
@@ -1119,8 +1116,7 @@ contains
                     end do
                 end do
             end do
-        end do       
-
+        end do    
 
         call cpu_time(finish)
 
