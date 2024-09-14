@@ -191,11 +191,13 @@ contains
         V_in = 0.1*sqrt(1.4*P_in)
         beta = 0.01d0
 
-        if(p == 0) then 
-            q_prim_vf(momxb)%sf(j, k, l) = V_in*sin(x_cc(j))* cos(y_cc(k))
-            q_prim_vf(momxb+1)%sf(j, k, l) = -V_in*cos(x_cc(j))* sin(y_cc(k))        
-            q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2/4d0)*(cos(2d0*x_cc(j)) + cos(2d0*y_cc(k)))
-
+        if(p /= -1) then 
+            q_prim_vf(momxb+1)%sf(j, k, l) = V_in*sin(y_cc(k))* cos(z_cc(l))
+            q_prim_vf(momxb+2)%sf(j, k, l) = -V_in*cos(y_cc(k))* sin(z_cc(l))        
+            q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2/4d0)*(cos(2d0*y_cc(k)) + cos(2d0*z_cc(l)))
+            if(p > 0) then 
+                q_prim_vf(momxb)%sf(j, k, l) = 0d0
+            end if
             R_in = sqrt((x_cc(j) - pi)**2d0 + (y_cc(k) - pi)**2d0)
           
             !q_prim_vf(momxb)%sf(j, k, l) = q_prim_vf(momxb)%sf(j, k, l) - V_in*beta*(y_cc(k) - pi)*exp(-0.5d0*R_in**2d0) / R_in
