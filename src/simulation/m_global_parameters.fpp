@@ -1020,7 +1020,7 @@ contains
         end if
 
         if(igr) then 
-            buff_size = 4
+            buff_size = 6
         end if
 
         ! Configuring Coordinate Direction Indexes =========================

@@ -191,23 +191,36 @@ contains
         V_in = 0.1*sqrt(1.4*P_in)
         beta = 0.01d0
 
-        if(p /= -1) then 
-            q_prim_vf(momxb+1)%sf(j, k, l) = V_in*sin(y_cc(k))* cos(z_cc(l))
-            q_prim_vf(momxb+2)%sf(j, k, l) = -V_in*cos(y_cc(k))* sin(z_cc(l))        
-            q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2/4d0)*(cos(2d0*y_cc(k)) + cos(2d0*z_cc(l)))
-            if(p > 0) then 
-                q_prim_vf(momxb)%sf(j, k, l) = 0d0
-            end if
-            R_in = sqrt((x_cc(j) - pi)**2d0 + (y_cc(k) - pi)**2d0)
+        if(p == 0) then 
+            q_prim_vf(momxb)%sf(j, k, l) = V_in*sin(x_cc(j))* cos(y_cc(k))
+            q_prim_vf(momxb+1)%sf(j, k, l) = -V_in*cos(x_cc(j))* sin(y_cc(k))        
+            q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2/4d0)*(cos(2d0*x_cc(j)) + cos(2d0*y_cc(k)))
           
-            !q_prim_vf(momxb)%sf(j, k, l) = q_prim_vf(momxb)%sf(j, k, l) - V_in*beta*(y_cc(k) - pi)*exp(-0.5d0*R_in**2d0) / R_in
-            !q_prim_vf(momxb+1)%sf(j, k, l) = q_prim_vf(momxb+1)%sf(j, k, l) + V_in*beta*(x_cc(j) - pi)*exp(-0.5d0*R_in**2d0) / R_in
-            !q_prim_vf(E_idx)%sf(j, k, l) = q_prim_vf(E_idx)%sf(j, k, l)+ 0.5d0*V_in**2d0*beta**2d0*(1.4d0/0.4d0)*exp(-R_in**2d0)
         else 
+
+            ! q_prim_vf(momxb)%sf(j, k, l) = V_in*sin(x_cc(j))* cos(z_cc(l))
+            ! q_prim_vf(momxb+2)%sf(j, k, l) = -V_in*cos(x_cc(j))* sin(z_cc(l))        
+            ! q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2/4d0)*(cos(2d0*x_cc(j)) + cos(2d0*z_cc(l)))
+            ! q_prim_vf(momxb+1)%sf(j, k, l) = 0d0
+
             q_prim_vf(momxb)%sf(j, k, l) = V_in*sin(x_cc(j))*cos(y_cc(k))*sin(z_cc(l))
             q_prim_vf(momxb + 1)%sf(j, k, l) = -V_in*cos(x_cc(j))*sin(y_cc(k))*cos(z_cc(l))
             q_prim_vf(momxb + 2)%sf(j, k, l) = 0d0
             q_prim_vf(E_idx)%sf(j, k, l) = P_in + (V_in**2d0/16d0)*(cos(2*x_cc(j)) + cos(2*y_cc(k)))*(cos(2*z_cc(l)) + 2)
+
+            ! q_prim_vf(momxb)%sf(j, k, l) = V_in*sin(x_cc(j))
+            ! q_prim_vf(momxb+1)%sf(j, k, l) = 0d0       
+            ! q_prim_vf(E_idx)%sf(j, k, l) = P_in 
+            ! q_prim_vf(momxb + 2)%sf(j, k, l) = 0d0
+            
+            ! q_prim_vf(1)%sf(j, k, l) = 1d0
+            ! q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.40d0)**2d0 + (y_cc(k) - 0.45d0)**2d0 + (z_cc(l) - 0.42d0)**2d0)/ 0.08d0**2d0)
+            ! q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.55d0)**2d0 + (y_cc(k) - 0.55d0)**2d0 + (z_cc(l) - 0.55d0)**2d0)/ 0.08d0**2d0)
+            ! q_prim_vf(1)%sf(j, k, l) = q_prim_vf(1)%sf(j, k, l) + (0.25d0 / (3d0*0.08d0)) * exp(-0.5d0*( (x_cc(j) - 0.60d0)**2d0 + (y_cc(k) - 0.42d0)**2d0 + (z_cc(l) - 0.58d0)**2d0)/ 0.08d0**2d0)
+            ! q_prim_vf(E_idx)%sf(j, k, l) = 0.2 * (q_prim_vf(1)%sf(j, k, l))**1.4d0
+            ! do i = momxb, momxb+2
+            !     q_prim_vf(i)%sf(j,k,l) = 0d0
+            ! end do
         end if
 
 
