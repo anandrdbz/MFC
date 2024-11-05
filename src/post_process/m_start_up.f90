@@ -181,7 +181,9 @@ contains
         integer, intent(inout) :: t_step
         character(LEN=name_len), intent(inout) :: varname
         real(kind(0d0)), intent(inout) :: pres, c, H
-
+        real(kind(0d0)) :: En_tot, rho_tot, omega_tot
+        character(20) :: filename
+        logical :: file_exists
         integer :: i, j, k, l
 
         ! Opening a new formatted database file
@@ -307,6 +309,33 @@ contains
             q_sf = q_cons_vf(E_idx)%sf(-offset_x%beg:m + offset_x%end, &
                                        -offset_y%beg:n + offset_y%end, &
                                        -offset_z%beg:p + offset_z%end)
+            
+            En_tot = 0d0
+            rho_tot = 0d0
+            do l = 0, p
+                do k = 0, n
+                    do j = 0, m
+                        En_tot = En_tot + q_cons_vf(mom_idx%beg)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l)
+                        En_tot = En_tot + q_cons_vf(mom_idx%beg+1)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l)
+                        En_tot = En_tot + q_cons_vf(mom_idx%beg+2)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l)
+                    end do
+                end do
+            end do
+            En_tot = En_tot
+            if(proc_rank == 0) then 
+                print *, "En_tot", En_tot , proc_rank
+            end if
+            write(filename,'(a,i0,a)') 'En_tot',proc_rank,'.dat'
+            inquire (FILE=filename, EXIST=file_exists)
+            if (file_exists) then
+                open (1, file=filename, position='append', status='old')
+                write (1, *) En_tot, proc_rank, t_step
+                close (1)
+            else
+                open (1, file=filename, status='new')
+                write (1, *) En_tot, proc_rank, t_step
+                close (1)
+            end if
 
             write (varname, '(A)') 'E'
             call s_write_variable_to_formatted_database_file(varname, t_step)
@@ -485,6 +514,59 @@ contains
                 if (omega_wrt(i)) then
 
                     call s_derive_vorticity_component(i, q_prim_vf, q_sf)
+
+                    if(i == 1) then 
+
+                        omega_tot = 0d0
+                        do l = 0, p
+                            do k = 0, n
+                                do j = 0, m
+                                    omega_tot = omega_tot + q_cons_vf(1)%sf(j, k, l)*q_sf(j,k,l)**2d0 
+                                end do
+                            end do
+                        end do
+
+                        if(proc_rank == 0) then 
+                            print *, "OMEGA1", omega_tot, proc_rank
+                        end if
+
+                    else if(i == 2) then 
+                        do l = 0, p
+                            do k = 0, n
+                                do j = 0, m
+                                    omega_tot = omega_tot + q_cons_vf(1)%sf(j, k, l)*q_sf(j,k,l)**2d0
+                                end do
+                            end do
+                        end do
+
+                        if(proc_rank == 0) then
+                            print *, "OMEGA2", omega_tot, proc_rank
+                        end if
+ 
+                    else
+                        do l = 0, p
+                            do k = 0, n
+                                do j = 0, m
+                                    omega_tot = omega_tot + q_cons_vf(1)%sf(j, k, l)*q_sf(j,k,l)**2d0
+                                end do
+                            end do
+                        end do
+
+                        if(proc_rank == 0) then 
+                            print *, "OMEGA3", omega_tot, proc_rank
+                        end if
+                        write(filename,'(a,i0,a)') 'omega_tot',proc_rank,'.dat'
+                        inquire (FILE=filename, EXIST=file_exists)
+                        if (file_exists) then
+                            open (1, file=filename, position='append', status='old')
+                            write (1, *) omega_tot, proc_rank, t_step
+                            close (1)
+                        else
+                            open (1, file=filename, status='new')
+                            write (1, *) omega_tot, proc_rank, t_step
+                            close (1)
+                        end if
+                    end if
 
                     write (varname, '(A,I0)') 'omega', i
                     call s_write_variable_to_formatted_database_file(varname, t_step)
