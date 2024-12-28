@@ -302,6 +302,7 @@ contains
 
         @:ALLOCATE_GLOBAL(k1(1:sys_size), k2(1:sys_size), k3(1:sys_size), q_cons_init(1:sys_size))
         
+        if(time_stepper == 6) then 
         do i = 1, sys_size
             @:ALLOCATE(k1(i)%sf(ix_t%beg:ix_t%end, &
                                       iy_t%beg:iy_t%end, &
@@ -323,6 +324,7 @@ contains
                                       iz_t%beg:iz_t%end))
             @:ACC_SETUP_SFs(q_cons_init)
         end do
+        end if
 
     end subroutine s_initialize_time_steppers_module
 

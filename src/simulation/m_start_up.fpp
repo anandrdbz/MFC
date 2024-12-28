@@ -61,6 +61,8 @@ module m_start_up
 
 #ifdef MFC_OpenACC
     use openacc
+    use accel_lib
+    use cudafor
 #endif
 
     use m_nvtx
@@ -1311,7 +1313,7 @@ contains
         call s_initialize_mpi_proxy_module()
         call s_initialize_variables_conversion_module()
         if (grid_geometry == 3) call s_initialize_fftw_module()
-        call s_initialize_riemann_solvers_module()
+        if (.not. igr) call s_initialize_riemann_solvers_module()
 
         if(bubbles) call s_initialize_bubbles_module()
         if (ib) call s_initialize_ibm_module()
@@ -1325,7 +1327,7 @@ contains
             call s_initialize_acoustic_src()
         end if
 
-        if (any(Re_size > 0)) then
+        if (any(Re_size > 0) .and. (.not. igr)) then
             call s_initialize_viscous_module()
         end if
 
@@ -1370,12 +1372,14 @@ contains
         ! Computation of parameters, allocation of memory, association of pointers,
         ! and/or execution of any other tasks that are needed to properly configure
         ! the modules. The preparations below DO DEPEND on the grid being complete.
-        call s_initialize_weno_module()
+        if(.not. igr) call s_initialize_weno_module()
 
-#if defined(MFC_OpenACC) && defined(MFC_MEMORY_DUMP)
+!#if defined(MFC_OpenACC) && defined(MFC_MEMORY_DUMP)
         print *, "[MEM-INST] After: s_initialize_weno_module"
         call acc_present_dump()
-#endif
+        print *, "MEM", acc_get_memory()
+        print *, "BYTES", acc_bytesalloc()
+!#endif
 
         call s_initialize_cbc_module()
 
@@ -1497,15 +1501,15 @@ contains
         call s_finalize_derived_variables_module()
         call s_finalize_data_output_module()
         call s_finalize_rhs_module()
-        call s_finalize_cbc_module()
-        call s_finalize_riemann_solvers_module()
-        call s_finalize_weno_module()
+        if(.not. igr) call s_finalize_cbc_module()
+        if(.not. igr) call s_finalize_riemann_solvers_module()
+        if(.not. igr) call s_finalize_weno_module()
         call s_finalize_variables_conversion_module()
         if (grid_geometry == 3) call s_finalize_fftw_module
         call s_finalize_mpi_proxy_module()
         call s_finalize_global_parameters_module()
         if (relax) call s_finalize_relaxation_solver_module()
-        if (any(Re_size > 0)) then
+        if (any(Re_size > 0) .and. .not. igr) then
             call s_finalize_viscous_module()
         end if
 

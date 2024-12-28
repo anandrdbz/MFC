@@ -227,7 +227,7 @@ contains
                     else
                         write (varname, '(A,I0)') 'rho', i
                     end if
-                    call s_write_variable_to_formatted_database_file(varname, t_step)
+                    !call s_write_variable_to_formatted_database_file(varname, t_step)
 
                     varname(:) = ' '
 
@@ -246,7 +246,7 @@ contains
                           -offset_z%beg:p + offset_z%end)
 
             write (varname, '(A)') 'rho'
-            call s_write_variable_to_formatted_database_file(varname, t_step)
+            !call s_write_variable_to_formatted_database_file(varname, t_step)
 
             varname(:) = ' '
 
@@ -263,7 +263,7 @@ contains
                        -offset_z%beg:p + offset_z%end)
 
                 write (varname, '(A,I0)') 'mom', i
-                call s_write_variable_to_formatted_database_file(varname, t_step)
+                !call s_write_variable_to_formatted_database_file(varname, t_step)
 
                 varname(:) = ' '
 
@@ -281,7 +281,7 @@ contains
                        -offset_z%beg:p + offset_z%end)
 
                 write (varname, '(A,I0)') 'vel', i
-                call s_write_variable_to_formatted_database_file(varname, t_step)
+               ! call s_write_variable_to_formatted_database_file(varname, t_step)
 
                 varname(:) = ' '
 
@@ -296,7 +296,7 @@ contains
                 call s_derive_flux_limiter(i, q_prim_vf, q_sf)
 
                 write (varname, '(A,I0)') 'flux', i
-                call s_write_variable_to_formatted_database_file(varname, t_step)
+                !call s_write_variable_to_formatted_database_file(varname, t_step)
 
                 varname(:) = ' '
             end if
@@ -315,9 +315,10 @@ contains
             do l = 0, p
                 do k = 0, n
                     do j = 0, m
-                        En_tot = En_tot + q_cons_vf(mom_idx%beg)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l)
-                        En_tot = En_tot + q_cons_vf(mom_idx%beg+1)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l)
-                        En_tot = En_tot + q_cons_vf(mom_idx%beg+2)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l)
+                        !En_tot = En_tot + 0.5d0* q_cons_vf(mom_idx%beg+0)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l) 
+                        !En_tot = En_tot + 0.5d0* q_cons_vf(mom_idx%beg+1)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l) 
+                        !En_tot = En_tot + 0.5d0* q_cons_vf(mom_idx%beg+2)%sf(j, k, l)**2d0 / q_cons_vf(1)%sf(j, k, l) 
+                        En_tot = En_tot + q_cons_vf(E_idx)%sf(j, k, l) 
                     end do
                 end do
             end do
@@ -338,7 +339,7 @@ contains
             end if
 
             write (varname, '(A)') 'E'
-            call s_write_variable_to_formatted_database_file(varname, t_step)
+            !call s_write_variable_to_formatted_database_file(varname, t_step)
 
             varname(:) = ' '
 
@@ -370,7 +371,7 @@ contains
                                        -offset_z%beg:p + offset_z%end)
 
             write (varname, '(A)') 'pres'
-            call s_write_variable_to_formatted_database_file(varname, t_step)
+            !call s_write_variable_to_formatted_database_file(varname, t_step)
 
             varname(:) = ' '
 
@@ -391,7 +392,7 @@ contains
                            -offset_z%beg:p + offset_z%end)
 
                     write (varname, '(A,I0)') 'alpha', i
-                    call s_write_variable_to_formatted_database_file(varname, t_step)
+                    !call s_write_variable_to_formatted_database_file(varname, t_step)
 
                     varname(:) = ' '
 
@@ -408,7 +409,7 @@ contains
                        -offset_z%beg:p + offset_z%end)
 
                 write (varname, '(A,I0)') 'alpha', num_fluids
-                call s_write_variable_to_formatted_database_file(varname, t_step)
+                !call s_write_variable_to_formatted_database_file(varname, t_step)
 
                 varname(:) = ' '
 
@@ -427,7 +428,7 @@ contains
                             -offset_z%beg:p + offset_z%end)
 
             write (varname, '(A)') 'gamma'
-            call s_write_variable_to_formatted_database_file(varname, t_step)
+            !call s_write_variable_to_formatted_database_file(varname, t_step)
 
             varname(:) = ' '
 
@@ -440,7 +441,7 @@ contains
             call s_derive_specific_heat_ratio(q_sf)
 
             write (varname, '(A)') 'heat_ratio'
-            call s_write_variable_to_formatted_database_file(varname, t_step)
+            !call s_write_variable_to_formatted_database_file(varname, t_step)
 
             varname(:) = ' '
 
@@ -457,7 +458,7 @@ contains
                              -offset_z%beg:p + offset_z%end)
 
             write (varname, '(A)') 'pi_inf'
-            call s_write_variable_to_formatted_database_file(varname, t_step)
+            !call s_write_variable_to_formatted_database_file(varname, t_step)
 
             varname(:) = ' '
 
@@ -501,7 +502,7 @@ contains
             end do
 
             write (varname, '(A)') 'c'
-            call s_write_variable_to_formatted_database_file(varname, t_step)
+            !call s_write_variable_to_formatted_database_file(varname, t_step)
 
             varname(:) = ' '
 
@@ -569,7 +570,7 @@ contains
                     end if
 
                     write (varname, '(A,I0)') 'omega', i
-                    call s_write_variable_to_formatted_database_file(varname, t_step)
+             !       call s_write_variable_to_formatted_database_file(varname, t_step)
 
                     varname(:) = ' '
                 end if
