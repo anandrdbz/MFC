@@ -1093,7 +1093,7 @@ contains
 
                     call nvtxStartRange("IGR_SETUP")
 
-                    alf_igr = 0d0*(dx(1)**2)
+                    alf_igr = 10d0*(dx(1)**2)
                     !$acc update device(alf_igr)
 
                     omega = 1d0 
