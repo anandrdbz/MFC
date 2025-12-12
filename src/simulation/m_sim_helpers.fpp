@@ -92,15 +92,15 @@ contains
         !! @param j x index
         !! @param k y index
         !! @param l z index
-    subroutine s_compute_enthalpy(q_prim_vf, pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, qv, j, k, l)
+    subroutine s_compute_enthalpy(pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, qv, E_hyp, j, k, l)
         $:GPU_ROUTINE(function_name='s_compute_enthalpy',parallelism='[seq]', &
             & cray_inline=True)
 
-        type(scalar_field), intent(in), dimension(sys_size) :: q_prim_vf
         real(wp), intent(inout), dimension(num_fluids) :: alpha
-        real(wp), intent(inout), dimension(num_vels) :: vel
+        real(wp), intent(inout), dimension(num_vels)  :: vel
         real(wp), intent(inout) :: rho, gamma, pi_inf, vel_sum, H, pres
-        real(wp), intent(out) :: qv
+        real(wp), intent(inout) :: qv
+        real(wp), intent(inout) :: E_hyp
         integer, intent(in) :: j, k, l
         real(wp), dimension(2), intent(inout) :: Re
 
@@ -109,66 +109,32 @@ contains
 
         integer :: i
 
-        if (igr) then
-            if (num_fluids == 1) then
-                alpha_rho(1) = q_prim_vf(contxb)%sf(j, k, l)
-                alpha(1) = 1._wp
-            else
-                $:GPU_LOOP(parallelism='[seq]')
-                do i = 1, num_fluids - 1
-                    alpha_rho(i) = q_prim_vf(i)%sf(j, k, l)
-                    alpha(i) = q_prim_vf(advxb + i - 1)%sf(j, k, l)
-                end do
-
-                alpha_rho(num_fluids) = q_prim_vf(num_fluids)%sf(j, k, l)
-                alpha(num_fluids) = 1._wp - sum(alpha(1:num_fluids - 1))
-            end if
-        else
-            $:GPU_LOOP(parallelism='[seq]')
-            do i = 1, num_fluids
-                alpha_rho(i) = q_prim_vf(i)%sf(j, k, l)
-                alpha(i) = q_prim_vf(advxb + i - 1)%sf(j, k, l)
-            end do
-        end if
-
         if (elasticity) then
             call s_convert_species_to_mixture_variables_acc(rho, gamma, pi_inf, qv, alpha, &
                                                             alpha_rho, Re, G_local, Gs)
-        elseif (bubbles_euler) then
-            call s_convert_species_to_mixture_variables_bubbles_acc(rho, gamma, pi_inf, qv, alpha, alpha_rho, Re)
         else
             call s_convert_species_to_mixture_variables_acc(rho, gamma, pi_inf, qv, alpha, alpha_rho, Re)
         end if
 
-        if (igr) then
-            $:GPU_LOOP(parallelism='[seq]')
-            do i = 1, num_vels
-                vel(i) = q_prim_vf(contxe + i)%sf(j, k, l)/rho
-            end do
-        else
-            $:GPU_LOOP(parallelism='[seq]')
-            do i = 1, num_vels
-                vel(i) = q_prim_vf(contxe + i)%sf(j, k, l)
-            end do
+        if(igr) then 
+            vel(i) = vel(i) / rho 
         end if
 
         vel_sum = 0._wp
-        $:GPU_LOOP(parallelism='[seq]')
         do i = 1, num_vels
             vel_sum = vel_sum + vel(i)**2._wp
         end do
 
         if (igr) then
-            E = q_prim_vf(E_idx)%sf(j, k, l)
+            E = pres
             pres = (E - pi_inf - qv - 5.e-1_wp*rho*vel_sum)/gamma
         else
-            pres = q_prim_vf(E_idx)%sf(j, k, l)
             E = gamma*pres + pi_inf + 5.e-1_wp*rho*vel_sum + qv
         end if
 
         ! Adjust energy for hyperelasticity
         if (hyperelasticity) then
-            E = E + G_local*q_prim_vf(xiend + 1)%sf(j, k, l)
+            E = E + G_local*E_hyp
         end if
 
         H = (E + pres)/rho
@@ -277,17 +243,17 @@ contains
                 if (grid_geometry == 3) then
                     fltr_dtheta = f_compute_filtered_dtheta(k, l)
                     vcfl_dt = cfl_target*(min(dx(j), dy(k), fltr_dtheta)**2._wp) &
-                              /minval(1/(rho*Re_l))
+                              /maxval(1/(rho*Re_l))
                 else
                     vcfl_dt = cfl_target*(min(dx(j), dy(k), dz(l))**2._wp) &
-                              /minval(1/(rho*Re_l))
+                              /maxval(1/(rho*Re_l))
                 end if
             elseif (n > 0) then
                 !2D
                 vcfl_dt = cfl_target*(min(dx(j), dy(k))**2._wp)/maxval((1/Re_l)/rho)
             else
                 !1D
-                vcfl_dt = cfl_target*(dx(j)**2._wp)/minval(1/(rho*Re_l))
+                vcfl_dt = cfl_target*(dx(j)**2._wp)/maxval(1/(rho*Re_l))
             end if
         end if
 

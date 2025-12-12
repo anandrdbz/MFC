@@ -106,15 +106,13 @@ contains
         real(wp) :: G_local
         integer :: j, k, l, i, r
 
-        $:GPU_PARALLEL_LOOP(collapse=3, private='[i,j,k,l,alpha_K, alpha_rho_K, rho, gamma, pi_inf, qv, G_local, Re, tensora, tensorb, i]')
+        $:GPU_PARALLEL_LOOP(collapse=3, private='[i,j,k,l,alpha_K, alpha_rho_K, rho, gamma, pi_inf, qv, G_local, Re, tensora, tensorb]')
         do l = 0, p
             do k = 0, n
                 do j = 0, m
-                    $:GPU_LOOP(parallelism='[seq]')
-                    do i = 1, num_fluids
-                        alpha_rho_k(i) = q_cons_vf(i)%sf(j, k, l)
-                        alpha_k(i) = q_cons_vf(advxb + i - 1)%sf(j, k, l)
-                    end do
+
+                    call s_compute_species_fraction(q_cons_vf, j, k, l, alpha_rho_k, alpha_k)
+
                     ! If in simulation, use acc mixture subroutines
                     call s_convert_species_to_mixture_variables_acc(rho, gamma, pi_inf, qv, alpha_k, &
                                                                     alpha_rho_k, Re, G_local, Gs_hyper)

@@ -271,20 +271,34 @@ contains
         real(wp) :: vel_sum    !< Cell-avg. velocity sum
         real(wp) :: pres       !< Cell-avg. pressure
         real(wp), dimension(num_fluids) :: alpha      !< Cell-avg. volume fraction
+        real(wp), dimension(num_fluids) :: alpha_rho      
         real(wp) :: gamma      !< Cell-avg. sp. heat ratio
         real(wp) :: pi_inf     !< Cell-avg. liquid stiffness function
         real(wp) :: qv         !< Cell-avg. internal energy reference value
         real(wp) :: c          !< Cell-avg. sound speed
         real(wp) :: H          !< Cell-avg. enthalpy
         real(wp), dimension(2) :: Re         !< Cell-avg. Reynolds numbers
-        integer :: j, k, l
+        real(wp) :: E_hyp
+        integer :: i, j, k, l
 
         ! Computing Stability Criteria at Current Time-step
-        $:GPU_PARALLEL_LOOP(collapse=3, private='[j,k,l,vel, alpha, Re, rho, vel_sum, pres, gamma, pi_inf, c, H, qv]')
+        $:GPU_PARALLEL_LOOP(collapse=3, private='[j,k,l,vel, alpha, Re, rho, vel_sum, pres, gamma, pi_inf, c, H, qv, E_hyp]')
         do l = 0, p
             do k = 0, n
                 do j = 0, m
-                    call s_compute_enthalpy(q_prim_vf, pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, qv, j, k, l)
+
+                    call s_compute_species_fraction(q_prim_vf, j, k, l, alpha_rho, alpha)
+
+                    $:GPU_LOOP(parallelism='[seq]')
+                    do i = 1, num_vels 
+                        vel(i) = q_prim_vf(momxb + i - 1)%sf(j, k, l)
+                    end do
+
+                    pres = q_prim_vf(E_idx)%sf(j, k, l)
+
+                    E_hyp = q_prim_vf(xiend + 1)%sf(j, k, l)
+
+                    call s_compute_enthalpy(pres, rho, gamma, pi_inf, Re, H, alpha, vel, vel_sum, qv, E_hyp, j, k, l)
 
                     call s_compute_speed_of_sound(pres, rho, gamma, pi_inf, H, alpha, vel_sum, 0._wp, c, qv)
 
@@ -507,10 +521,10 @@ contains
             write (2) ib_markers%sf(0:m, 0:n, 0:p); close (2)
         end if
 
-        gamma = fluid_pp(1)%gamma
-        lit_gamma = 1._wp/fluid_pp(1)%gamma + 1._wp
-        pi_inf = fluid_pp(1)%pi_inf
-        qv = fluid_pp(1)%qv
+        gamma = gammas(1)
+        lit_gamma = gs_min(1)
+        pi_inf = pi_infs(1)
+        qv = qvs(1)
 
         if (precision == 1) then
             FMT = "(2F30.3)"
@@ -1239,7 +1253,7 @@ contains
                     end if
 
                     if (model_eqns == 4) then
-                        lit_gamma = 1._wp/fluid_pp(1)%gamma + 1._wp
+                        lit_gamma = gammas(1)
                     else if (elasticity) then
                         tau_e(1) = q_cons_vf(stress_idx%end)%sf(j - 2, k, l)/rho
                     end if
@@ -1353,7 +1367,7 @@ contains
                         end if
 
                         if (model_eqns == 4) then
-                            lit_gamma = 1._wp/fluid_pp(1)%gamma + 1._wp
+                            lit_gamma = gs_min(1)
                         else if (elasticity) then
                             do s = 1, 3
                                 tau_e(s) = q_cons_vf(s)%sf(j - 2, k - 2, l)/rho
