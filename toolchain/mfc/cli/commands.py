@@ -275,14 +275,6 @@ RUN_COMMAND = Command(
             dest="no_build",
         ),
         Argument(
-            name="prebuilt-prefix",
-            help="Use prebuilt MFC binaries from <PREFIX>/bin (e.g. a Spack install prefix). Implies --no-build. Also settable via MFC_PREBUILT_PREFIX.",
-            type=str,
-            default=None,
-            metavar="PREFIX",
-            dest="prebuilt_prefix",
-        ),
-        Argument(
             name="wait",
             help="(Batch) Wait for the job to finish.",
             action=ArgAction.STORE_TRUE,
@@ -446,14 +438,6 @@ TEST_COMMAND = Command(
             dest="no_build",
         ),
         Argument(
-            name="prebuilt-prefix",
-            help="Use prebuilt MFC binaries from <PREFIX>/bin (e.g. a Spack install prefix). Implies --no-build. Also settable via MFC_PREBUILT_PREFIX.",
-            type=str,
-            default=None,
-            metavar="PREFIX",
-            dest="prebuilt_prefix",
-        ),
-        Argument(
             name="no-examples",
             help="Do not test example cases.",
             action=ArgAction.STORE_TRUE,
@@ -481,26 +465,24 @@ TEST_COMMAND = Command(
             default=None,
         ),
         Argument(
-            name="build-coverage-cache",
-            help="Run all tests with gcov instrumentation to build the file-level coverage cache. Pass --gcov to enable coverage instrumentation in the internal build step.",
-            action=ArgAction.STORE_TRUE,
-            default=False,
-            dest="build_coverage_cache",
+            name="build-coverage-map", dest="build_coverage_map", action=ArgAction.STORE_TRUE, default=False, help="Build the gcov coverage map (requires a prior --gcov build). Master-side only."
         ),
         Argument(
             name="only-changes",
-            help="Only run tests whose covered files overlap with files changed since branching from master (uses file-level gcov coverage cache).",
+            dest="only_changes",
             action=ArgAction.STORE_TRUE,
             default=False,
-            dest="only_changes",
+            help="Shadow mode: compute and print the coverage-based test selection but still run the full suite. Use --select-enforce to actually prune.",
         ),
         Argument(
-            name="changes-branch",
-            help="Branch to compare against for --only-changes (default: master).",
-            type=str,
-            default="master",
-            dest="changes_branch",
+            name="select-enforce",
+            dest="select_enforce",
+            action=ArgAction.STORE_TRUE,
+            default=False,
+            help="Run only the coverage-selected tests (implies selection; skips unselected tests). Without it, --only-changes is shadow-only.",
         ),
+        Argument(name="changed-files", dest="changed_files", type=str, default=None, help="Changed-file list (newline-, space-, or comma-separated; from CI paths-filter). Overrides git detection."),
+        Argument(name="changes-branch", dest="changes_branch", type=str, default="master", help="Branch to diff against for --only-changes."),
     ],
     mutually_exclusive=[
         MutuallyExclusiveGroup(
@@ -533,8 +515,6 @@ TEST_COMMAND = Command(
         Example("./mfc.sh test -j 4", "Run with 4 parallel jobs"),
         Example("./mfc.sh test --only 3D", "Run only 3D tests"),
         Example("./mfc.sh test --generate", "Regenerate golden files"),
-        Example("./mfc.sh test --only-changes -j 4", "Run tests affected by changed files"),
-        Example("./mfc.sh build --gcov -j 8 && ./mfc.sh test --build-coverage-cache", "One-time: build file-coverage cache"),
     ],
     key_options=[
         ("-j, --jobs N", "Number of parallel test jobs"),
@@ -542,8 +522,6 @@ TEST_COMMAND = Command(
         ("-f, --from UUID", "Start from specific test"),
         ("--generate", "Generate/update golden files"),
         ("--no-build", "Skip rebuilding MFC"),
-        ("--build-coverage-cache", "Build file-level gcov coverage cache (one-time)"),
-        ("--only-changes", "Run tests affected by changed files (requires cache)"),
     ],
 )
 
