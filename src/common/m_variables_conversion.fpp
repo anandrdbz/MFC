@@ -457,6 +457,13 @@ contains
                            & i))/(mu + sig)**(3._wp)/(mass_g0(i) + mass_v0(i))
                         pb(j, k, l, 4, i) = (pb0(i))*(R0(i)**(3._wp))*(mass_g0(i) + mv(j, k, l, 4, &
                            & i))/(mu + sig)**(3._wp)/(mass_g0(i) + mass_v0(i))
+
+                        if(pseudo_poly) then 
+                            pb(j, k, l, 1, i) = (pb0(i) - pv)*(R0(i)**(4.2_wp))/(mu - sig)**4.2_wp + pv
+                            pb(j, k, l, 2, i) = (pb0(i) - pv)*(R0(i)**(4.2_wp))/(mu - sig)**4.2_wp + pv
+                            pb(j, k, l, 3, i) = (pb0(i) - pv)*(R0(i)**(4.2_wp))/(mu + sig)**4.2_wp + pv
+                            pb(j, k, l, 4, i) = (pb0(i) - pv)*(R0(i)**(4.2_wp))/(mu + sig)**4.2_wp + pv
+                        end if
                     end do
                 end do
             end do

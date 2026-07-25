@@ -596,7 +596,7 @@ contains
         call s_convert_conservative_to_primitive_variables(q_cons_ts(1)%vf, q_T_sf, q_prim_vf, idwint)
 
         if (bubbles_euler) then
-            call s_compute_bubble_EE_source(q_cons_ts(1)%vf, q_prim_vf, rhs_vf, divu)
+            call s_compute_bubble_EE_source(q_cons_ts(1)%vf, q_prim_vf, rhs_vf, divu, 1)
             call s_comp_alpha_from_n(q_cons_ts(1)%vf)
         else if (bubbles_lagrange) then
             call s_populate_variables_buffers(bc_type, q_prim_vf, pb_ts(1)%sf, mv_ts(1)%sf, q_T_sf)

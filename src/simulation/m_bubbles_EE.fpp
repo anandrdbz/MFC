@@ -138,12 +138,13 @@ contains
     end subroutine s_compute_bubbles_EE_rhs
 
     !> Compute the Euler-Euler bubble source terms
-    impure subroutine s_compute_bubble_EE_source(q_cons_vf, q_prim_vf, rhs_vf, divu_in)
+    impure subroutine s_compute_bubble_EE_source(q_cons_vf, q_prim_vf, rhs_vf, divu_in, t_step)
 
         type(scalar_field), dimension(sys_size), intent(inout) :: q_cons_vf
         type(scalar_field), dimension(sys_size), intent(in)    :: q_prim_vf
         type(scalar_field), dimension(sys_size), intent(inout) :: rhs_vf
         type(scalar_field), intent(in)                         :: divu_in  !< matrix for div(u)
+        integer, intent(in)                                   :: t_step
         real(wp)                                               :: rddot
         real(wp)                                               :: pb_local, mv_local, vflux, pbdot
         real(wp)                                               :: n_tait, B_tait
@@ -245,12 +246,15 @@ contains
                         n_tait = 1._wp/n_tait + 1._wp  ! make this the usual little 'gamma'
                         B_tait = B_tait*(n_tait - 1)/n_tait  ! make this the usual pi_inf
 
-                        myP = q_prim_vf(eqn_idx%E)%sf(j, k, l)
                         alf = q_prim_vf(eqn_idx%alf)%sf(j, k, l)
                         myR = q_prim_vf(rs(q))%sf(j, k, l)
                         myV = q_prim_vf(vs(q))%sf(j, k, l)
+                        myP = q_prim_vf(eqn_idx%E)%sf(j, k, l)
+                        if(bub_0d) then
+                            myP = 1._wp + 0.5_wp*sin(pi*t_step*dt)
+                        end if
 
-                        if (alf < small_alf) then
+                        if (alf < -small_alf) then
                             bub_adv_src(j, k, l) = 0._wp
                             bub_r_src(j, k, l, q) = 0._wp
                             bub_v_src(j, k, l, q) = 0._wp

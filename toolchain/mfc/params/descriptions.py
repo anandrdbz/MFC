@@ -211,6 +211,8 @@ DESCRIPTIONS = {
     "sim_data": "Enable simulation data output",
     "output_partial_domain": "Enable partial domain output",
     "fft_wrt": "Enable FFT output",
+    "bub_0d": "Enable 0D bubble test",
+    "pseudo_poly": "Enable Pseudo Polytropic QBMM",
     "lag_header": "Enable Lagrangian output header",
     "chem_wrt_T": "Write temperature field for chemistry",
     # Body force parameters

@@ -186,6 +186,7 @@ module m_global_parameters
     logical                            :: E_wrt
     logical, dimension(num_fluids_max) :: alpha_rho_e_wrt
     logical                            :: fft_wrt
+    logical                            :: pseudo_poly, bub_0d
     logical                            :: pres_wrt
     logical, dimension(num_fluids_max) :: alpha_wrt
     logical                            :: gamma_wrt
@@ -396,6 +397,8 @@ contains
         file_per_process = .false.
         E_wrt = .false.
         fft_wrt = .false.
+        pseudo_poly = .false.
+        bub_0d = .false.
         pres_wrt = .false.
         alpha_wrt = .false.
         gamma_wrt = .false.

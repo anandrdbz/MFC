@@ -609,6 +609,9 @@ contains
                         if (.not. f_is_default(Re_inv)) coeffs(5, i1, i2) = -4._wp*i2*Re_inv/rho
                         if (.not. f_is_default(Web)) coeffs(6, i1, i2) = -2._wp*i2/Web/rho
                         coeffs(7, i1, i2) = 0._wp
+                        if(pseudo_poly) then 
+                            coeffs(7, i1, i2) = i2*pv/rho
+                        end if
                     #:endif
                 else if (bubble_model == 2) then
                     ! KM with approximation of 1/(1-V/C) = 1+V/C
@@ -730,7 +733,7 @@ contains
     end subroutine s_coeff
 
     !> Perform moment inversion to recover quadrature weights and abscissas and evaluate bubble source terms
-    subroutine s_mom_inv(q_cons_vf, q_prim_vf, momsp, moms3d, pb, rhs_pb, mv, rhs_mv, ix, iy, iz)
+    subroutine s_mom_inv(q_cons_vf, q_prim_vf, momsp, moms3d, pb, rhs_pb, mv, rhs_mv, ix, iy, iz, t_step)
 
         type(scalar_field), dimension(:), intent(inout)                                            :: q_cons_vf, q_prim_vf
         type(scalar_field), dimension(:), intent(inout)                                            :: momsp
@@ -740,6 +743,7 @@ contains
         real(stp), dimension(idwbuff(1)%beg:,idwbuff(2)%beg:,idwbuff(3)%beg:,1:,1:), intent(inout) :: mv
         real(wp), dimension(idwbuff(1)%beg:,idwbuff(2)%beg:,idwbuff(3)%beg:,1:,1:), intent(inout)  :: rhs_mv
         type(int_bounds_info), intent(in)                                                          :: ix, iy, iz
+        integer , intent(in) :: t_step
 
         #:if not MFC_CASE_OPTIMIZATION and USING_AMD
             real(wp), dimension(6)    :: moms, msum
@@ -768,6 +772,9 @@ contains
                 do id1 = is1_qbmm%beg, is1_qbmm%end
                     alf = q_prim_vf(eqn_idx%alf)%sf(id1, id2, id3)
                     pres = q_prim_vf(eqn_idx%E)%sf(id1, id2, id3)
+                    if(bub_0d) then
+                        pres = 1._wp + 0.5_wp*sin(pi*dt*t_step)
+                    end if
                     rho = q_prim_vf(eqn_idx%cont%beg)%sf(id1, id2, id3)
 
                     if (bubble_model == 2) then
@@ -779,7 +786,7 @@ contains
 
                     call s_coeff_selector(pres, rho, c, coeff, polytropic)
 
-                    if (alf > small_alf) then
+                    if (alf > -small_alf) then
                         nbub = q_cons_vf(eqn_idx%bub%beg)%sf(id1, id2, id3)
                         $:GPU_LOOP(parallelism='[seq]')
                         do q = 1, nb
@@ -813,6 +820,9 @@ contains
                                                          & j, q)) - 1._wp)
                                     ht(j, q) = pb0(q)*k_mw*grad_T/Pe_T(q)/abscX(j, q)
                                     wght_pb(j, q) = wght(j, q)*(pb(id1, id2, id3, j, q))
+                                    if(pseudo_poly) then 
+                                        wght_pb(j, q) = wght(j, q)*(pb(id1, id2, id3, j, q) - pv)
+                                    end if
                                     wght_mv(j, q) = wght(j, q)*(rhs_mv(id1, id2, id3, j, q))
                                     wght_ht(j, q) = wght(j, q)*ht(j, q)
                                 end do
@@ -877,10 +887,14 @@ contains
                                     drdt2 = drdt2*(msum(3) - 2._wp*moms(2)*msum(2))
                                     drdt = drdt + drdt2
                                     rhs_pb(id1, id2, id3, j, q) = (-3._wp*gam*drdt/abscX(j, q))*(pb(id1, id2, id3, j, q))
-                                    rhs_pb(id1, id2, id3, j, q) = rhs_pb(id1, id2, id3, j, q) + (3._wp*gam/abscX(j, &
-                                           & q))*rhs_mv(id1, id2, id3, j, q)*R_v*Tw
-                                    rhs_pb(id1, id2, id3, j, q) = rhs_pb(id1, id2, id3, j, q) + (3._wp*gam/abscX(j, q))*ht(j, q)
-                                    rhs_mv(id1, id2, id3, j, q) = rhs_mv(id1, id2, id3, j, q)*(4._wp*pi*abscX(j, q)**2._wp)
+                                    if(pseudo_poly) then 
+                                        rhs_pb(id1, id2, id3, j, q) =  rhs_pb(id1, id2, id3, j, q) + (3._wp*gam*drdt/abscX(j, q))*pv
+                                    else
+                                        rhs_pb(id1, id2, id3, j, q) = rhs_pb(id1, id2, id3, j, q) + (3._wp*gam/abscX(j, &
+                                               & q))*rhs_mv(id1, id2, id3, j, q)*R_v*Tw
+                                        rhs_pb(id1, id2, id3, j, q) = rhs_pb(id1, id2, id3, j, q) + (3._wp*gam/abscX(j, q))*ht(j, q)
+                                        rhs_mv(id1, id2, id3, j, q) = rhs_mv(id1, id2, id3, j, q)*(4._wp*pi*abscX(j, q)**2._wp)
+                                    end if
                                 end do
                             end if
                         end do
@@ -984,7 +998,7 @@ contains
             Vf = c11*up/c20
 
             ! Second 1D quadrature (Y direction, conditional on X)
-            mu2 = max(0._wp, c02 - sum(myrho*(Vf**2._wp)))
+            mu2 = max(sgm_eps, c02 - sum(myrho*(Vf**2._wp)))
             M3 = (/1._wp, 0._wp, mu2/)
             call s_hyqmom(myrho3, up3, M3)
 

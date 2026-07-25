@@ -553,7 +553,7 @@ contains
         end if
 
         if (qbmm) call s_mom_inv(q_cons_qp%vf, q_prim_qp%vf, mom_sp, mom_3d, pb_in, rhs_pb, mv_in, rhs_mv, idwbuff(1), &
-            & idwbuff(2), idwbuff(3))
+            & idwbuff(2), idwbuff(3), t_step)
 
         if ((viscous .and. .not. igr)) then
             call nvtxStartRange("RHS-VISCOUS")
@@ -805,7 +805,7 @@ contains
         ! Add bubbles source term
         if (bubbles_euler .and. (.not. adap_dt) .and. (.not. qbmm)) then
             call nvtxStartRange("RHS-BUBBLES-SRC")
-            call s_compute_bubble_EE_source(q_cons_qp%vf(1:sys_size), q_prim_qp%vf(1:sys_size), rhs_vf, divu)
+            call s_compute_bubble_EE_source(q_cons_qp%vf(1:sys_size), q_prim_qp%vf(1:sys_size), rhs_vf, divu, t_step)
             call nvtxEndRange
         end if
 

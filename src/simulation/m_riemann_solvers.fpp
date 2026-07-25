@@ -4086,10 +4086,10 @@ contains
 
         & dvelR_dy_vf, dvelR_dz_vf, flux_src_vf, norm_dir, ix, iy, iz)
 
-        type(scalar_field), dimension(num_dims), intent(in)    :: velL_vf, velR_vf
-        type(scalar_field), dimension(num_dims), intent(in)    :: dvelL_dx_vf, dvelR_dx_vf
-        type(scalar_field), dimension(num_dims), intent(in)    :: dvelL_dy_vf, dvelR_dy_vf
-        type(scalar_field), dimension(num_dims), intent(in)    :: dvelL_dz_vf, dvelR_dz_vf
+        type(scalar_field), dimension(1:), intent(in)    :: velL_vf, velR_vf
+        type(scalar_field), dimension(1:), intent(in)    :: dvelL_dx_vf, dvelR_dx_vf
+        type(scalar_field), dimension(1:), intent(in)    :: dvelL_dy_vf, dvelR_dy_vf
+        type(scalar_field), dimension(1:), intent(in)    :: dvelL_dz_vf, dvelR_dz_vf
         type(scalar_field), dimension(sys_size), intent(inout) :: flux_src_vf
         integer, intent(in)                                    :: norm_dir
         type(int_bounds_info), intent(in)                      :: ix, iy, iz
@@ -4259,9 +4259,9 @@ contains
         & dvelR_dz_vf, flux_src_vf, norm_dir)
 
         ! Arguments
-        type(scalar_field), dimension(num_dims), intent(in)    :: dvelL_dx_vf, dvelR_dx_vf
-        type(scalar_field), dimension(num_dims), intent(in)    :: dvelL_dy_vf, dvelR_dy_vf
-        type(scalar_field), dimension(num_dims), intent(in)    :: dvelL_dz_vf, dvelR_dz_vf
+        type(scalar_field), dimension(1:), intent(in)    :: dvelL_dx_vf, dvelR_dx_vf
+        type(scalar_field), dimension(1:), intent(in)    :: dvelL_dy_vf, dvelR_dy_vf
+        type(scalar_field), dimension(1:), intent(in)    :: dvelL_dz_vf, dvelR_dz_vf
         type(scalar_field), dimension(sys_size), intent(inout) :: flux_src_vf
         integer, intent(in)                                    :: norm_dir
 

@@ -186,6 +186,7 @@ module m_global_parameters
     real(wp)                               :: Bx0        !< Constant magnetic field in the x-direction (1D)
     integer                                :: buff_size  !< Number of ghost cells for boundary condition storage
     logical                                :: fft_wrt
+    logical                                :: pseudo_poly, bub_0d
 
 contains
 
@@ -302,6 +303,8 @@ contains
         elliptic_smoothing = .false.
 
         fft_wrt = .false.
+        bub_0d = .false. 
+        pseudo_poly = .false.
 
         simplex_perturb = .false.
         simplex_params%perturb_vel(:) = .false.

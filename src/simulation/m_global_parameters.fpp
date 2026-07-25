@@ -479,6 +479,9 @@ module m_global_parameters
     $:GPU_DECLARE(create='[hyper_cleaning_speed, hyper_cleaning_tau]')
     !> @}
 
+    logical :: bub_0d, pseudo_poly
+    $:GPU_DECLARE(create='[bub_0d], pseudo_poly]')
+
 contains
 
     !> Assigns default values to the user inputs before reading them in. This enables for an easier consistency check of these
@@ -694,6 +697,8 @@ contains
         #:endfor
 
         fft_wrt = .false.
+        bub_0d = .false.
+        pseudo_poly = .false.
 
         do j = 1, num_probes_max
             acoustic(j)%pulse = dflt_int

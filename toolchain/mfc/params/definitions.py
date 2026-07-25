@@ -298,6 +298,8 @@ _SIMPLE_DESCS = {
     "pi_inf_wrt": "Write pi_inf field",
     "pres_inf_wrt": "Write reference pressure",
     "fft_wrt": "Write FFT output",
+    "bub_0d": "Enable 0D bubble test",
+    "pseudo_poly": "Enable pseudo polytropic QBMM",
     "chem_wrt_T": "Write temperature (chemistry)",
     # Misc physics
     "alt_soundspeed": "Alternative sound speed formulation",
@@ -942,7 +944,7 @@ def _load():
     _r("precision", INT, {"output"})
     _r("format", INT, {"output"})
     _r("schlieren_alpha", REAL, {"output"})
-    for n in ["parallel_io", "file_per_process", "run_time_info", "prim_vars_wrt", "cons_vars_wrt", "fft_wrt", "ib_state_wrt"]:
+    for n in ["parallel_io", "file_per_process", "run_time_info", "prim_vars_wrt", "cons_vars_wrt", "fft_wrt", "ib_state_wrt","bub_0d","pseudo_poly"]:
         _r(n, LOG, {"output"})
     for n in [
         "schlieren_wrt",

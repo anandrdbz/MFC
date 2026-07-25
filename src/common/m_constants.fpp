@@ -37,7 +37,7 @@ module m_constants
     !> color function gradient magnitude at which to apply the surface tension fluxes
     real(wp), parameter :: capillary_cutoff = 1.e-6
     !> Spatial support width of acoustic source, used in s_source_spatial
-    real(wp), parameter :: acoustic_spatial_support_width = 2.5_wp
+    real(wp), parameter :: acoustic_spatial_support_width = 15._wp
     real(wp), parameter :: dflt_vcfl_dt = 100._wp  !< value of vcfl_dt when viscosity is off for computing adaptive timestep size
     !> The constant to scale the spectral level at the lower frequency bound
     real(wp), parameter :: broadband_spectral_level_constant = 20._wp
