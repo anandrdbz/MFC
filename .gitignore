@@ -60,7 +60,7 @@ examples/**/D/*
 examples/**/D_*
 examples/**/*.inf
 examples/**/*.inp
-examples/**/*.dat
+!examples/**/*.dat
 examples/**/*.o*
 examples/**/silo*
 examples/**/restart_data*
