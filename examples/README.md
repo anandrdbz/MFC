@@ -15,7 +15,8 @@
 
 ## Application to Bubble Screens  (Section 5)
 
-1D_qbmm_bubblescreen - 1D bubblescreen sample case file used to generate the results in Subsections 5.1 - 5.4. Keller--Miksis equations used. Number of bins nb, Standard deviation of moment set SigR, SigV as well as the standard deviation of log-normal PDF for equilibrium radius poly_sigma varied in the experiments, which can be changed directly in the case file. Probe_wrt = T generates the pressure at the center of the bubblescreen. Constant transfer model used.
+1D_qbmm_bubblescreen - 1D bubblescreen sample case file used to generate the results in Subsections 5.1 - 5.4. Keller--Miksis equations used. Number of bins nb, Standard deviation of moment set SigR, SigV as well as the standard deviation of log-normal PDF for equilibrium radius poly_sigma varied in the experiments, which can be changed directly in the case file. Probe_wrt = T generates the pressure at the center of the bubblescreen. Constant transfer model used. SigR, SigV and poly_sigma varied as {0.1, 0.2, 0.3} and nb varied as {9, 21, 31, 51, 91}.
+
 
 1D_qbmm_bubblescreen_poly - Same case as 1D_qbmm_bubblescreen with polytropic assumptions. 
 
