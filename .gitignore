@@ -56,7 +56,7 @@ docs/api/readme.md
 
 examples/*batch/*/
 examples/**/D/*
-examples/**/p*
+!examples/**/p*
 examples/**/D_*
 examples/**/*.inf
 examples/**/*.inp
@@ -67,7 +67,7 @@ examples/**/restart_data*
 examples/**/*.out
 examples/**/binary
 examples/**/fort.1
-examples/**/*.sh
+!examples/**/*.sh
 examples/**/*.err
 examples/**/viz/
 examples/*.jpg
