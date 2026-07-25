@@ -1,0 +1,8 @@
+ >> Cloud generated. Nbubs = 1070 (input/lag_bubbles.dat)
+--> Calculated void fraction is 4.000627e-05 
+Avg interbubble distance is 28.2596 times the mean bubble radius
+Minimum interbubble distance is 2.9336 times the mean bubble radius
+Model inequality --> Grid size must be smaller than 28.2596 times the mean bubble radius.
+Model inequality --> Grid is 10.0000 times the mean bubble radius.
+
+Model inequality passed! :)
