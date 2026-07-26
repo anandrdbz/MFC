@@ -131,7 +131,7 @@ print(
             "pseudo_poly": "T",
             "bub_0d": "T",
             "bubble_model": 3,
-            "polytropic": "T",
+            "polytropic": "F",
             "polydisperse": "F",
             "thermal": 3,
             "nb": 1,
