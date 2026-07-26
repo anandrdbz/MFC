@@ -2,15 +2,17 @@
 
 ## Model Verification  (Section 4)
 
-0D_qbmm - Case file used for the monodisperse qbmm results in this section, uses Rayleigh--Plesset equations. bub_0d = 'T' sets the pressure to be the sinusoid. Constant transfer model used. plot.py and plot_err.py to generate comparisons to Monte Carlo simulations displayed in Figure 2. plot.py also writes quadrature nodes Node1-4.csv as well as the Monte Carlo densities Rad.csv and Rdot.csv to generate results for Figure 3.
+0D_qbmm - Case file used for the monodisperse qbmm results in this section, uses Rayleigh--Plesset equations. bub_0d = 'T' sets the pressure to be the sinusoid. Constant transfer model used. plot.py used to generate comparisons to Monte Carlo simulations displayed in Figure 2 and Table 1. plot.py also writes quadrature nodes Node1-4.csv as well as the Monte Carlo co-ordinates Rad.csv and Rdot.csv to generate results for Figure 3. convert_density.py converts the Monte Carlo co-ordinates to the density1-4.csv used in Figure3. plot_err.py displays the error values for constant transfer model in Table 1.
 
-0D_qbmm_poly - Same case as 0D_qbmm by explicitly replacing constant transfer model with polytropic assumptions. plot.py and plot_err.py to generate comparisons to Monte Carlo simulations as well as to confirm matching pseudo-polytropic results.
+0D_qbmm_poly - Same case as 0D_qbmm by explicitly replacing constant transfer model with polytropic assumptions. plot.py and plot_err.py to generate comparisons to Monte Carlo simulations as well as to confirm matching pseudo-polytropic results in Table 1.
 
 0D_qbmm_pseudo_poly - Same case as 0D_qbmm with pseudo_poly = 'T', that changes the temporal evolution of bubble pressure pb to match the polytropic results. 
 
 0D_moc - Monte Carlo simulations with 1000 samples. Run generate_rv.py with seed = 42 to generate the list of bubble radii and velocities in Rad.txt and Vel.txt. Running script_generate.sh then creates sub-directories for all 1000 samples. Finally run script_run.sh to get the results. Constant transfer model used.
 
 0D_moc_poly - Monte Carlo simulations with polytropic assumptions. Rest of the files follow 0D_moc
+
+All 0D results are used to generate the error
 
 
 ## Application to Bubble Screens  (Section 5)
