@@ -480,7 +480,7 @@ module m_global_parameters
     !> @}
 
     logical :: bub_0d, pseudo_poly
-    $:GPU_DECLARE(create='[bub_0d], pseudo_poly]')
+    $:GPU_DECLARE(create='[bub_0d, pseudo_poly]')
 
 contains
 

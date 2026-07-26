@@ -231,7 +231,7 @@ contains
         real(wp)                       :: orig_qv
         real(wp)                       :: muR, muV
         real(wp)                       :: R3bar
-        real(wp)                       :: rcoord, theta, phi, xi_sph, rsum, rsumw, wsum
+        real(wp)                       :: rcoord, theta, phi, xi_sph
         real(wp), dimension(3)         :: xi_cart
         real(wp)                       :: Ys(1:num_species)
         real(stp), dimension(sys_size) :: orig_prim_vf  !< Vector to hold original values of cell for smoothing purposes
@@ -475,16 +475,6 @@ contains
                 q_prim_vf(i)%sf(j, k, l) = q_prim_vf(eqn_idx%E)%sf(j, k, l)
             end do
         end if
-
-        rsum = 0._wp 
-        rsumw = 0._wp
-
-        do i = 1, nb 
-            wsum = wsum + weight(i)
-            rsumw = rsumw + R0(i)*weight(i)
-        end do
-        rsumw = rsumw / wsum
-
 
         if (bubbles_euler) then
             do i = 1, nb
