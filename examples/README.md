@@ -1,4 +1,4 @@
-## Description of example cases for reproducability
+## Description of example cases for reproducibility
 
 ## Model Verification  (Section 4)
 

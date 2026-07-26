@@ -101,7 +101,7 @@ def compute_2d_quadrature(momin):
 
 
 dt = 0.0005
-delt = 80
+delta_t = 80
 tstop = 16000
 tstart = 0
 count = 0
@@ -122,10 +122,10 @@ Rdot_mc = np.zeros((Nsamp, 4))
 momin = np.zeros(6)
 node_locs = np.zeros((4, 2))
 
-for i in range(tstart, tstop, delt):
+for i in range(tstart, tstop, delta_t):
     data_qbmm = np.loadtxt("D/prim.6.00." + str(i).zfill(6) + ".dat")[1, 1]
     Rad_qbmm.append(data_qbmm)
-    T_qbmm.append(count * delt * dt)
+    T_qbmm.append(count * delta_t * dt)
 
     if count == 32:
         momin[0] = 1.0

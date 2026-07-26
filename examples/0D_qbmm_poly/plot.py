@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 dt = 0.0005
-delt = 80
+delta_t = 80
 tstop = 16000
 tstart = 0
 count = 0
@@ -14,10 +14,10 @@ Rad_qbmm_pseudo_poly = []
 
 Rad_moc = []
 
-for i in range(tstart, tstop, delt):
+for i in range(tstart, tstop, delta_t):
     data_qbmm = np.loadtxt("D/prim.6.00." + str(i).zfill(6) + ".dat")[1, 1]
     Rad_qbmm.append(data_qbmm)
-    T_qbmm.append(count * delt * dt)
+    T_qbmm.append(count * delta_t * dt)
 
     data_qbmm = np.loadtxt("../0D_qbmm_pseudo_poly/D/prim.6.00." + str(i).zfill(6) + ".dat")[1, 1]
     Rad_qbmm_pseudo_poly.append(data_qbmm)
