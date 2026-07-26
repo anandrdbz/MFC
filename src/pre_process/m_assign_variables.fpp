@@ -159,7 +159,6 @@ contains
 
         R3bar = 0._wp
 
-
         if (qbmm) then
             do i = 1, nb
                 R3bar = R3bar + weight(i)*0.5_wp*(q_prim_vf(eqn_idx%bub%beg + 1 + (i - 1)*nmom)%sf(j, k, l))**3._wp
@@ -487,7 +486,8 @@ contains
                         q_prim_vf(qbmm_idx%fullmom(i, 1, 0))%sf(j, k, l) = muR
                         q_prim_vf(qbmm_idx%fullmom(i, 0, 1))%sf(j, k, l) = muV
                         q_prim_vf(qbmm_idx%fullmom(i, 2, 0))%sf(j, k, l) = muR**2 + (sigR*R0ref*R0(i))**2
-                        q_prim_vf(qbmm_idx%fullmom(i, 1, 1))%sf(j, k, l) = muR*muV + rhoRV*(sigR*R0ref*R0(i))*(sigV*sqrt(p0ref/rho0ref))
+                        q_prim_vf(qbmm_idx%fullmom(i, 1, 1))%sf(j, k, &
+                                  & l) = muR*muV + rhoRV*(sigR*R0ref*R0(i))*(sigV*sqrt(p0ref/rho0ref))
                         q_prim_vf(qbmm_idx%fullmom(i, 0, 2))%sf(j, k, l) = muV**2 + (sigV*sqrt(p0ref/rho0ref))**2
                     else if (dist_type == 2) then
                         q_prim_vf(qbmm_idx%fullmom(i, 0, 0))%sf(j, k, l) = 1._wp
@@ -533,10 +533,11 @@ contains
         if (bubbles_euler .and. (.not. polytropic) .and. (.not. qbmm)) then
             do i = 1, nb
                 if (f_is_default(real(q_prim_vf(qbmm_idx%ms(i))%sf(j, k, l), kind=wp))) then
-                    q_prim_vf(qbmm_idx%ms(i))%sf(j, k, l) = mass_v0(i)*(q_prim_vf(qbmm_idx%rs(i))%sf(j, k, l) / R0(i))**3_wp
+                    q_prim_vf(qbmm_idx%ms(i))%sf(j, k, l) = mass_v0(i)*(q_prim_vf(qbmm_idx%rs(i))%sf(j, k, l)/R0(i))**3_wp
                 end if
                 if (f_is_default(real(q_prim_vf(qbmm_idx%ps(i))%sf(j, k, l), kind=wp))) then
-                    q_prim_vf(qbmm_idx%ps(i))%sf(j, k, l) = pb0(i)*(R0(i) / q_prim_vf(qbmm_idx%rs(i))%sf(j, k, l))**3_wp*(mass_g0(i) + q_prim_vf(qbmm_idx%ms(i))%sf(j, k, l)) / (mass_g0(i) + mass_v0(i))
+                    q_prim_vf(qbmm_idx%ps(i))%sf(j, k, l) = pb0(i)*(R0(i)/q_prim_vf(qbmm_idx%rs(i))%sf(j, k, &
+                              & l))**3_wp*(mass_g0(i) + q_prim_vf(qbmm_idx%ms(i))%sf(j, k, l))/(mass_g0(i) + mass_v0(i))
                     ! print *, 'setting to pb0'
                 end if
             end do

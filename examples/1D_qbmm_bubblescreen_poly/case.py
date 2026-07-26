@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import math
 import json
+import math
 
 # FLUID PROPERTIES
 R_uni = 8314.0  # [J/kmol/K]
@@ -53,7 +53,6 @@ T0 = T0ref  # [K]
 u0 = math.sqrt(p0 / rho0)  # [m/s]
 t0 = x0 / u0  # [s]
 
-#
 cfl = 0.1
 Nx = 1600
 Ldomain = 20.0e-03
@@ -84,14 +83,14 @@ print(
             "n": 0,
             "p": 0,
             "dt": dt,
-            #"cfl_adap_dt": "T",
-            #"cfl_target": 0.1,
+            # "cfl_adap_dt": "T",
+            # "cfl_target": 0.1,
             "t_step_start": 0,
             "t_step_stop": Nt,
             "t_step_save": Nout,
-            #"n_start": 0,
-            #"t_stop": Tfinal,
-            #"t_save": Tfinal / 200.0,
+            # "n_start": 0,
+            # "t_stop": Tfinal,
+            # "t_save": Tfinal / 200.0,
             # Simulation Algorithm Parameters
             "num_patches": 2,
             "model_eqns": 2,

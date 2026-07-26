@@ -1,13 +1,14 @@
-from py_functions import *
 import math
+
+from py_functions import *
 
 # Reference scaling
 x0 = 10e-6  # reference length (m)
 
 # Domain (normalized by x0)
-H = 5.e-3/ x0  # cubic cloud size
+H = 5.0e-3 / x0  # cubic cloud size
 
-x_beg, x_end = -0.5 * H, 0.5 * H 
+x_beg, x_end = -0.5 * H, 0.5 * H
 y_beg, y_end = -0.5 * H, 0.5 * H
 z_beg, z_end = -0.5 * H, 0.5 * H
 
@@ -36,9 +37,6 @@ fun_createDir(output_path)
 # Generate cloud
 cloud_volume = (x_end - x_beg) * (y_end - y_beg) * (z_end - z_beg)
 
-n_bubbles = cloud_generator_rectangular_prism(
-                x_beg, x_end, y_beg, y_end, z_beg, z_end,
-                void_fraction, Rmean, Rmin, Rmax, Rdev_log, Rskew,
-                output_path, 1)
+n_bubbles = cloud_generator_rectangular_prism(x_beg, x_end, y_beg, y_end, z_beg, z_end, void_fraction, Rmean, Rmin, Rmax, Rdev_log, Rskew, output_path, 1)
 
-cloud_stats_plots_rectangular_prism( cloud_volume, Rmean, grid_size, output_path)
+cloud_stats_plots_rectangular_prism(cloud_volume, Rmean, grid_size, output_path)

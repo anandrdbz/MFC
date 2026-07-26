@@ -609,7 +609,7 @@ contains
                         if (.not. f_is_default(Re_inv)) coeffs(5, i1, i2) = -4._wp*i2*Re_inv/rho
                         if (.not. f_is_default(Web)) coeffs(6, i1, i2) = -2._wp*i2/Web/rho
                         coeffs(7, i1, i2) = 0._wp
-                        if(pseudo_poly) then 
+                        if (pseudo_poly) then
                             coeffs(7, i1, i2) = i2*pv/rho
                         end if
                     #:endif
@@ -743,7 +743,7 @@ contains
         real(stp), dimension(idwbuff(1)%beg:,idwbuff(2)%beg:,idwbuff(3)%beg:,1:,1:), intent(inout) :: mv
         real(wp), dimension(idwbuff(1)%beg:,idwbuff(2)%beg:,idwbuff(3)%beg:,1:,1:), intent(inout)  :: rhs_mv
         type(int_bounds_info), intent(in)                                                          :: ix, iy, iz
-        integer , intent(in) :: t_step
+        integer, intent(in)                                                                        :: t_step
 
         #:if not MFC_CASE_OPTIMIZATION and USING_AMD
             real(wp), dimension(6)    :: moms, msum
@@ -772,7 +772,7 @@ contains
                 do id1 = is1_qbmm%beg, is1_qbmm%end
                     alf = q_prim_vf(eqn_idx%alf)%sf(id1, id2, id3)
                     pres = q_prim_vf(eqn_idx%E)%sf(id1, id2, id3)
-                    if(bub_0d) then
+                    if (bub_0d) then
                         pres = 1._wp + 0.5_wp*sin(pi*dt*t_step)
                     end if
                     rho = q_prim_vf(eqn_idx%cont%beg)%sf(id1, id2, id3)
@@ -820,7 +820,7 @@ contains
                                                          & j, q)) - 1._wp)
                                     ht(j, q) = pb0(q)*k_mw*grad_T/Pe_T(q)/abscX(j, q)
                                     wght_pb(j, q) = wght(j, q)*(pb(id1, id2, id3, j, q))
-                                    if(pseudo_poly) then 
+                                    if (pseudo_poly) then
                                         wght_pb(j, q) = wght(j, q)*(pb(id1, id2, id3, j, q) - pv)
                                     end if
                                     wght_mv(j, q) = wght(j, q)*(rhs_mv(id1, id2, id3, j, q))
@@ -887,8 +887,8 @@ contains
                                     drdt2 = drdt2*(msum(3) - 2._wp*moms(2)*msum(2))
                                     drdt = drdt + drdt2
                                     rhs_pb(id1, id2, id3, j, q) = (-3._wp*gam*drdt/abscX(j, q))*(pb(id1, id2, id3, j, q))
-                                    if(pseudo_poly) then 
-                                        rhs_pb(id1, id2, id3, j, q) =  rhs_pb(id1, id2, id3, j, q) + (3._wp*gam*drdt/abscX(j, q))*pv
+                                    if (pseudo_poly) then
+                                        rhs_pb(id1, id2, id3, j, q) = rhs_pb(id1, id2, id3, j, q) + (3._wp*gam*drdt/abscX(j, q))*pv
                                     else
                                         rhs_pb(id1, id2, id3, j, q) = rhs_pb(id1, id2, id3, j, q) + (3._wp*gam/abscX(j, &
                                                & q))*rhs_mv(id1, id2, id3, j, q)*R_v*Tw

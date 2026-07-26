@@ -41,8 +41,7 @@ def write_grid(path_out, R, V, logf):
         comments="",
         fmt="%.4f",
     )
-    print(f"{path_out}: {logf.shape[0]}x{logf.shape[1]}, "
-          f"log10 f in [{logf.min():.2f}, {logf.max():.2f}]")
+    print(f"{path_out}: {logf.shape[0]}x{logf.shape[1]}, log10 f in [{logf.min():.2f}, {logf.max():.2f}]")
 
 
 def to_log(k):
@@ -62,8 +61,7 @@ def to_log(k):
     Rc = R.reshape(-1, COARSE).mean(1)
     Vc = V.reshape(-1, COARSE).mean(1)
     RRc, VVc = np.meshgrid(Rc, Vc)
-    write_grid(f"density{k}_log_coarse.csv", RRc, VVc,
-               np.log10(np.clip(Zc, FLOOR, None)))
+    write_grid(f"density{k}_log_coarse.csv", RRc, VVc, np.log10(np.clip(Zc, FLOOR, None)))
 
 
 if __name__ == "__main__":

@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-import math
 import json
-
+import math
 import sys
 
 # Select sample (1-based)
 sample_index = 1
 
-rad = float(open("../Rad.txt").read().splitlines()[sample_index-1])
-vel = float(open("../Vel.txt").read().splitlines()[sample_index-1])
+rad = float(open("../Rad.txt").read().splitlines()[sample_index - 1])
+vel = float(open("../Vel.txt").read().splitlines()[sample_index - 1])
 
 
 # FLUID PROPERTIES
@@ -62,7 +61,6 @@ T0 = T0ref  # [K]
 u0 = math.sqrt(p0 / rho0)  # [m/s]
 t0 = x0 / u0  # [s]
 
-#
 cfl = 0.1
 Nx = 400
 Ldomain = 20.0e-03

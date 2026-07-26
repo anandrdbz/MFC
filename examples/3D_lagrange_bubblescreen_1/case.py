@@ -9,7 +9,7 @@ p0 = 101325
 c0 = math.sqrt(p0 / rho0)
 T0 = 298
 
-r0 = 10e-6 # Mean bubble radius
+r0 = 10e-6  # Mean bubble radius
 
 # Domain bounds and resolution (w/ stretching)
 num_cells = [400, 50, 50]
@@ -26,18 +26,18 @@ gamma_g = 1.4
 mu_g = 1.48e-5 / (rho0 * c0 * x0)
 
 # Lagrangian bubble properties
-R_uni = 8314          # Universal gas constant - J/kmol/K
-MW_g = 28.0           # Molar weight of the gas - kg/kmol
-MW_v = 18.0           # Molar weight of the vapor - kg/kmol
-gam_g = 1.4           # Specific heat ratio of the gas
-gam_v = 1.333         # Specific heat ratio of the vapor
-pv = 2350             # Vapor pressure of the host - Pa
-cp_g = 1.0e3          # Specific heat of the gas - J/kg/K
-cp_v = 2.1e3          # Specific heat of the vapor - J/kg/K
-k_g = 0.025           # Thermal conductivity of the gas - W/m/K
-k_v = 0.02            # Thermal conductivity of the vapor - W/m/K
-diffVapor = 2.5e-5    # Diffusivity coefficient of the vapor - m2/s
-sigBubble = 0.074     # Surface tension of the bubble - N/m
+R_uni = 8314  # Universal gas constant - J/kmol/K
+MW_g = 28.0  # Molar weight of the gas - kg/kmol
+MW_v = 18.0  # Molar weight of the vapor - kg/kmol
+gam_g = 1.4  # Specific heat ratio of the gas
+gam_v = 1.333  # Specific heat ratio of the vapor
+pv = 2350  # Vapor pressure of the host - Pa
+cp_g = 1.0e3  # Specific heat of the gas - J/kg/K
+cp_v = 2.1e3  # Specific heat of the vapor - J/kg/K
+k_g = 0.025  # Thermal conductivity of the gas - W/m/K
+k_v = 0.02  # Thermal conductivity of the vapor - W/m/K
+diffVapor = 2.5e-5  # Diffusivity coefficient of the vapor - m2/s
+sigBubble = 0.074  # Surface tension of the bubble - N/m
 
 # Ambient properties
 pAmb = 101325 / p0
@@ -54,7 +54,7 @@ pulse_width_factor = 2  # Multiplier on Gaussian pulse width
 f_nat = (1.0 / (2 * math.pi)) * math.sqrt(3 * gamma_g * pAmb / rho_w)
 lambda_nat = cw / f_nat
 
-f_ac = 0.3 
+f_ac = 0.3
 lambda_ac = cw / f_ac
 
 # Timestepping and output parameters
@@ -66,7 +66,7 @@ tend = n_collapse_times * T_RC
 
 tsave = tend / nsave
 cfl = 0.2
-eps = 1.e-7
+eps = 1.0e-7
 
 dt = cfl * dx / cw
 t_step_start = 0
@@ -84,7 +84,7 @@ with open(bubbles_file, "r") as f:
             continue
         nBubs += 1
         bub_radii.append(float(line.split()[3]))
-print(f"Found {nBubs} bubbles in {bubbles_file}", file=__import__('sys').stderr)
+print(f"Found {nBubs} bubbles in {bubbles_file}", file=__import__("sys").stderr)
 
 
 case = {
@@ -97,9 +97,9 @@ case = {
     "probe(1)%y": 0.0,
     "probe(1)%z": 0.0,
     "rdma_mpi": "F",
-    "m": num_cells[0]-1,
-    "n": num_cells[1]-1,
-    "p": num_cells[2]-1,
+    "m": num_cells[0] - 1,
+    "n": num_cells[1] - 1,
+    "p": num_cells[2] - 1,
     "dt": dt,
     "t_step_start": t_step_start,
     "t_step_stop": t_step_stop,
@@ -124,12 +124,12 @@ case = {
     "prim_vars_wrt": "T",
     "lag_db_wrt": "T",
     "lag_txt_wrt": "T",
-    "x_domain%beg": -0.5*dim[0],
-    "x_domain%end": 0.5*dim[0],
-    "y_domain%beg": -0.5*dim[1],
-    "y_domain%end": 0.5*dim[1],
-    "z_domain%beg": -0.5*dim[2],
-    "z_domain%end": 0.5*dim[2],
+    "x_domain%beg": -0.5 * dim[0],
+    "x_domain%end": 0.5 * dim[0],
+    "y_domain%beg": -0.5 * dim[1],
+    "y_domain%end": 0.5 * dim[1],
+    "z_domain%beg": -0.5 * dim[2],
+    "z_domain%end": 0.5 * dim[2],
     "bc_x%beg": -3,
     "bc_x%end": -3,
     "bc_y%beg": -1,
@@ -163,7 +163,7 @@ case = {
     "fluid_pp(2)%Re(1)": 1.0 / mu_g,
     # Lagrangian Bubbles
     "bubbles_lagrange": "T",
-    "bubble_model": 2,              # Keller-Miksis model
+    "bubble_model": 2,  # Keller-Miksis model
     "thermal": 3,
     "polytropic": "F",
     "lag_params%nBubs_glb": nBubs,
@@ -205,9 +205,9 @@ case = {
     "acoustic(1)%npulse": 1,
     "acoustic(1)%mag": pAc,
     "acoustic(1)%pulse": 1,
-    "acoustic(1)%wavelength" : lambda_ac,
-    "acoustic(1)%length": 2*dim[2],
-    "acoustic(1)%height": 2*dim[1],
+    "acoustic(1)%wavelength": lambda_ac,
+    "acoustic(1)%length": 2 * dim[2],
+    "acoustic(1)%height": 2 * dim[1],
     "acoustic(1)%loc(1)": -700.0,
     "acoustic(1)%loc(2)": 0.0,
     "acoustic(1)%loc(3)": 0.0,

@@ -303,7 +303,7 @@ contains
         elliptic_smoothing = .false.
 
         fft_wrt = .false.
-        bub_0d = .false. 
+        bub_0d = .false.
         pseudo_poly = .false.
 
         simplex_perturb = .false.

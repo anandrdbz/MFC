@@ -144,7 +144,7 @@ contains
         type(scalar_field), dimension(sys_size), intent(in)    :: q_prim_vf
         type(scalar_field), dimension(sys_size), intent(inout) :: rhs_vf
         type(scalar_field), intent(in)                         :: divu_in  !< matrix for div(u)
-        integer, intent(in)                                   :: t_step
+        integer, intent(in)                                    :: t_step
         real(wp)                                               :: rddot
         real(wp)                                               :: pb_local, mv_local, vflux, pbdot
         real(wp)                                               :: n_tait, B_tait
@@ -250,7 +250,7 @@ contains
                         myR = q_prim_vf(rs(q))%sf(j, k, l)
                         myV = q_prim_vf(vs(q))%sf(j, k, l)
                         myP = q_prim_vf(eqn_idx%E)%sf(j, k, l)
-                        if(bub_0d) then
+                        if (bub_0d) then
                             myP = 1._wp + 0.5_wp*sin(pi*t_step*dt)
                         end if
 

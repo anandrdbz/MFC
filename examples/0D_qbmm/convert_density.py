@@ -3,7 +3,6 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import gaussian_kde
 
-
 base = Path(".")
 
 # Each file is assumed to contain 4 columns, one for each simulation time.
@@ -16,18 +15,22 @@ y = np.linspace(-0.6, 0.6, 220)
 
 X, Y = np.meshgrid(x, y)
 
-query_points = np.vstack([
-    X.ravel(),
-    Y.ravel(),
-])
+query_points = np.vstack(
+    [
+        X.ravel(),
+        Y.ravel(),
+    ]
+)
 
 densities = []
 
 for i in range(4):
-    samples = np.vstack([
-        rad[:, i],
-        rdot[:, i],
-    ])
+    samples = np.vstack(
+        [
+            rad[:, i],
+            rdot[:, i],
+        ]
+    )
 
     kde = gaussian_kde(samples)
 
@@ -36,10 +39,7 @@ for i in range(4):
     densities.append(density)
 
 # Use one common normalization across all four panels.
-density_max = max(
-    density.max()
-    for density in densities
-)
+density_max = max(density.max() for density in densities)
 
 for i, density in enumerate(densities, start=1):
     density_normalized = density / density_max
@@ -57,11 +57,7 @@ for i, density in enumerate(densities, start=1):
 
         for iy in range(len(y)):
             for ix in range(len(x)):
-                file.write(
-                    f"{X[iy, ix]:.12e},"
-                    f"{Y[iy, ix]:.12e},"
-                    f"{density_normalized[iy, ix]:.12e}\n"
-                )
+                file.write(f"{X[iy, ix]:.12e},{Y[iy, ix]:.12e},{density_normalized[iy, ix]:.12e}\n")
 
             # Blank line separates adjacent grid rows for PGFPlots.
             file.write("\n")
