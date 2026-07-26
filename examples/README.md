@@ -2,7 +2,7 @@
 
 ## Model Verification  (Section 4)
 
-0D_qbmm - Case file used for the monodisperse qbmm results in this section, uses Rayleigh--Plesset equations. bub_0d = 'T' sets the pressure to be the sinusoid. Constant transfer model used. plot.py used to generate comparisons to Monte Carlo simulations displayed in Figure 2 and Table 1. plot.py also writes quadrature nodes Node1-4.csv as well as the Monte Carlo co-ordinates Rad.csv and Rdot.csv to generate results for Figure 3. convert_density.py converts the Monte Carlo co-ordinates to the density1-4.csv, and make_density_rasters creates the density rasters used in the generation of Figure 3. plot_err.py displays the error values for constant transfer model in Table 1.
+0D_qbmm - Case file used for the monodisperse qbmm results in this section, uses Rayleigh--Plesset equations. bub_0d = 'T' sets the pressure to be the sinusoid. Constant transfer model used. plot.py used to generate comparisons to Monte Carlo simulations displayed in Figure 2 and Table 1. plot.py also writes quadrature nodes Node1-4.csv as well as the Monte Carlo co-ordinates Rad.csv and Rdot.csv to generate results for Figure 3. convert_density.py converts the Monte Carlo co-ordinates to the density1-4.csv, and make_density_log.py creates the density1-4_log.csv which are used by PGFplot to generate Figure 3. plot_err.py displays the error values for constant transfer model in Table 1.
 
 0D_qbmm_poly - Same case as 0D_qbmm by explicitly replacing constant transfer model with polytropic assumptions. plot.py and plot_err.py to generate comparisons to Monte Carlo simulations as well as to confirm matching pseudo-polytropic results in Table 1.
 
